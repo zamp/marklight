@@ -161,6 +161,18 @@ namespace MarkLight
             }
         }
 
+        public override int GetHashCode() {
+            return (int)Value;
+        }
+
+        public override bool Equals(object obj) {
+            var other = obj as ElementSize;
+            if (other == null)
+                return false;
+
+            return Math.Abs(other.Value - Value) < 0.00001 && other.Unit == Unit;
+        }
+
         #endregion
 
         #region Properties

@@ -41,14 +41,6 @@ namespace MarkLight.Views.UI
             }
         }
 
-        /// <summary>
-        /// Sets default values of the view.
-        /// </summary>
-        public override void SetDefaultValues()
-        {
-            base.SetDefaultValues();
-        }
-
         #endregion
     }
 }

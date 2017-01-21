@@ -170,7 +170,7 @@ namespace MarkLight.Views.UI
         [ChangeHandler("LayoutChanged")]
         public _AdjustToText AdjustToText;
 
-        private static Regex _tagRegex = new Regex(@"\[(?<tag>[^\]]+)\]");
+        private static readonly Regex _tagRegex = new Regex(@"\[(?<tag>[^\]]+)\]");
 
         #endregion
 
@@ -215,17 +215,13 @@ namespace MarkLight.Views.UI
             else
             {
                 // size of view changes with text so notify parents                
-                LayoutsChanged();
+                LayoutChanged();
             }
         }
 
-        /// <summary>
-        /// Called when a field affecting the layout of the view has changed.
-        /// </summary>
-        public override void LayoutChanged()
-        {
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
             AdjustLabelToText();
-            base.LayoutChanged();
+            return Layout.IsDirty;
         }
 
         /// <summary>
@@ -236,7 +232,7 @@ namespace MarkLight.Views.UI
             if (AdjustToText == MarkLight.AdjustToText.None)
                 return;
 
-            LayoutsChanged();
+            LayoutChanged();
         }
 
         /// <summary>
@@ -282,16 +278,16 @@ namespace MarkLight.Views.UI
         {
             if (AdjustToText == MarkLight.AdjustToText.Width)
             {
-                Width.DirectValue = new ElementSize(PreferredWidth);
+                Layout.Width = new ElementSize(PreferredWidth);
             }
             else if (AdjustToText == MarkLight.AdjustToText.Height)
             {
-                Height.DirectValue = new ElementSize(PreferredHeight);
+                Layout.Height = new ElementSize(PreferredHeight);
             }
             else if (AdjustToText == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Width.DirectValue = new ElementSize(PreferredWidth);
-                Height.DirectValue = new ElementSize(PreferredHeight);
+                Layout.Width = new ElementSize(PreferredWidth);
+                Layout.Height = new ElementSize(PreferredHeight);
             }
         }
 

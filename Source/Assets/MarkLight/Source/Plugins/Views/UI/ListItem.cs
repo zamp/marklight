@@ -163,14 +163,14 @@ namespace MarkLight.Views.UI
         /// List item length.
         /// </summary>
         /// <d>Specifies the list item length. Used as the default item width when Width isn't set.</d>
-        [ChangeHandler("LayoutsChanged")]
+        [ChangeHandler("LayoutChanged")]
         public _ElementSize Length;
 
         /// <summary>
         /// List item breadth.
         /// </summary>
         /// <d>Specifies the list item breadth. Used as the default item height when Height isn't set.</d>
-        [ChangeHandler("LayoutsChanged")]
+        [ChangeHandler("LayoutChanged")]
         public _ElementSize Breadth;
 
         /// <summary>
@@ -243,33 +243,40 @@ namespace MarkLight.Views.UI
             }
         }
 
-        /// <summary>
-        /// Called when the layout of the view has been changed. 
-        /// </summary>
-        public override void LayoutChanged()
+        public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
             // adjust width and height to ParentList
-            if (ParentList == null || ParentList.Orientation == ElementOrientation.Horizontal)
-            {
-                Width.DirectValue = Width.IsSet && Width.Value.Unit != ElementSizeUnit.Percents ? Width.Value : new ElementSize(Length.Value);
+            if (ParentList == null || ParentList.Layout.Orientation == ElementOrientation.Horizontal) {
 
-                if (!Height.IsSet)
-                {
-                    Height.DirectValue = Breadth.IsSet ? new ElementSize(Breadth.Value) : ElementSize.FromPercents(1);
+                if (!Width.IsSet) {
+                //    Layout.Width = new ElementSize(Length.Value);
+                }
+                else if (Layout.Width.Unit == ElementSizeUnit.Percents) {
+                  //  Layout.Width.Value = Layout.PixelWidth;
+                }
+
+                if (!Height.IsSet) {
+                    Layout.Height = Breadth.IsSet
+                        ? new ElementSize(Breadth.Value)
+                        : ElementSize.FromPercents(1);
                 }
             }
             else
             {
-                // if neither width nor length is set, use 100% width                
+                //  if neither width nor length is set, use 100% width
                 if (!Width.IsSet)
                 {
-                    Width.DirectValue = Length.IsSet ? new ElementSize(Length.Value) : ElementSize.FromPercents(1);
+                    Layout.Width = Length.IsSet
+                        ? new ElementSize(Length.Value)
+                        : ElementSize.FromPercents(1);
                 }
 
-                Height.DirectValue = Height.IsSet && Height.Value.Unit != ElementSizeUnit.Percents ? Height.Value : new ElementSize(Breadth.Value);
+                //Layout.Height = Height.IsSet // && Height.Value.Unit != ElementSizeUnit.Percents
+                //    ? new ElementSize(Height.Value)
+                //    : new ElementSize(Breadth.Value);
             }
 
-            base.LayoutChanged();
+            return Layout.IsDirty;
         }
 
         /// <summary>
@@ -283,23 +290,23 @@ namespace MarkLight.Views.UI
             // adjust item size to text
             if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.Width)
             {
-                Width.Value = new ElementSize(ItemLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels
+                Layout.Width = new ElementSize(ItemLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels
                     + ItemLabel.Margin.Value.Left.Pixels + ItemLabel.Margin.Value.Right.Pixels);
             }
             else if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.Height)
             {
-                Height.Value = new ElementSize(ItemLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels
+                Layout.Height = new ElementSize(ItemLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels
                     + ItemLabel.Margin.Value.Top.Pixels + ItemLabel.Margin.Value.Bottom.Pixels);
             }
             else if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Width.Value = new ElementSize(ItemLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels
+                Layout.Width = new ElementSize(ItemLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels
                     + ItemLabel.Margin.Value.Left.Pixels + ItemLabel.Margin.Value.Right.Pixels);
-                Height.Value = new ElementSize(ItemLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels
+                Layout.Height = new ElementSize(ItemLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels
                     + ItemLabel.Margin.Value.Top.Pixels + ItemLabel.Margin.Value.Bottom.Pixels);
             }
 
-            LayoutsChanged();
+            LayoutChanged();
         }
 
         /// <summary>

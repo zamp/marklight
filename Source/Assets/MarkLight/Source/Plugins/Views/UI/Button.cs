@@ -230,7 +230,7 @@ namespace MarkLight.Views.UI
                 Height.DirectValue = new ElementSize(ButtonLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels);
             }
 
-            LayoutsChanged();
+            LayoutChanged();
         }
 
         /// <summary>

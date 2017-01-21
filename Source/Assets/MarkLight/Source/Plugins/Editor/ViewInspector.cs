@@ -31,7 +31,7 @@ namespace MarkLight.Editor
             if (GUILayout.Button("Update View"))
             {
                 var view = (View)target;
-                view.LayoutChanged();
+                view.NotifyLayoutChanged();
             }
         }
 

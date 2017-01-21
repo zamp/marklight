@@ -206,24 +206,12 @@ namespace MarkLight.Views.UI
             ScrollRectComponent.scrollSensitivity = 60f;
             ImageComponent.color = Color.clear;
         }
-        
-        /// <summary>
-        /// Called when a child view has been added or removed.
-        /// </summary>
-        public override void ChildrenChanged()
-        {
-            base.ChildrenChanged();
-            QueueChangeHandler("LayoutChanged");
-        }
 
-        /// <summary>
-        /// Called when the layout of the view has been changed.
-        /// </summary>
-        public override void LayoutChanged()
-        {
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
+
             var child = this.Find<UIView>(false);
             if (child == null)
-                return;
+                return false;
 
             // set scrollrect content to first child
             if (ScrollRectComponent.content == null)
@@ -233,13 +221,15 @@ namespace MarkLight.Views.UI
 
             if (ContentAlignment.IsSet)
             {
-                child.Alignment.DirectValue = ContentAlignment.Value;
+                child.Layout.Alignment = ContentAlignment.Value;
                 child.Pivot.DirectValue = ContentAlignment.Value.ToPivot();
+                context.NotifyLayoutUpdated(child);
             }
 
             // workaround for panel blocking drag events in child views
             UnblockDragEvents();
-            base.LayoutChanged();
+
+            return Layout.IsDirty;
         }
 
         /// <summary>

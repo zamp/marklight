@@ -355,44 +355,43 @@ namespace MarkLight.Views.UI
             TabHeaderList.Alignment.DirectValue = ElementAlignment.TopLeft;
         }
 
-        /// <summary>
-        /// Updates the layout of the view.
-        /// </summary>
-        public override void LayoutChanged()
-        {
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
+
             // set content margins based on tab list size and its orientation
             var contentMargin = new ElementMargin();
             var tabAlignment = ElementAlignment.Center;
-            if (TabHeaderList.Orientation == ElementOrientation.Horizontal)
+
+            if (TabHeaderList.Layout.Orientation == ElementOrientation.Horizontal)
             {
-                if (TabHeaderList.Alignment.Value.HasFlag(ElementAlignment.Bottom))
+                if (TabHeaderList.Layout.Alignment.HasFlag(ElementAlignment.Bottom))
                 {
-                    contentMargin.Bottom = ElementSize.FromPixels(TabHeaderList.Height.Value.Pixels);
+                    contentMargin.Bottom = ElementSize.FromPixels(TabHeaderList.Layout.Height.Pixels);
                     tabAlignment = ElementAlignment.Top;
                 }
                 else
-                {                    
-                    contentMargin.Top = ElementSize.FromPixels(TabHeaderList.Height.Value.Pixels);
+                {
+                    contentMargin.Top = ElementSize.FromPixels(TabHeaderList.Layout.Height.Pixels);
                     tabAlignment = ElementAlignment.Bottom;
                 }
             }
             else
             {
-                if (TabHeaderList.Alignment.Value.HasFlag(ElementAlignment.Right))
+                if (TabHeaderList.Layout.Alignment.HasFlag(ElementAlignment.Right))
                 {
-                    contentMargin.Right = ElementSize.FromPixels(TabHeaderList.Width.Value.Pixels);
+                    contentMargin.Right = ElementSize.FromPixels(TabHeaderList.Layout.Width.Pixels);
                     tabAlignment = ElementAlignment.Left;
                 }
                 else
                 {
-                    contentMargin.Left = ElementSize.FromPixels(TabHeaderList.Width.Value.Pixels);
+                    contentMargin.Left = ElementSize.FromPixels(TabHeaderList.Layout.Width.Pixels);
                     tabAlignment = ElementAlignment.Right;
                 }
             }
 
             if (AutoAdjustContentMargin)
             {
-                TabContent.Margin.Value = contentMargin;
+                TabContent.Layout.Margin = contentMargin;
+                context.NotifyLayoutUpdated(TabContent);
             }
 
             if (AutoAdjustTabListContentAlignment)
@@ -400,7 +399,7 @@ namespace MarkLight.Views.UI
                 TabHeaderList.ContentAlignment.Value = tabAlignment;
             }
 
-            base.LayoutChanged();
+            return Layout.IsDirty;
         }
 
         /// <summary>
@@ -637,7 +636,7 @@ namespace MarkLight.Views.UI
                 ListChanged.Trigger(new ListChangedActionData { ListChangeAction = e.ListChangeAction, StartIndex = e.StartIndex, EndIndex = e.EndIndex });
             }
 
-            LayoutsChanged();
+            LayoutChanged();
         }
 
         /// <summary>

@@ -27,28 +27,28 @@ namespace MarkLight.Views.UI
         /// The width of the view.
         /// </summary>
         /// <d>Specifies the width of the view either in pixels or percents.</d>
-        [ChangeHandler("LayoutsChanged")]
+        [ChangeHandler("LayoutChanged")]
         public _ElementSize Width;
 
         /// <summary>
         /// The height of the view.
         /// </summary>
         /// <d>Specifies the height of the view either in pixels or percents.</d>
-        [ChangeHandler("LayoutsChanged")]
+        [ChangeHandler("LayoutChanged")]
         public _ElementSize Height;
 
         /// <summary>
         /// Override width.
         /// </summary>
         /// <d>Used to override the layouting logic of inherited views and set the specified width.</d>
-        [ChangeHandler("LayoutsChanged")]
+        [ChangeHandler("LayoutChanged")]
         public _ElementSize OverrideWidth;
 
         /// <summary>
         /// Override height.
         /// </summary>
         /// <d>Used to override the layouting logic of inherited views and set the specified height.</d>
-        [ChangeHandler("LayoutsChanged")]
+        [ChangeHandler("LayoutChanged")]
         public _ElementSize OverrideHeight;
 
         /// <summary>
@@ -240,6 +240,8 @@ namespace MarkLight.Views.UI
         
         protected CanvasGroup _canvasGroup;
 
+        private LayoutData _layout;
+
         #endregion
 
         #region Methods
@@ -251,7 +253,7 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Alignment.DirectValue = MarkLight.ElementAlignment.Center;
+            Alignment.DirectValue = ElementAlignment.Center;
             Width.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents);
             Height.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents);
             OverrideWidth.DirectValue = ElementSize.FromPixels(0);
@@ -274,18 +276,108 @@ namespace MarkLight.Views.UI
             UpdateBackground.DirectValue = true;
         }
 
-        /// <summary>
-        /// Called when a field affecting the layout of the view (size and anchors) has changed.
-        /// </summary>
-        public override void LayoutChanged()
-        {
-            base.LayoutChanged();
-            //Debug.Log(String.Format("{0}.LayoutChanged called", ViewTypeName));
+        public override void LayoutChanged() {
 
-            if (!UpdateRectTransform) 
+            RefreshLayoutData();
+            base.LayoutChanged();
+        }
+
+        public override void RenderLayout()
+        {
+            base.RenderLayout();
+
+            Layout.IsDirty = false;
+
+            if (!UpdateRectTransform)
                 return; // rect transform is updated elsewhere
 
-            RectTransformChanged();            
+            // update rectTransform
+            // horizontal alignment and positioning
+            var width = OverrideWidth.IsSet ? OverrideWidth.Value : Layout.Width;
+            var height = OverrideHeight.IsSet ? OverrideHeight.Value : Layout.Height;
+
+            float xMin;
+            float xMax;
+            float offsetMinX;
+            float offsetMaxX;
+
+            if (Layout.Alignment.HasFlag(ElementAlignment.Left))
+            {
+                xMin = 0f;
+                xMax = width.Percent;
+                offsetMinX = 0f;
+                offsetMaxX = width.Pixels;
+            }
+            else if (Layout.Alignment.HasFlag(ElementAlignment.Right))
+            {
+                xMin = 1f - width.Percent;
+                xMax = 1f;
+                offsetMinX = -width.Pixels;
+                offsetMaxX = 0f;
+            }
+            else
+            {
+                xMin = 0.5f - width.Percent / 2f;
+                xMax = 0.5f + width.Percent / 2f;
+                offsetMinX = -width.Pixels / 2f;
+                offsetMaxX = width.Pixels / 2f;
+            }
+
+            //  vertical alignment
+            float yMin;
+            float yMax;
+            float offsetMinY;
+            float offsetMaxY;
+
+            if (Layout.Alignment.HasFlag(ElementAlignment.Top))
+            {
+                yMin = 1f - height.Percent;
+                yMax = 1f;
+                offsetMinY = -height.Pixels;
+                offsetMaxY = 0f;
+            }
+            else if (Layout.Alignment.HasFlag(ElementAlignment.Bottom))
+            {
+                yMin = 0f;
+                yMax = height.Percent;
+                offsetMinY = 0f;
+                offsetMaxY = height.Pixels;
+            }
+            else
+            {
+                yMin = 0.5f - height.Percent / 2f;
+                yMax = 0.5f + height.Percent / 2f;
+                offsetMinY = -height.Pixels / 2f;
+                offsetMaxY = height.Pixels / 2f;
+            }
+
+            RectTransform.anchorMin = new Vector2(xMin + Layout.Margin.Left.Percent, yMin + Layout.Margin.Bottom.Percent);
+            RectTransform.anchorMax = new Vector2(xMax - Layout.Margin.Right.Percent, yMax - Layout.Margin.Top.Percent);
+
+            // positioning and margins
+            RectTransform.offsetMin = new Vector2(
+
+                offsetMinX + Layout.Margin.Left.Pixels + Layout.Offset.Left.Pixels
+                - Layout.Offset.Right.Pixels + Layout.OffsetFromParent.Left.Pixels
+                - Layout.OffsetFromParent.Right.Pixels,
+
+                offsetMinY + Layout.Margin.Bottom.Pixels - Layout.Offset.Top.Pixels
+                + Layout.Offset.Bottom.Pixels - Layout.OffsetFromParent.Top.Pixels
+                + Layout.OffsetFromParent.Bottom.Pixels);
+
+            RectTransform.offsetMax = new Vector2(
+
+                offsetMaxX - Layout.Margin.Right.Pixels + Layout.Offset.Left.Pixels
+                - Layout.Offset.Right.Pixels + Layout.OffsetFromParent.Left.Pixels
+                - Layout.OffsetFromParent.Right.Pixels,
+
+                offsetMaxY - Layout.Margin.Top.Pixels - Layout.Offset.Top.Pixels
+                + Layout.Offset.Bottom.Pixels - Layout.OffsetFromParent.Top.Pixels
+                + Layout.OffsetFromParent.Bottom.Pixels);
+
+            RectTransform.anchoredPosition = new Vector2(
+                RectTransform.offsetMin.x / 2.0f + RectTransform.offsetMax.x / 2.0f,
+                RectTransform.offsetMin.y / 2.0f + RectTransform.offsetMax.y / 2.0f);
         }
 
         /// <summary>
@@ -296,12 +388,15 @@ namespace MarkLight.Views.UI
             if (!UpdateRectTransform)
                 return; // rect transform is updated elsewhere
 
-            RectTransformChanged();
+            LayoutData.Copy(Offset.Value, Layout.Offset);
+            LayoutData.Copy(OffsetFromParent.Value, Layout.OffsetFromParent);
+            RenderLayout();
         }
 
         /// <summary>
         /// Called when fields affecting the rect transform of the view has changed.
         /// </summary>
+        [Obsolete]
         public virtual void RectTransformChanged()
         {
             if (!UpdateRectTransform)
@@ -309,8 +404,8 @@ namespace MarkLight.Views.UI
 
             // update rectTransform
             // horizontal alignment and positioning
-            var width = OverrideWidth.IsSet ? OverrideWidth : Width;
-            var height = OverrideHeight.IsSet ? OverrideHeight : Height;
+            var width = OverrideWidth.IsSet ? OverrideWidth.Value : Layout.Width;
+            var height = OverrideHeight.IsSet ? OverrideHeight.Value : Layout.Height;
 
             float xMin = 0f;
             float xMax = 0f;
@@ -320,26 +415,26 @@ namespace MarkLight.Views.UI
             if (Alignment.Value.HasFlag(ElementAlignment.Left))
             {
                 xMin = 0f;
-                xMax = width.Value.Percent;
+                xMax = width.Percent;
                 offsetMinX = 0f;
-                offsetMaxX = width.Value.Pixels;
+                offsetMaxX = width.Pixels;
             }
             else if (Alignment.Value.HasFlag(ElementAlignment.Right))
             {
-                xMin = 1f - width.Value.Percent;
+                xMin = 1f - width.Percent;
                 xMax = 1f;
-                offsetMinX = -width.Value.Pixels;
+                offsetMinX = -width.Pixels;
                 offsetMaxX = 0f;
             }
             else
             {
-                xMin = 0.5f - width.Value.Percent / 2f;
-                xMax = 0.5f + width.Value.Percent / 2f;
-                offsetMinX = -width.Value.Pixels / 2f;
-                offsetMaxX = width.Value.Pixels / 2f;
+                xMin = 0.5f - width.Percent / 2f;
+                xMax = 0.5f + width.Percent / 2f;
+                offsetMinX = -width.Pixels / 2f;
+                offsetMaxX = width.Pixels / 2f;
             }
 
-            // vertical alignment
+            //  vertical alignment
             float yMin = 0f;
             float yMax = 0f;
             float offsetMinY = 0f;
@@ -347,24 +442,24 @@ namespace MarkLight.Views.UI
 
             if (Alignment.Value.HasFlag(ElementAlignment.Top))
             {
-                yMin = 1f - height.Value.Percent;
+                yMin = 1f - height.Percent;
                 yMax = 1f;
-                offsetMinY = -height.Value.Pixels;
+                offsetMinY = -height.Pixels;
                 offsetMaxY = 0f;
             }
             else if (Alignment.Value.HasFlag(ElementAlignment.Bottom))
             {
                 yMin = 0f;
-                yMax = height.Value.Percent;
+                yMax = height.Percent;
                 offsetMinY = 0f;
-                offsetMaxY = height.Value.Pixels;
+                offsetMaxY = height.Pixels;
             }
             else
             {
-                yMin = 0.5f - height.Value.Percent / 2f;
-                yMax = 0.5f + height.Value.Percent / 2f;
-                offsetMinY = -height.Value.Pixels / 2f;
-                offsetMaxY = height.Value.Pixels / 2f;
+                yMin = 0.5f - height.Percent / 2f;
+                yMax = 0.5f + height.Percent / 2f;
+                offsetMinY = -height.Pixels / 2f;
+                offsetMaxY = height.Pixels / 2f;
             }
 
             RectTransform.anchorMin = new Vector2(xMin + Margin.Value.Left.Percent, yMin + Margin.Value.Bottom.Percent);
@@ -544,9 +639,38 @@ namespace MarkLight.Views.UI
             }
         }
 
+        /// <summary>
+        /// Refreshes values in LayoutData with view field values.
+        /// </summary>
+        public virtual void RefreshLayoutData()
+        {
+            Layout.Alignment = Alignment.Value;
+            LayoutData.Copy(Width.Value, Layout.Width);
+            LayoutData.Copy(Height.Value, Layout.Height);
+            LayoutData.Copy(OffsetFromParent.Value, Layout.OffsetFromParent);
+            LayoutData.Copy(Offset.Value, Layout.Offset);
+            LayoutData.Copy(Margin.Value, Layout.Margin);
+            Layout.IsDirty = false;
+        }
+
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Gets layout data which is used to calculate layout before rendering.
+        /// </summary>
+        public LayoutData Layout {
+            get
+            {
+                if (_layout != null)
+                    return _layout;
+
+                _layout = new LayoutData(this);
+                RefreshLayoutData();
+                return _layout;
+            }
+        }
 
         /// <summary>
         /// Gets actual width of view in pixels. Useful when Width may be specified as percentage and you want actual pixel width.

@@ -252,23 +252,11 @@ namespace MarkLight.Views.UI
             PropagateChildLayoutChanges.DirectValue = true;
         }
 
-        /// <summary>
-        /// Called when a child layout has been updated.
-        /// </summary>
-        public override void ChildLayoutChanged()
-        {
-            base.ChildLayoutChanged();
-            QueueChangeHandler("LayoutChanged");
-        }
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
-        /// <summary>
-        /// Called when a field affecting the layout of the view has changed.
-        /// </summary>
-        public override void LayoutChanged()
-        {
             // adjust width to CheckBoxGroup
-            Width.DirectValue = new ElementSize(CheckBoxGroup.ActualWidth, ElementSizeUnit.Pixels);
-            base.LayoutChanged();
+            Layout.Width = new ElementSize(CheckBoxGroup.ActualWidth, ElementSizeUnit.Pixels);
+            return Layout.IsDirty;
         }
 
         /// <summary>

@@ -29,20 +29,18 @@ namespace MarkLight.Views.UI
 
         #region Methods
 
-        /// <summary>
-        /// Called when the layout of the view has changed.
-        /// </summary>
-        public override void LayoutChanged()
-        {
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
+
             if (ParentDataGrid == null)
             {
-                return;
+                return false;
             }
-            
+
             // arrange columns according to the settings in the parent datagrid
             var columns = this.GetChildren<Column>(false);
-            var columnHeaders = ParentDataGrid.RowHeader != null ? ParentDataGrid.RowHeader.GetChildren<ColumnHeader>(false) :
-                new List<ColumnHeader>();
+            var columnHeaders = ParentDataGrid.RowHeader != null
+                ? ParentDataGrid.RowHeader.GetChildren<ColumnHeader>(false)
+                : new List<ColumnHeader>();
 
             if (columnHeaders.Count > 0 && columns.Count > columnHeaders.Count)
             {
@@ -57,35 +55,33 @@ namespace MarkLight.Views.UI
             if (columnHeaders.Count <= 0)
             {
                 // adjust columns to row width
-                float columnWidth = (ActualWidth - ((columns.Count - 1) * ParentDataGrid.ColumnSpacing.Value.Pixels)) / columns.Count;
+                var columnWidth = (ActualWidth - (columns.Count - 1)
+                                                  * ParentDataGrid.ColumnSpacing.Value.Pixels) / columns.Count;
                 foreach (var column in columns)
                 {
-                    column.Width.DirectValue = ElementSize.FromPixels(columnWidth);
+                    column.Layout.Width = ElementSize.FromPixels(columnWidth);
+                    context.NotifyLayoutUpdated(column);
                 }
             }
             else
             {
                 // adjust width of columns based on headers
-                float columnSpacing = ((columns.Count - 1) * ParentDataGrid.ColumnSpacing.Value.Pixels) / columns.Count;
-                List<Column> columnsToFill = new List<Column>();
+                var columnSpacing = (columns.Count - 1) * ParentDataGrid.ColumnSpacing.Value.Pixels / columns.Count;
+                var columnsToFill = new List<Column>();
                 float totalWidth = 0;
 
-                for (int i = 0; i < columns.Count; ++i)
+                for (var i = 0; i < columns.Count; ++i)
                 {
-                    var defWidth = columnHeaders[i].Width.Value;
-                    if (!columnHeaders[i].Width.IsSet || defWidth.Fill == true)
+                    var defWidth = columnHeaders[i].Layout.Width;
+                    if (!columnHeaders[i].Width.IsSet || defWidth.Fill)
                     {
                         columnsToFill.Add(columns[i]);
                         continue;
                     }
-                    else if (defWidth.Unit == ElementSizeUnit.Percents)
-                    {
-                        columns[i].Width.DirectValue = new ElementSize((defWidth.Percent * ActualWidth) - columnSpacing, ElementSizeUnit.Pixels);
-                    }
-                    else
-                    {
-                        columns[i].Width.DirectValue = new ElementSize(defWidth.Pixels - columnSpacing, ElementSizeUnit.Pixels);
-                    }
+
+                    columns[i].Layout.Width = defWidth.Unit == ElementSizeUnit.Percents
+                        ? new ElementSize(defWidth.Percent * ActualWidth - columnSpacing, ElementSizeUnit.Pixels)
+                        : new ElementSize(defWidth.Pixels - columnSpacing, ElementSizeUnit.Pixels);
 
                     totalWidth += columns[i].Width.Value.Pixels;
                 }
@@ -93,10 +89,10 @@ namespace MarkLight.Views.UI
                 // adjust width of fill columns
                 if (columnsToFill.Count > 0)
                 {
-                    float columnWidth = Math.Max(columnSpacing, (ActualWidth - totalWidth) / columnsToFill.Count);
+                    var columnWidth = Math.Max(columnSpacing, (ActualWidth - totalWidth) / columnsToFill.Count);
                     foreach (var column in columnsToFill)
                     {
-                        column.Width.DirectValue = new ElementSize(columnWidth - columnSpacing, ElementSizeUnit.Pixels);
+                        column.Layout.Width = new ElementSize(columnWidth - columnSpacing, ElementSizeUnit.Pixels);
                     }
                 }
             }
@@ -114,13 +110,13 @@ namespace MarkLight.Views.UI
                 {
                     column.TextMargin.Value = ParentDataGrid.ColumnTextMargin.Value;
                 }
-                
+
                 column.OffsetFromParent.DirectValue = new ElementMargin(offset, 0, 0, 0);
-                offset += (column.Width.Value.Pixels + ParentDataGrid.ColumnSpacing.Value.Pixels);
-                column.QueueChangeHandler("LayoutChanged");
+                offset += column.Width.Value.Pixels + ParentDataGrid.ColumnSpacing.Value.Pixels;
+                context.NotifyLayoutUpdated(column);
             }
 
-            base.LayoutChanged();
+            return Layout.IsDirty;
         }
 
         /// <summary>

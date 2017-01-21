@@ -308,23 +308,10 @@ namespace MarkLight.Views.UI
             ColumnHeaderTextMargin.DirectValue = new ElementMargin();
         }
 
-        /// <summary>
-        /// Called when the layout of a child has changed.
-        /// </summary>
-        public override void ChildLayoutChanged()
-        {
-            base.ChildLayoutChanged();
-            QueueChangeHandler("LayoutChanged");
-        }
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
-        /// <summary>
-        /// Called when the layout of the view changes.
-        /// </summary>
-        public override void LayoutChanged()
-        {
-            // adjust height to group
-            Height.DirectValue = new ElementSize(DataGridList.Height.Value.Pixels + DataGridList.OffsetFromParent.Value.Top.Pixels);
-            base.LayoutChanged(); 
+            Layout.Height = new ElementSize(DataGridList.Height.Value.Pixels + DataGridList.OffsetFromParent.Value.Top.Pixels);
+            return Layout.IsDirty;
         }
 
         /// <summary>

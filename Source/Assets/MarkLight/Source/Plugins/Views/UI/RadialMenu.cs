@@ -160,7 +160,7 @@ namespace MarkLight.Views.UI
                         child.OffsetFromParent.DirectValue = new ElementMargin(xOffset + _menuOffset.x, -yOffset + _menuOffset.y, 0, 0);
                         child.Alignment.DirectValue = ElementAlignment.Center;
                         child.Activate();
-                        child.LayoutChanged();
+                        child.NotifyLayoutChanged();
                         angle += deltaAngle;
                     }
                 }
@@ -318,7 +318,7 @@ namespace MarkLight.Views.UI
                     child.OffsetFromParent.DirectValue = new ElementMargin(_menuOffset.x, _menuOffset.y, 0, 0);
                     child.Alignment.DirectValue = ElementAlignment.Center;
                     child.Deactivate();
-                    child.LayoutChanged();
+                    child.NotifyLayoutChanged();
                     angle += deltaAngle;
                 }
             }
@@ -326,7 +326,7 @@ namespace MarkLight.Views.UI
             foreach (var deactivatedItem in _deactivatedMenuItems)
             {
                 deactivatedItem.Deactivate();
-                deactivatedItem.LayoutChanged();
+                deactivatedItem.NotifyLayoutChanged();
             }
         }
 

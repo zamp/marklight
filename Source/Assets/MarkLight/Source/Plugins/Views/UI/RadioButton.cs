@@ -244,23 +244,10 @@ namespace MarkLight.Views.UI
             RadioButtonImageView.Height.DirectValue = new ElementSize(40);
         }
 
-        /// <summary>
-        /// Called when a child layout has been updated.
-        /// </summary>
-        public override void ChildLayoutChanged()
+        public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
-            base.ChildLayoutChanged();
-            QueueChangeHandler("LayoutChanged");
-        }
-
-        /// <summary>
-        /// Called when a field affecting the layout of the view has changed.
-        /// </summary>
-        public override void LayoutChanged()
-        {
-            // adjust width to RadioButtonGroup
-            Width.DirectValue = new ElementSize(RadioButtonGroup.ActualWidth, ElementSizeUnit.Pixels);
-            base.LayoutChanged();
+            Layout.Width = new ElementSize(RadioButtonGroup.ActualWidth, ElementSizeUnit.Pixels);
+            return Layout.IsDirty;
         }
 
         /// <summary>

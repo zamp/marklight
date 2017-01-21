@@ -1,6 +1,5 @@
 ﻿//#define DISABLE_INIT_TRYCATCH // uncomment if you don't want exceptions to be caught during initialization of views
 #region Using Statements
-using MarkLight.ValueConverters;
 using MarkLight.Views;
 using System;
 using System.Collections.Generic;
@@ -15,6 +14,8 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using MarkLight.Views.UI;
 #endregion
 
@@ -341,7 +342,9 @@ namespace MarkLight
         private bool _isDefaultState;
         private bool _isInitialized;
         private string _previousState;
-        private StateAnimation _stateAnimation;        
+        private StateAnimation _stateAnimation;
+        private LayoutChangeContext _currentChange;
+        private bool _isLayoutChanged;
 
 #if UNITY_4_6 || UNITY_5_0
         private bool _eventSystemTriggersInitialized;
@@ -1102,6 +1105,20 @@ namespace MarkLight
                     }
                 }
             }
+
+            if (_isLayoutChanged && _currentChange == null)
+            {
+                _isLayoutChanged = false;
+
+                // calculate new layout
+                _currentChange = new LayoutChangeContext(this);
+                while (_currentChange.Calculate(this))
+                {
+                }
+
+                _currentChange.RenderLayout();
+                _currentChange = null;
+            }
         }
 
         /// <summary>
@@ -1280,53 +1297,55 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Called when a field affecting the layout of the view has changed and that change is to be propagated to parents.
-        /// </summary>
-        public virtual void LayoutsChanged()
-        {
-            QueueChangeHandler("LayoutChanged");
-
-            // inform parents of update
-            NotifyLayoutChanged();
-        }
-
-        /// <summary>
-        /// Notifies the parents that the layout of this view has changed.
-        /// </summary>
-        public void NotifyLayoutChanged()
-        {
-            // inform parents of update
-            if (LayoutParent != null)
-            {
-                LayoutParent.QueueChangeHandler("ChildLayoutChanged");
-                if (LayoutParent.PropagateChildLayoutChanges)
-                {
-                    LayoutParent.NotifyLayoutChanged();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Called when a child layout has been changed.
-        /// </summary>
-        public virtual void ChildLayoutChanged()
-        {
-        }
-
-        /// <summary>
-        /// Called when a child view has been added or removed.
-        /// </summary>
-        public virtual void ChildrenChanged()
-        {
-            this.ForEachParent<View>(x => x.ChildrenChanged());
-        }
-
-        /// <summary>
         /// Called when a field affecting the layout of the view has changed.
         /// </summary>
         public virtual void LayoutChanged()
         {
-            //Utils.Log("LayoutChanged");
+            NotifyLayoutChanged();
+        }
+
+        /// <summary>
+        /// Notify the view that its layout has been changed. Should only be used when layout is
+        /// not changed as a result of calling CalculateLayoutChanges.
+        ///
+        /// </summary>
+        public void NotifyLayoutChanged()
+        {
+            _isLayoutChanged = true;
+        }
+
+        /// <summary>
+        /// Calculate layout in response to NotifyLayoutChanged method called or because of propagation from
+        /// another views NotifyLayoutChanged method being called.
+        /// </summary>
+        public virtual bool CalculateLayoutChanges(LayoutChangeContext context)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Called by LayoutChangeContext to notify that a child has recalculated its layout and as a result
+        /// the child layout will change.
+        /// </summary>
+        public virtual void NotifyChildLayoutCalculated(View child, LayoutChangeContext context)
+        {
+            context.Calculate(this);
+        }
+
+        /// <summary>
+        /// Called by LayoutChangeContext to notify that the parent has recalculated its layout and as a result
+        /// the child layout will change.
+        /// </summary>
+        public virtual void NotifyParentLayoutCalculated(View parent, LayoutChangeContext context)
+        {
+            context.Calculate(this);
+        }
+
+        /// <summary>
+        /// Called by LayoutChangeContext to render calculated layout.
+        /// </summary>
+        public virtual void RenderLayout()
+        {
         }
 
         /// <summary>
@@ -1625,7 +1644,7 @@ namespace MarkLight
                 SetValue(() => LayoutParent, target);
             }
 
-            target.ChildrenChanged();
+            NotifyLayoutChanged();
         }
 
         /// <summary>

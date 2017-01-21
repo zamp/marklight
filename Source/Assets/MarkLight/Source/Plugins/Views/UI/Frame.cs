@@ -52,68 +52,49 @@ namespace MarkLight.Views.UI
             PropagateChildLayoutChanges.DirectValue = true;
         }
 
-        /// <summary>
-        /// Called when a child layout has been updated.
-        /// </summary>
-        public override void ChildLayoutChanged()
-        {
-            base.ChildLayoutChanged();
-            QueueChangeHandler("LayoutChanged");
-        }
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
-        /// <summary>
-        /// Updates the layout of the view.
-        /// </summary>
-        public override void LayoutChanged()
-        {
             if (!PropagateChildLayoutChanges.IsSet)
             {
                 PropagateChildLayoutChanges.DirectValue = ResizeToContent;
             }
 
-            if (ResizeToContent)
+            if (!ResizeToContent)
+                return Layout.IsDirty;
+
+            var maxWidth = 0f;
+            var maxHeight = 0f;
+            var childCount = ChildCount;
+
+            // get size of content and set content offsets and alignment
+            for (var i = 0; i < childCount; ++i)
             {
-                float maxWidth = 0f;
-                float maxHeight = 0f;
-                int childCount = ChildCount;
+                var go = transform.GetChild(i);
+                var view = go.GetComponent<UIView>();
+                if (view == null)
+                    continue;
 
-                // get size of content and set content offsets and alignment
-                for (int i = 0; i < childCount; ++i)
-                {
-                    var go = transform.GetChild(i);
-                    var view = go.GetComponent<UIView>();
-                    if (view == null)
-                        continue;
-
-                    // get size of content
-                    if (view.Width.Value.Unit != ElementSizeUnit.Percents)
-                    {
-                        maxWidth = view.Width.Value.Pixels > maxWidth ? view.Width.Value.Pixels : maxWidth;
-                    }
-
-                    if (view.Height.Value.Unit != ElementSizeUnit.Percents)
-                    {
-                        maxHeight = view.Height.Value.Pixels > maxHeight ? view.Height.Value.Pixels : maxHeight;
-                    }
-                }
-
-                // add margins
-                maxWidth += Margin.Value.Left.Pixels + Margin.Value.Right.Pixels + ContentMargin.Value.Left.Pixels + ContentMargin.Value.Right.Pixels;
-                maxHeight += Margin.Value.Top.Pixels + Margin.Value.Bottom.Pixels + ContentMargin.Value.Bottom.Pixels + ContentMargin.Value.Top.Pixels;
-
-                // adjust size to content unless it has been set
-                if (!Width.IsSet)
-                {
-                    Width.DirectValue = new ElementSize(maxWidth);
-                }
-
-                if (!Height.IsSet)
-                {
-                    Height.DirectValue = new ElementSize(maxHeight);
-                }
+                // get size of content
+                maxWidth = Mathf.Max(maxWidth, view.Layout.PixelWidth, view.Layout.Width.Pixels);
+                maxHeight = Mathf.Max(maxHeight, view.Layout.PixelHeight, view.Layout.Height.Pixels);
             }
 
-            base.LayoutChanged();
+            // add margins
+            maxWidth += ContentMargin.Value.Left.Pixels + ContentMargin.Value.Right.Pixels;
+            maxHeight += ContentMargin.Value.Bottom.Pixels + ContentMargin.Value.Top.Pixels;
+
+            // adjust size to content unless it has been set
+            if (!Width.IsSet)
+            {
+                Layout.Width = new ElementSize(maxWidth);
+            }
+
+            if (!Height.IsSet)
+            {
+                Layout.Height = new ElementSize(maxHeight);
+            }
+
+            return Layout.IsDirty;
         }
 
         #endregion

@@ -267,29 +267,41 @@ namespace MarkLight.Views.UI
             SliderHandleImageView.Height.DirectValue = ElementSize.FromPercents(1);
         }
 
-        /// <summary>
-        /// Updates the layout of the view.
-        /// </summary>
-        public override void LayoutChanged()
-        {
-            Width.DirectValue = Width.IsSet ? Width.Value : (Orientation == ElementOrientation.Horizontal ? Length.Value : Breadth.Value);
-            Height.DirectValue = Height.IsSet ? Height.Value : (Orientation == ElementOrientation.Horizontal ? Breadth.Value : Length.Value);
-            SliderFillImageView.Alignment.Value = IsRightToLeft ? ElementAlignment.Right : ElementAlignment.Left;
-            SliderHandleImageView.Alignment.Value = IsRightToLeft ? ElementAlignment.Right : ElementAlignment.Left;
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
-            base.LayoutChanged();
+            if (!Width.IsSet)
+                Layout.Width = Orientation == ElementOrientation.Horizontal
+                    ? Length.Value
+                    : Breadth.Value;
 
-            // if vertical slider rotate slide region 90 degrees            
+            if (!Height.IsSet)
+                Layout.Height = Orientation == ElementOrientation.Horizontal
+                    ? Breadth.Value
+                    : Length.Value;
+
+            SliderFillImageView.Alignment.Value = IsRightToLeft
+                ? ElementAlignment.Right
+                : ElementAlignment.Left;
+
+            SliderHandleImageView.Alignment.Value = IsRightToLeft
+                ? ElementAlignment.Right
+                : ElementAlignment.Left;
+
+            //base.LayoutChanged();
+
+            // if vertical slider rotate slide region 90 degrees
             if (Orientation == ElementOrientation.Vertical)
             {
-                SliderRegion.Width.DirectValue = new ElementSize(RectTransform.rect.height, ElementSizeUnit.Pixels);
-                SliderRegion.Height.DirectValue = new ElementSize(RectTransform.rect.width, ElementSizeUnit.Pixels);
+                SliderRegion.Layout.Width = new ElementSize(RectTransform.rect.height, ElementSizeUnit.Pixels);
+                SliderRegion.Layout.Height = new ElementSize(RectTransform.rect.width, ElementSizeUnit.Pixels);
                 SliderRegion.Rotation.Value = Quaternion.Euler(new Vector3(0, 0, 90));
-                SliderRegion.LayoutChanged();
+                context.NotifyLayoutUpdated(SliderRegion);
             }
 
             // update slider position
             UpdateSliderPosition(Value);
+
+            return Layout.IsDirty;
         }
 
         /// <summary>
@@ -375,7 +387,7 @@ namespace MarkLight.Views.UI
 
             // calculate slide percentage (transform.position.x/y is center of fill area)
             float p = 0;
-            float slideAreaLength = fillTransform.rect.width - SliderHandleImageView.Width.Value.Pixels;
+            float slideAreaLength = fillTransform.rect.width - SliderHandleImageView.Layout.Width.Pixels;
             if (Orientation == ElementOrientation.Horizontal)
             {
                 p = ((pos.x - fillTransform.localPosition.x + slideAreaLength / 2f) / slideAreaLength).Clamp(0, 1);
@@ -420,24 +432,26 @@ namespace MarkLight.Views.UI
         /// </summary>
         private void UpdateSliderPosition(float value)
         {
-            float p = (value - Min) / (Max - Min);
+            var p = (value - Min) / (Max - Min);
             var fillTransform = SliderFillRegion.RectTransform;
 
             // set handle offset
-            float fillWidth = fillTransform.rect.width;
-            float slideAreaWidth = fillWidth - SliderHandleImageView.Width.Value.Pixels;
-            float sliderFillMargin = IsRightToLeft ? SliderFillRegion.Margin.Value.Right.Pixels : SliderFillRegion.Margin.Value.Left.Pixels;
-            float handleOffset = p * slideAreaWidth + sliderFillMargin;
+            var fillWidth = fillTransform.rect.width;
+            var slideAreaWidth = fillWidth - SliderHandleImageView.Layout.Width.Pixels;
+            var sliderFillMargin = IsRightToLeft
+                ? SliderFillRegion.Layout.Margin.Right.Pixels
+                : SliderFillRegion.Layout.Margin.Left.Pixels;
+            var handleOffset = p * slideAreaWidth + sliderFillMargin;
 
-            SliderHandleImageView.OffsetFromParent.DirectValue = IsRightToLeft ?
-                ElementMargin.FromRight(new ElementSize(handleOffset, ElementSizeUnit.Pixels)) :
-                ElementMargin.FromLeft(new ElementSize(handleOffset, ElementSizeUnit.Pixels));
-            SliderHandleImageView.LayoutChanged();
+            SliderHandleImageView.Layout.OffsetFromParent = IsRightToLeft
+                ? ElementMargin.FromRight(new ElementSize(handleOffset, ElementSizeUnit.Pixels))
+                : ElementMargin.FromLeft(new ElementSize(handleOffset, ElementSizeUnit.Pixels));
+            SliderHandleImageView.RenderLayout();
 
             // set fill percentage as to match the offset of the handle
-            float fillP = (handleOffset + SliderHandleImageView.Width.Value.Pixels / 2f) / fillWidth;
-            SliderFillImageView.Width.DirectValue = new ElementSize(fillP, ElementSizeUnit.Percents);
-            SliderFillImageView.LayoutChanged();
+            var fillP = (handleOffset + SliderHandleImageView.Layout.Width.Pixels / 2f) / fillWidth;
+            SliderFillImageView.Layout.Width = new ElementSize(fillP, ElementSizeUnit.Percents);
+            SliderFillImageView.RenderLayout();
         }
 
         #endregion

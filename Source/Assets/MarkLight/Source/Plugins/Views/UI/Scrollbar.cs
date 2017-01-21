@@ -135,30 +135,27 @@ namespace MarkLight.Views.UI
             Handle.RectTransform.Reset();
         }
 
-        /// <summary>
-        /// Called when the layout of the view has been changed.
-        /// </summary>
-        public override void LayoutChanged()
-        {
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
+
             // adjust scrollbar to orientation
             if (Orientation == ElementOrientation.Horizontal)
             {
-                Width.DirectValue = new ElementSize(1, ElementSizeUnit.Percents);
-                Height.DirectValue = new ElementSize(Breadth.Value.Pixels, ElementSizeUnit.Pixels);
-                Alignment.DirectValue = ElementAlignment.Bottom;
+                Layout.Width = new ElementSize(1, ElementSizeUnit.Percents);
+                Layout.Height = new ElementSize(Breadth.Value.Pixels, ElementSizeUnit.Pixels);
+                Layout.Alignment = ElementAlignment.Bottom;
 
                 ScrollbarComponent.direction = UnityEngine.UI.Scrollbar.Direction.LeftToRight;
             }
             else
             {
-                Width.DirectValue = new ElementSize(Breadth.Value.Pixels, ElementSizeUnit.Pixels);
-                Height.DirectValue = new ElementSize(1, ElementSizeUnit.Percents);
-                Alignment.DirectValue = ElementAlignment.Right;
+                Layout.Width = new ElementSize(Breadth.Value.Pixels, ElementSizeUnit.Pixels);
+                Layout.Height = new ElementSize(1, ElementSizeUnit.Percents);
+                Layout.Alignment = ElementAlignment.Right;
 
                 ScrollbarComponent.direction = UnityEngine.UI.Scrollbar.Direction.BottomToTop;
             }
 
-            base.LayoutChanged();
+            return Layout.IsDirty;
         }
 
         #endregion

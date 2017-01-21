@@ -45,6 +45,17 @@ namespace MarkLight
         /// <summary>
         /// Initializes a new instance of the class.
         /// </summary>
+        public ElementMargin(ElementMargin other)
+        {
+            _left = new ElementSize(other.Left);
+            _top = new ElementSize(other.Top);
+            _right = new ElementSize(other.Right);
+            _bottom = new ElementSize(other.Bottom);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the class.
+        /// </summary>
         public ElementMargin(ElementSize margin)
         {
             _left = margin;
@@ -129,7 +140,20 @@ namespace MarkLight
         /// <returns></returns>
         public override string ToString()
         {
-            return String.Format("{0},{1},{2},{3}", Left.ToString(), Top.ToString(), Right.ToString(), Bottom.ToString());
+            return string.Format("{0},{1},{2},{3}", Left, Top, Right, Bottom);
+        }
+
+        public override int GetHashCode() {
+            return (int)Left.Value ^ (int)Top.Value ^ (int)Right.Value ^ (int)Bottom.Value;
+        }
+
+        public override bool Equals(object obj) {
+            var other = obj as ElementMargin;
+            if (other == null)
+                return false;
+
+            return other._left.Equals(_left) && other._top.Equals(_top)
+                   && other._right.Equals(_right) && other._bottom.Equals(_bottom);
         }
 
         #endregion
