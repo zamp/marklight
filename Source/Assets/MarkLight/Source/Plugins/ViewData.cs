@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.IO;
 using MarkLight.Animation;
+using Marklight.Themes;
 using MarkLight.Views.UI;
 using MarkLight.Views;
 using MarkLight.ValueConverters;
@@ -31,11 +32,11 @@ namespace MarkLight
             ViewPresenter.UpdateInstance();
             var viewPresenter = ViewPresenter.Instance;
 
-            viewPresenter.Views.Clear();
-            viewPresenter.Views.AddRange(viewPresenter.ViewTypeDataList.Where(y => !y.HideInPresenter).Select(x => x.ViewTypeName).OrderBy(x => x));
+            viewPresenter.ViewTypeNames.Clear();
+            viewPresenter.ViewTypeNames.AddRange(viewPresenter.ViewTypeDataList.Where(y => !y.HideInPresenter).Select(x => x.ViewTypeName).OrderBy(x => x));
 
-            viewPresenter.Themes.Clear();
-            viewPresenter.Themes.AddRange(viewPresenter.ThemeData.Select(x => x.ThemeName).OrderBy(x => x));
+            viewPresenter.ThemeNames.Clear();
+            viewPresenter.ThemeNames.AddRange(viewPresenter.Themes.Select(x => x.Name).OrderBy(x => x));
 
             // validate views and check for cyclical dependencies
             foreach (var viewType in viewPresenter.ViewTypeDataList)
@@ -145,7 +146,15 @@ namespace MarkLight
             if (String.Equals(xumlElement.Name.LocalName, "Theme", StringComparison.OrdinalIgnoreCase))
             {
                 // theme
-                LoadThemeXuml(xumlElement, xuml, xumlAssetName);
+                var themeLoader = new XumlThemeLoader();
+                var theme = themeLoader.LoadXuml(xumlElement, xuml, xumlAssetName);
+                if (theme == null)
+                    return;
+
+                var viewPresenter = ViewPresenter.Instance;
+                viewPresenter.Themes.RemoveAll(
+                    x => string.Equals(x.Name, theme.Name, StringComparison.OrdinalIgnoreCase));
+                viewPresenter.Themes.Add(theme);
             }
             else if (String.Equals(xumlElement.Name.LocalName, "ResourceDictionary", StringComparison.OrdinalIgnoreCase))
             {
@@ -399,91 +408,6 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Loads XUML to theme database.
-        /// </summary>
-        private static void LoadThemeXuml(XElement xumlElement, string xuml, string xumlAssetName)
-        {
-            var viewPresenter = ViewPresenter.Instance;
-
-            var themeNameAttr = xumlElement.Attribute("Name");
-            if (themeNameAttr == null)
-            {
-                Debug.LogError(String.Format("[MarkLight] {0}: Error parsing theme XUML. Name attribute missing.", xumlAssetName));
-            }
-
-            viewPresenter.ThemeData.RemoveAll(x => String.Equals(x.ThemeName, themeNameAttr.Value, StringComparison.OrdinalIgnoreCase));
-
-            var themeData = new ThemeData();
-            viewPresenter.ThemeData.Add(themeData);
-
-            themeData.Xuml = xuml;
-            themeData.XumlElement = xumlElement;
-            themeData.ThemeName = themeNameAttr.Value;
-
-            var baseDirectoryAttr = xumlElement.Attribute("BaseDirectory");
-            themeData.BaseDirectorySet = baseDirectoryAttr != null;
-            if (themeData.BaseDirectorySet)
-            {
-                themeData.BaseDirectory = baseDirectoryAttr.Value;
-            }
-
-            var unitSizeAttr = xumlElement.Attribute("UnitSize");
-            themeData.UnitSizeSet = unitSizeAttr != null;
-            if (themeData.UnitSizeSet)
-            {
-                if (String.IsNullOrEmpty(unitSizeAttr.Value))
-                {
-                    // use default unit size
-                    themeData.UnitSize = ViewPresenter.Instance.UnitSize;
-                }
-                else
-                {
-                    var converter = new Vector3ValueConverter();
-                    var result = converter.Convert(unitSizeAttr.Value);
-                    if (result.Success)
-                    {
-                        themeData.UnitSize = (Vector3)result.ConvertedValue;
-                    }
-                    else
-                    {
-                        Debug.LogError(String.Format("[MarkLight] {0}: Error parsing theme XUML. Unable to parse UnitSize attribute value \"{1}\".", xumlAssetName, unitSizeAttr.Value));
-                        themeData.UnitSize = ViewPresenter.Instance.UnitSize;
-                    }
-                }
-            }
-
-            // load theme elements
-            foreach (var childElement in xumlElement.Elements())
-            {
-                var themeElement = new ThemeElementData();
-                themeElement.ViewName = childElement.Name.LocalName;
-
-                var idAttr = childElement.Attribute("Id");
-                if (idAttr != null)
-                {
-                    themeElement.Id = idAttr.Value;
-                }
-
-                var styleAttr = childElement.Attribute("Style");
-                if (styleAttr != null)
-                {
-                    themeElement.Style = styleAttr.Value;
-                }
-
-                var basedOnAttr = childElement.Attribute("BasedOn");
-                if (basedOnAttr != null)
-                {
-                    themeElement.BasedOn = basedOnAttr.Value;
-                }
-
-                themeElement.XumlElement = childElement;
-                themeElement.Xuml = childElement.ToString();
-
-                themeData.ThemeElementData.Add(themeElement);
-            }
-        }
-
-        /// <summary>
         /// Loads XUML to resource dictionary database.
         /// </summary>
         private static void LoadResourceDictionaryXuml(XElement xumlElement, string xuml, string xumlAssetName)
@@ -582,16 +506,16 @@ namespace MarkLight
         /// <summary>
         /// Creates view of specified type.
         /// </summary>
-        public static T CreateView<T>(View layoutParent, View parent, ValueConverterContext context = null, string themeName = "", string id = "", string style = "", IEnumerable<XElement> contentXuml = null) where T : View
+        public static T CreateView<T>(View layoutParent, View parent, ValueConverterContext context = null, string themeName = "", string id = "", string className = "", IEnumerable<XElement> contentXuml = null) where T : View
         {
             Type viewType = typeof(T);
-            return CreateView(viewType.Name, layoutParent, parent, context, themeName, id, style, contentXuml) as T;
+            return CreateView(viewType.Name, layoutParent, parent, context, themeName, id, className, contentXuml) as T;
         }
 
         /// <summary>
         /// Creates view of specified type.
         /// </summary>
-        public static View CreateView(string viewName, View layoutParent, View parent, ValueConverterContext context = null, string theme = "", string id = "", string style = "", IEnumerable<XElement> contentXuml = null)
+        public static View CreateView(string viewName, View layoutParent, View parent, ValueConverterContext context = null, string themeName = "", string id = "", string className = "", IEnumerable<XElement> contentXuml = null)
         {
             // Creates the views in the following order:
             // CreateView(view)
@@ -605,9 +529,9 @@ namespace MarkLight
             //   SetThemeValues(view)
 
             // use default theme if no theme is specified
-            if (String.IsNullOrEmpty(theme))
+            if (String.IsNullOrEmpty(themeName))
             {
-                theme = ViewPresenter.Instance.DefaultTheme;
+                themeName = ViewPresenter.Instance.DefaultTheme;
             }
 
             // initialize value converter context
@@ -643,8 +567,8 @@ namespace MarkLight
             view.LayoutParent = layoutParent;
             view.Parent = parent;
             view.Id = id;
-            view.Style = style;
-            view.Theme = theme;
+            view.Style = className;
+            view.Theme = themeName;
             view.Content = view;
             view.ViewXumlName = viewTypeData.ViewTypeName;
             view.ValueConverterContext = context;
@@ -699,7 +623,7 @@ namespace MarkLight
                 var childContext = GetValueConverterContext(context, childElement, view.GameObjectName);
 
                 var childView = CreateView(childElement.Name.LocalName, view, view, childContext,
-                    childThemeAttr != null ? childThemeAttr.Value : theme,
+                    childThemeAttr != null ? childThemeAttr.Value : themeName,
                     childViewIdAttr != null ? childViewIdAttr.Value : String.Empty,
                     GetChildViewStyle(view.Style, childViewStyleAttr),
                     childElement.Elements());
@@ -730,7 +654,7 @@ namespace MarkLight
                     var contentContext = GetValueConverterContext(context, contentElement, view.GameObjectName);
 
                     var contentView = CreateView(contentElement.Name.LocalName, contentLayoutParent, parent, contentContext,
-                        contentThemeAttr != null ? contentThemeAttr.Value : theme,
+                        contentThemeAttr != null ? contentThemeAttr.Value : themeName,
                         contentElementIdAttr != null ? contentElementIdAttr.Value : String.Empty,
                         GetChildViewStyle(view.Style, contentElementStyleAttr),
                         contentElement.Elements());
@@ -766,33 +690,17 @@ namespace MarkLight
             SetViewValues(view, viewTypeData.XumlElement, view, context);
 
             // set theme values
-            var themeData = GetThemeData(theme);
-            if (themeData != null)
+            var theme = GetTheme(themeName);
+            if (theme != null)
             {
-                // if the view-model replaces another then get the theme data from that view as well
-                var themeElements = new List<ThemeElementData>();
-                if (!String.IsNullOrEmpty(viewTypeData.ReplacesViewModel))
+                if (!string.IsNullOrEmpty(viewTypeData.ReplacesViewModel))
                 {
-                    themeElements.AddRange(themeData.GetThemeElementData(viewTypeData.ReplacesViewModel, view.Id, view.Style));
+                    var replaceStyle = theme.GetStyle(viewTypeData.ReplacesViewModel, id, className);
+                    if (replaceStyle != null)
+                        replaceStyle.ApplyTo(view, context);
                 }
-                themeElements.AddRange(themeData.GetThemeElementData(view.ViewTypeName, view.Id, view.Style));
-
-                foreach (var themeElement in themeElements)
-                {
-                    var themeValueContext = new ValueConverterContext(context);
-                    if (themeData.BaseDirectorySet)
-                    {
-                        themeValueContext.BaseDirectory = themeData.BaseDirectory;
-                    }
-                    if (themeData.UnitSizeSet)
-                    {
-                        themeValueContext.UnitSize = themeData.UnitSize;
-                    }
-
-                    SetViewValues(view, themeElement.XumlElement, view, themeValueContext);
-                }
+                theme.ApplyTo(view, context);
             }
-
             return view;
         }
 
@@ -920,9 +828,9 @@ namespace MarkLight
         /// <summary>
         /// Gets theme data.
         /// </summary>
-        public static ThemeData GetThemeData(string themeName)
+        public static Theme GetTheme(string themeName)
         {
-            return ViewPresenter.Instance.GetThemeData(themeName);
+            return ViewPresenter.Instance.GetTheme(themeName);
         }
 
         /// <summary>

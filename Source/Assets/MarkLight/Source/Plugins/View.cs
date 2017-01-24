@@ -397,8 +397,9 @@ namespace MarkLight
         /// <param name="updateDefaultState">Boolean indicating if the default state should be updated (if the view is in the default state).</param>
         /// <param name="callstack">Callstack used to prevent cyclical SetValue calls.</param>
         /// <param name="context">Value converter context.</param>
+        /// <param name="suppressErrors">True to suppress errors. Default is false.</param>
         /// <returns>Returns the converted value set.</returns>
-        public object SetValue(string viewField, object value, bool updateDefaultState, HashSet<ViewFieldData> callstack, ValueConverterContext context, bool notifyObservers)
+        public object SetValue(string viewField, object value, bool updateDefaultState, HashSet<ViewFieldData> callstack, ValueConverterContext context, bool notifyObservers, bool suppressErrors = false)
         {
             callstack = callstack ?? new HashSet<ViewFieldData>();
             context = context ?? ValueConverterContext;
@@ -409,7 +410,12 @@ namespace MarkLight
             var viewFieldData = GetViewFieldData(viewField);
             if (viewFieldData == null)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View field not found.", GameObjectName, value, viewField));
+                if (!suppressErrors)
+                {
+                    Debug.LogError(String.Format(
+                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View field not found.",
+                        GameObjectName, value, viewField));
+                }
                 return null;
             }
 
@@ -435,7 +441,12 @@ namespace MarkLight
             }
             catch (Exception e)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". Exception thrown: {3}", GameObjectName, value, viewField, Utils.GetError(e)));
+                if (!suppressErrors)
+                {
+                    Debug.LogError(String.Format(
+                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". Exception thrown: {3}",
+                        GameObjectName, value, viewField, Utils.GetError(e)));
+                }
                 return null;
             }
         }

@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using System.Reflection;
 using System.Text;
 using System.IO;
+using Marklight.Themes;
 using MarkLight.Views.UI;
 using MarkLight.Animation;
 using MarkLight.ValueConverters;
@@ -27,14 +28,14 @@ namespace MarkLight
         #region Fields
 
         public List<ViewTypeData> ViewTypeDataList;
-        public List<ThemeData> ThemeData;
+        public List<Theme> Themes;
         public List<ResourceDictionary> ResourceDictionaries;
         public string MainView;
         public string DefaultTheme;
         public string DefaultLanguage;
         public string DefaultPlatform;
-        public List<string> Views;
-        public List<string> Themes;
+        public List<string> ViewTypeNames;
+        public List<string> ThemeNames;
         public GameObject RootView;
         public bool DisableAutomaticReload;
         public bool UpdateXsdSchema;
@@ -46,7 +47,7 @@ namespace MarkLight
         private Dictionary<string, ValueConverter> _cachedValueConverters;
         private Dictionary<string, Type> _viewTypes;
         private Dictionary<string, ViewTypeData> _viewTypeDataDictionary;
-        private Dictionary<string, ThemeData> _themeDataDictionary;
+        private Dictionary<string, Theme> _themeDictionary;
         private Dictionary<string, ResourceDictionary> _resourceDictionaries;
         private Dictionary<string, ValueConverter> _valueConvertersForType;
         private Dictionary<string, ValueConverter> _valueConverters;
@@ -63,10 +64,10 @@ namespace MarkLight
         {
             AssetDictionary = new AssetDictionary();
             ViewTypeDataList = new List<ViewTypeData>();
-            ThemeData = new List<ThemeData>();
+            Themes = new List<Theme>();
             ResourceDictionaries = new List<ResourceDictionary>();
-            Views = new List<string>();
-            Themes = new List<string>();
+            ViewTypeNames = new List<string>();
+            ThemeNames = new List<string>();
             UnitSize = new Vector3(40, 40, 40);
         }
 
@@ -181,13 +182,13 @@ namespace MarkLight
         /// </summary>
         public void Clear()
         {
-            ThemeData.Clear();
+            Themes.Clear();
             ViewTypeDataList.Clear();
             ResourceDictionaries.Clear();
             AssetDictionary.Clear();
 
             _viewTypeDataDictionary = null;
-            _themeDataDictionary = null;
+            _themeDictionary = null;
             _resourceDictionaries = null;
             _viewTypes = null;
 
@@ -259,18 +260,18 @@ namespace MarkLight
         /// <summary>
         /// Gets theme data.
         /// </summary>
-        public ThemeData GetThemeData(string themeName)
+        public Theme GetTheme(string themeName)
         {
-            if (_themeDataDictionary == null)
+            if (_themeDictionary == null)
             {
-                _themeDataDictionary = new Dictionary<string, ThemeData>();
-                foreach (var themeData in ThemeData)
+                _themeDictionary = new Dictionary<string, Theme>();
+                foreach (var theme in Themes)
                 {
-                    _themeDataDictionary.Add(themeData.ThemeName, themeData);
+                    _themeDictionary.Add(theme.Name, theme);
                 }
             }
 
-            return _themeDataDictionary.Get(themeName);
+            return _themeDictionary.Get(themeName);
         }
 
         /// <summary>

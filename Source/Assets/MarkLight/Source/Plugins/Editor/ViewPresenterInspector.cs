@@ -30,15 +30,15 @@ namespace MarkLight.Editor
             var viewPresenter = (ViewPresenter)target;
 
             // main view selection
-            int selectedViewIndex = viewPresenter.Views.IndexOf(viewPresenter.MainView) + 1;
+            int selectedViewIndex = viewPresenter.ViewTypeNames.IndexOf(viewPresenter.MainView) + 1;
 
             // .. add empty selection
-            var mainViewOptions = new List<string>(viewPresenter.Views);
+            var mainViewOptions = new List<string>(viewPresenter.ViewTypeNames);
             mainViewOptions.Insert(0, "-- none --");
 
             // .. add drop-down logic
             int newSelectedViewIndex = EditorGUILayout.Popup("Main View", selectedViewIndex, mainViewOptions.ToArray());
-            viewPresenter.MainView = newSelectedViewIndex > 0 ? viewPresenter.Views[newSelectedViewIndex - 1] : String.Empty;
+            viewPresenter.MainView = newSelectedViewIndex > 0 ? viewPresenter.ViewTypeNames[newSelectedViewIndex - 1] : String.Empty;
             if (newSelectedViewIndex != selectedViewIndex)
             {
                 // .. trigger reload on view presenter
@@ -49,15 +49,15 @@ namespace MarkLight.Editor
             }
 
             // default theme selection
-            int selectedThemeIndex = viewPresenter.Themes.IndexOf(viewPresenter.DefaultTheme) + 1;
+            int selectedThemeIndex = viewPresenter.ThemeNames.IndexOf(viewPresenter.DefaultTheme) + 1;
 
             // .. add empty selection
-            var themeOptions = new List<string>(viewPresenter.Themes);
+            var themeOptions = new List<string>(viewPresenter.ThemeNames);
             themeOptions.Insert(0, "-- none --");
 
             // .. add drop-down logic            
             int newSelectedThemeIndex = EditorGUILayout.Popup("Default Theme", selectedThemeIndex, themeOptions.ToArray());
-            viewPresenter.DefaultTheme = newSelectedThemeIndex > 0 ? viewPresenter.Themes[newSelectedThemeIndex - 1] : String.Empty;
+            viewPresenter.DefaultTheme = newSelectedThemeIndex > 0 ? viewPresenter.ThemeNames[newSelectedThemeIndex - 1] : String.Empty;
             if (newSelectedThemeIndex != selectedThemeIndex)
             {
                 // .. trigger reload on view presenter
