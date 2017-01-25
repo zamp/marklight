@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using MarkLight;
 
 namespace Marklight.Themes
@@ -40,6 +41,79 @@ namespace Marklight.Themes
             _id = id ?? "";
             _className = className ?? "";
             _parent = parent;
+
+            if (_elementName != "")
+                _selectorType |= StyleSelectorType.Element;
+
+            if (_id != "")
+                _selectorType |= StyleSelectorType.Id;
+
+            if (_className != "")
+                _selectorType |= StyleSelectorType.Class;
+
+            _hash = (_elementName != null ? _elementName.GetHashCode() : 128)
+                    ^ (_id != null ? _id.GetHashCode() : 256);
+        }
+
+        /// <summary>
+        /// Constructor that parses a selector string.
+        /// </summary>
+        public StyleSelector(string selector) {
+
+            var mode = StyleSelectorType.Element;
+            var buffer = new StringBuilder(selector.Length);
+            var className = "";
+            var id = "";
+            var elementName = "";
+
+            for (var i = 0; i < selector.Length; i++)
+            {
+                var ch = selector[i];
+                if (" \r\n\t".IndexOf(ch) != -1)
+                {
+                    throw new Exception("White space not accepted in style selector. " + selector);
+                }
+
+                if (ch == '.' || ch == '#' || i == selector.Length - 1)
+                {
+
+                    if (i == selector.Length - 1)
+                        buffer.Append(ch);
+
+                    switch (mode)
+                    {
+                        case StyleSelectorType.Class:
+                            className += (className.Length > 0 ? " " : "") + buffer;
+                            break;
+                        case StyleSelectorType.Id:
+                            id += buffer.ToString();
+                            break;
+                        case StyleSelectorType.Element:
+                            elementName = buffer.ToString();
+                            break;
+                    }
+
+                    buffer.Length = 0;
+
+                    switch (ch)
+                    {
+                        case '.':
+                            mode = StyleSelectorType.Class;
+                            break;
+                        case '#':
+                            mode = StyleSelectorType.Id;
+                            break;
+                    }
+                    continue;
+                }
+
+                buffer.Append(ch);
+            }
+
+            _elementName = elementName;
+            _id = id;
+            _className = className;
+            _parent = null;
 
             if (_elementName != "")
                 _selectorType |= StyleSelectorType.Element;

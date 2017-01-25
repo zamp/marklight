@@ -12,6 +12,8 @@ using UnityEditor;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Text.RegularExpressions;
+using Marklight.Themes;
+using UnityEditor.VersionControl;
 #if !UNITY_4_6 && !UNITY_5_0 && !UNITY_5_1 && !UNITY_5_2 && !UNITY_5_3_1 && !UNITY_5_3_2 && !UNITY_5_3_3
 using UnityEditor.SceneManagement;
 #endif
@@ -43,7 +45,8 @@ namespace MarkLight.Editor
             foreach (var path in importedAssets.Concat(deletedAssets).Concat(movedAssets).Concat(movedFromAssetPaths))
             {
                 if (configuration.ViewPaths.Any(x => path.IndexOf(x, StringComparison.OrdinalIgnoreCase) >= 0) &&
-                    path.IndexOf(".xml", StringComparison.OrdinalIgnoreCase) >= 0)
+                    (path.IndexOf(".xml", StringComparison.OrdinalIgnoreCase) >= 0
+                    || path.IndexOf(".css", StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     viewAssetsUpdated = true;
                     break;
@@ -74,6 +77,7 @@ namespace MarkLight.Editor
 
             // get all XUML assets
             HashSet<TextAsset> viewAssets = new HashSet<TextAsset>();
+            HashSet<CssAsset> cssAssets = new HashSet<CssAsset>();
             foreach (var path in Configuration.Instance.ViewPaths)
             {
                 string localPath = path.StartsWith("Assets/") ? path.Substring(7) : path;
@@ -81,13 +85,17 @@ namespace MarkLight.Editor
                 {
                     viewAssets.Add(asset);
                 }
+                foreach (var asset in GetCssAtPath(localPath))
+                {
+                    cssAssets.Add(asset);
+                }
             }
 
             // uncomment to log load performance
             //var sw = System.Diagnostics.Stopwatch.StartNew();
 
             // load XUML assets
-            ViewData.LoadAllXuml(viewAssets);
+            ViewData.LoadAllAssets(viewAssets, cssAssets);
 
             // update xsd schema
             if (ViewPresenter.Instance.UpdateXsdSchema)
@@ -128,6 +136,33 @@ namespace MarkLight.Editor
             }
 
             return assets;
+        }
+
+        /// <summary>
+        /// Gets all CSS assets at a path.
+        /// </summary>
+        private static List<CssAsset> GetCssAtPath(string path)
+        {
+            var results = new List<CssAsset>();
+            var searchPath = Application.dataPath + "/" + path;
+
+            if (!Directory.Exists(searchPath))
+                return results;
+
+            var fileEntries = Directory.GetFiles(searchPath, "*.css", SearchOption.AllDirectories);
+            foreach (var filePath in fileEntries)
+            {
+                var fileName = filePath.Substring(searchPath.Length);
+
+                using (var reader = new StreamReader(filePath))
+                {
+                    var css = reader.ReadToEnd();
+                    var asset = new CssAsset(fileName, css);
+                    results.Add(asset);
+                }
+            }
+
+            return results;
         }
 
         /// <summary>

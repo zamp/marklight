@@ -103,12 +103,18 @@ namespace MarkLight
         /// <summary>
         /// Loads all XUML assets.
         /// </summary>
-        public static void LoadAllXuml(IEnumerable<TextAsset> xumlAssets)
+        public static void LoadAllAssets(IEnumerable<TextAsset> xumlAssets, IEnumerable<CssAsset> cssAssets)
         {
             var viewPresenter = ViewPresenter.Instance;
 
             // clear existing views from view presenter
             viewPresenter.Clear();
+
+            // load css themes
+            foreach (var cssAsset in cssAssets)
+            {
+                LoadCss(cssAsset.Css, cssAsset.Name);
+            }
 
             // load xuml
             foreach (var xumlAsset in xumlAssets)
@@ -118,6 +124,21 @@ namespace MarkLight
 
             // generate views
             GenerateViews();
+        }
+
+        /// <summary>
+        /// Loads CSS string to themes.
+        /// </summary>
+        public static void LoadCss(string css, string cssAssetName = "") {
+            var themeLoader = new CssThemeLoader();
+            var theme = themeLoader.LoadCss(css, cssAssetName);
+            if (theme == null)
+                return;
+
+            var viewPresenter = ViewPresenter.Instance;
+            viewPresenter.Themes.RemoveAll(
+                x => string.Equals(x.Name, theme.Name, StringComparison.OrdinalIgnoreCase));
+            viewPresenter.Themes.Add(theme);
         }
 
         /// <summary>
