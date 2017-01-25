@@ -87,10 +87,12 @@ namespace MarkLight
             // create main view
             if (!String.IsNullOrEmpty(viewPresenter.MainView))
             {
-                var mainView = CreateView(viewPresenter.MainView, viewPresenter, viewPresenter);
+                var presenterNode = new ViewRecursionNode(viewPresenter, null);
+                var mainView = CreateView(viewPresenter.MainView, presenterNode, presenterNode);
                 if (mainView != null)
                 {
-                    viewPresenter.RootView = mainView.gameObject;
+                    viewPresenter.RootView = mainView.View.gameObject;
+                    ApplyParentChildStyles(mainView, new ValueConverterContext());
                 }
             }
 
@@ -517,6 +519,18 @@ namespace MarkLight
         /// </summary>
         public static View CreateView(string viewName, View layoutParent, View parent, ValueConverterContext context = null, string themeName = "", string id = "", string className = "", IEnumerable<XElement> contentXuml = null)
         {
+            var layoutParentNode = new ViewRecursionNode(layoutParent, null);
+            var parentNode = layoutParent == parent ? layoutParentNode : new ViewRecursionNode(parent, null);
+
+            var node = CreateView(viewName, layoutParentNode, parentNode, context, themeName, id, className, contentXuml);
+            return node == null ? null : node.View;
+        }
+
+        /// <summary>
+        /// Creates view of specified type.
+        /// </summary>
+        private static ViewRecursionNode CreateView(string viewName, ViewRecursionNode layoutParent, ViewRecursionNode parent, ValueConverterContext context = null, string themeName = "", string id = "", string className = "", IEnumerable<XElement> contentXuml = null)
+        {
             // Creates the views in the following order:
             // CreateView(view)
             //   Foreach child
@@ -526,7 +540,6 @@ namespace MarkLight
             //      CreateView(contentView)
             //      SetViewValues(contentView)
             //   SetViewValues(view)
-            //   SetThemeValues(view)
 
             // use default theme if no theme is specified
             if (String.IsNullOrEmpty(themeName))
@@ -560,12 +573,12 @@ namespace MarkLight
             {
                 go.AddComponent<RectTransform>();
             }
-            go.transform.SetParent(layoutParent.transform, false);
+            go.transform.SetParent(layoutParent.View.transform, false);
 
             // create view behavior and initialize it
             var view = go.AddComponent(viewType) as View;
-            view.LayoutParent = layoutParent;
-            view.Parent = parent;
+            view.LayoutParent = layoutParent.View;
+            view.Parent = parent.View;
             view.Id = id;
             view.Style = className;
             view.Theme = themeName;
@@ -614,6 +627,8 @@ namespace MarkLight
                 dependencyFieldInstance.IsMapped = !String.Equals(viewTypeData.GetMappedViewField(dependencyField), dependencyField);
             }
 
+            var result = new ViewRecursionNode(view, parent);
+
             // parse child XUML and for each child create views and set their values
             foreach (var childElement in viewTypeData.XumlElement.Elements())
             {
@@ -622,21 +637,25 @@ namespace MarkLight
                 var childThemeAttr = childElement.Attribute("Theme");
                 var childContext = GetValueConverterContext(context, childElement, view.GameObjectName);
 
-                var childView = CreateView(childElement.Name.LocalName, view, view, childContext,
+                var childView = CreateView(childElement.Name.LocalName, result, result, childContext,
                     childThemeAttr != null ? childThemeAttr.Value : themeName,
                     childViewIdAttr != null ? childViewIdAttr.Value : String.Empty,
                     GetChildViewStyle(view.Style, childViewStyleAttr),
                     childElement.Elements());
-                SetViewValues(childView, childElement, view, childContext);
+
+                result.Children.Add(childView);
+
+                SetViewValues(childView.View, childElement, view, childContext);
             }
 
             // search for a content placeholder
             ContentPlaceholder contentContainer = view.Find<ContentPlaceholder>(true, view);
-            var contentLayoutParent = view;
+            var contentLayoutParent = result;
             if (contentContainer != null)
             {
-                contentLayoutParent = contentContainer.LayoutParent;
-                view.Content = contentLayoutParent;
+
+                contentLayoutParent = result.Find(contentContainer.LayoutParent);
+                view.Content = contentLayoutParent.View;
 
                 // remove placeholder
                 GameObject.DestroyImmediate(contentContainer.gameObject);
@@ -658,7 +677,8 @@ namespace MarkLight
                         contentElementIdAttr != null ? contentElementIdAttr.Value : String.Empty,
                         GetChildViewStyle(view.Style, contentElementStyleAttr),
                         contentElement.Elements());
-                    SetViewValues(contentView, contentElement, parent, contentContext);
+
+                    SetViewValues(contentView.View, contentElement, parent.View, contentContext);
                 }
             }
 
@@ -695,14 +715,54 @@ namespace MarkLight
             {
                 if (!string.IsNullOrEmpty(viewTypeData.ReplacesViewModel))
                 {
-                    var replaceStyle = theme.GetStyle(viewTypeData.ReplacesViewModel, id, className);
+                    var replaceStyle = theme.GetStyle(viewTypeData.ReplacesViewModel, id, className, StyleFilterMode.RootOnly, layoutParent.View);
                     if (replaceStyle != null)
                         replaceStyle.ApplyTo(view, context);
                 }
-                theme.ApplyTo(view, context);
+                theme.ApplyTo(view, StyleFilterMode.RootOnly, context);
             }
-            return view;
+            return result;
         }
+
+        /// <summary>
+        /// Applies parent/child type styles recursively to the views in a ViewRecursionNode.
+        /// </summary>
+        private static void ApplyParentChildStyles(ViewRecursionNode viewNode, ValueConverterContext context) {
+
+            // Parent/child type styles need to be applied starting from the root of the layout
+            // instead of from the branches. This is done by applying those styles after the
+            // layout is complete.
+
+            var view = viewNode.View;
+            var themeName = view.Theme;
+            if (!string.IsNullOrEmpty(themeName))
+            {
+                // set theme values
+                var theme = GetTheme(themeName);
+                if (theme != null)
+                {
+                    var viewTypeData = GetViewTypeData(view.ViewTypeName);
+                    if (viewTypeData != null)
+                    {
+                        if (!string.IsNullOrEmpty(viewTypeData.ReplacesViewModel))
+                        {
+                            var replaceStyle =
+                                theme.GetStyle(viewTypeData.ReplacesViewModel, view.Id, view.Style, StyleFilterMode.ChildOnly, view.LayoutParent);
+
+                            if (replaceStyle != null)
+                                replaceStyle.ApplyTo(view, context);
+                        }
+                        theme.ApplyTo(view, StyleFilterMode.ChildOnly, context);
+                    }
+                }
+            }
+
+            foreach (var child in viewNode.Children)
+            {
+                ApplyParentChildStyles(child, context);
+            };
+        }
+
 
         /// <summary>
         /// Creates value converter context from element settings.

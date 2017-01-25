@@ -1,75 +1,81 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using MarkLight;
 using UnityEngine;
 
 namespace Marklight.Themes
 {
-    [Serializable]
-    public class Style : IEnumerable<StyleProperty>
+    /// <summary>
+    /// Transient unserialized style for in memory style tree.
+    /// </summary>
+    public class Style : StyleSelector
     {
         #region Private Fields
 
-        [SerializeField]
-        private string _elementName;
+        private static readonly Style[] EmptyStyleArray = new Style[0];
 
-        [SerializeField]
-        private string _id;
+        private readonly int _index;
+        private readonly Theme _theme;
+        private readonly string _basedOn;
+        private readonly List<StyleProperty> _properties;
 
-        [SerializeField]
-        private string _className;
-
-        [SerializeField]
-        private string _basedOn;
-
-        [SerializeField]
-        private StyleSelectorType _selectorType;
-
-        [SerializeField]
-        private List<StyleProperty> _properties = new List<StyleProperty>(10);
-
-        [SerializeField]
-        private List<string> _childSelectors;
-
-        [NonSerialized]
-        private string _selector;
-
-        [NonSerialized]
-        private string[] _selectors;
-
-        [NonSerialized]
-        private StyleClass _class;
+        private IEnumerable<Style> _children;
 
         #endregion
 
         #region Constructors
 
-        public Style()
-        {
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="theme">The theme the style belongs to.</param>
+        /// <param name="selector">A selector to copy from.</param>
+        public Style(Theme theme, StyleSelector selector)
+            : this(theme, selector.ElementName, selector.Id, selector.ClassName, null) {
         }
 
-        public Style(string elementName, string id, string className, string basedOn = null)
-        {
-            _elementName = elementName ?? "";
-            _id = id ?? "";
-            _className = className ?? "";
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="theme">The theme the style belongs to.</param>
+        /// <param name="data">The style data to copy from.</param>
+        public Style(Theme theme, StyleData data)
+            : this(theme, data.ElementName, data.Id, data.ClassName, data.BasedOn, data.Properties,
+                GetParent(theme, data)) {
+
+            _index = data.Index;
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="theme">The theme the style belongs to.</param>
+        /// <param name="elementName">The element name component of the style selector.</param>
+        /// <param name="id">The ID component of the style selector.</param>
+        /// <param name="className">The class name component of the style selector.</param>
+        /// <param name="basedOn">The style to inherit from.</param>
+        /// <param name="properties">Properties to copy or null.</param>
+        /// <param name="parent">The parent style or null.</param>
+        public Style(Theme theme, string elementName, string id, string className, string basedOn,
+                     IEnumerable<StyleProperty> properties = null, StyleSelector parent = null)
+                     : base(elementName, id, className, parent) {
+
+            _children = null;
+            _theme = theme;
             _basedOn = basedOn ?? "";
-
-            if (_elementName != "")
-                _selectorType |= StyleSelectorType.Element;
-
-            if (_id != "")
-                _selectorType |= StyleSelectorType.Id;
-
-            if (className != "")
-                _selectorType |= StyleSelectorType.Class;
+            _properties = properties != null
+                ? new List<StyleProperty>(properties)
+                : new List<StyleProperty>(10);
+            _index = -1;
         }
 
         #endregion
 
         #region Methods
 
+        /// <summary>
+        /// Apply the style to a view.
+        /// </summary>
         public void ApplyTo(View view, ValueConverterContext context)
         {
             foreach (var property in _properties)
@@ -78,84 +84,15 @@ namespace Marklight.Themes
             }
         }
 
-        public bool IsApplicable(View view)
-        {
-            return IsApplicable(view.ViewXumlName, view.Id, view.Style);
-        }
-
-        public bool IsApplicable(string elementName, string id, string className)
-        {
-            if (!string.IsNullOrEmpty(_elementName) && elementName != _elementName)
-                return false;
-
-            if (!string.IsNullOrEmpty(_id) && id != _id)
-                return false;
-
-            if (!StyleClass.IsSet)
-                return true;
-
-            if (string.IsNullOrEmpty(className))
-                return false;
-
-            var viewStyle = new StyleClass(className);
-
-            foreach (var ownClassName in StyleClass.ClassNames)
-            {
-                var hasOwnClass = false;
-                foreach (var name in viewStyle.ClassNames)
-                {
-                    if (name != ownClassName)
-                        continue;
-
-                    hasOwnClass = true;
-                    break;
-                }
-
-                if (!hasOwnClass)
-                    return false;
-            }
-
-            return true;
-        }
-
-        public IEnumerator<StyleProperty> GetEnumerator()
-        {
-            return _properties.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
         public override int GetHashCode()
         {
-            var result = 128;
-            if (!string.IsNullOrEmpty(_elementName))
-                result ^= _elementName.GetHashCode();
-            if (!string.IsNullOrEmpty(_id))
-                result ^= _id.GetHashCode();
-            if (StyleClass.IsSet)
-                result ^= StyleClass.GetHashCode();
-            return result;
+            return _index == -1 ? base.GetHashCode() : _index;
         }
 
         public override bool Equals(object obj)
         {
             var other = obj as Style;
-            if (other == null)
-                return false;
-
-            if (other._elementName != _elementName || other._id != _id)
-                return false;
-
-            if (other._className == _className)
-                return true;
-
-            if (other.StyleClass.IsSet && StyleClass.IsSet)
-                return other.StyleClass.ClassName == StyleClass.ClassName;
-
-            return false;
+            return other != null && base.Equals(obj);
         }
 
         /// <summary>
@@ -165,122 +102,101 @@ namespace Marklight.Themes
         {
             styles.Sort((style1, style2) =>
             {
-                if (style1.SelectorType == style2.SelectorType)
-                    return 0;
+                var score1 = GetSortScore(style1);
+                var score2 = GetSortScore(style2);
 
-                if (style1.SelectorType.HasFlag(StyleSelectorType.Element))
-                    return -1;
-
-                if (style1.SelectorType.HasFlag(StyleSelectorType.Id))
-                    return style2.SelectorType.HasFlag(StyleSelectorType.Element)
-                        ? 1
-                        : -1;
-
-                if (style1.SelectorType.HasFlag(StyleSelectorType.Class))
-                    return 1;
-
-                if (style1.SelectorType == StyleSelectorType.None)
-                    return 1;
-
-                throw new ArgumentOutOfRangeException();
+                return score1 > score2 ? 1 : (score1 < score2 ? -1 : 0);
             });
+        }
+
+        private static int GetSortScore(StyleSelector style) {
+
+            var score = 0;
+
+            if (style.SelectorType.HasFlag(StyleSelectorType.Element))
+                score += 100;
+
+            if (style.SelectorType.HasFlag(StyleSelectorType.Id))
+                score += 50;
+
+            if (style.SelectorType.HasFlag(StyleSelectorType.Class))
+                score += 1;
+
+            if (style.Parent != null)
+            {
+                score += 1000;
+                score += GetSortScore(style.Parent);
+            }
+
+            return score;
+        }
+
+        private static Style GetParent(Theme theme, StyleData data) {
+            var parentData = data.ParentIndex >= 0
+                ? theme.GetStyleData(data.ParentIndex)
+                : null;
+
+            return parentData != null
+                ? parentData.GetStyle(theme)
+                : null;
         }
 
         #endregion
 
         #region Properties
 
-        public string[] Selectors
+        /// <summary>
+        /// Get the theme the style belongs to.
+        /// </summary>
+        public Theme Theme
         {
-            get
-            {
-                if (_selectors != null)
-                    return _selectors;
-
-                var list = new List<string>();
-                if (!string.IsNullOrEmpty(_className))
-                {
-                    var classNames = StyleClass.ClassNames;
-                    foreach (var className in classNames)
-                    {
-                        var selector = "";
-
-                        if (!string.IsNullOrEmpty(_elementName))
-                            selector += _elementName;
-
-                        if (!string.IsNullOrEmpty(_id))
-                            selector += '#' + _id;
-
-                        selector += '.' + className;
-
-                        list.Add(selector);
-                    }
-                }
-                else
-                {
-                    var selector = "";
-
-                    if (!string.IsNullOrEmpty(_elementName))
-                        selector += _elementName;
-
-                    if (!string.IsNullOrEmpty(_id))
-                        selector += '#' + _id;
-
-                    list.Add(selector);
-                }
-
-                list.Sort(StringComparer.Ordinal);
-                _selectors = list.ToArray();
-                return _selectors;
-            }
+            get { return _theme; }
         }
 
-        public string Selector
-        {
-            get
-            {
-                if (_selector != null)
-                    return _selector;
-
-                _selector = string.Join(",", Selectors);
-
-                return _selector;
-            }
-        }
-
-        public string ElementName
-        {
-            get { return _elementName; }
-        }
-
-        public string Id
-        {
-            get { return _id; }
-        }
-
-        public StyleClass StyleClass
-        {
-            get { return _class ?? (_class = new StyleClass(_className)); }
-        }
-
+        /// <summary>
+        /// Get the name of the style that this style is based on.
+        /// </summary>
         public string BasedOn
         {
             get { return _basedOn; }
         }
 
-        public StyleSelectorType SelectorType
-        {
-            get { return _selectorType; }
-        }
-
+        /// <summary>
+        /// Get the styles property list.
+        /// </summary>
         public List<StyleProperty> Properties
         {
             get { return _properties; }
         }
 
-        public List<string> ChildSelectors
+        /// <summary>
+        /// Get child styles.
+        /// </summary>
+        public IEnumerable<Style> Children
         {
-            get { return _childSelectors ?? (_childSelectors = new List<string>(0)); }
+            get
+            {
+                if (_children != null)
+                    return _children;
+
+                if (_index >= 0)
+                {
+                    var childData = Theme.GetStyleChildData(_index, new List<StyleData>());
+                    var children = new List<Style>(childData.Count);
+                    foreach (var child in childData)
+                    {
+                        children.Add(child.GetStyle(Theme));
+                    }
+                    Sort(children);
+                    _children = children;
+                }
+                else
+                {
+                    _children = EmptyStyleArray;
+                }
+
+                return _children;
+            }
         }
 
         #endregion

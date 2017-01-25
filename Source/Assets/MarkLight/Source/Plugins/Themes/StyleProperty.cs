@@ -4,10 +4,12 @@ using UnityEngine;
 
 namespace Marklight.Themes
 {
+    /// <summary>
+    /// A single style property.
+    /// </summary>
     [Serializable]
     public struct StyleProperty
     {
-
         #region Private Fields
 
         [SerializeField]
@@ -20,6 +22,11 @@ namespace Marklight.Themes
 
         #region Constructor
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="name">The name of the property.</param>
+        /// <param name="value">The property value.</param>
         public StyleProperty(string name, string value)
         {
             _name = name;
@@ -30,8 +37,13 @@ namespace Marklight.Themes
 
         #region Methods
 
-        public void ApplyTo(View view, ValueConverterContext context)
-        {
+        /// <summary>
+        /// Apply the property to a view.
+        /// </summary>
+        /// <param name="view">The view to apply to.</param>
+        /// <param name="context">The converter context to use.</param>
+        public void ApplyTo(View view, ValueConverterContext context) {
+
             if (context == null)
                 context = new ValueConverterContext();
 
@@ -103,15 +115,25 @@ namespace Marklight.Themes
             return other._name == _name;
         }
 
+        public override string ToString() {
+            return "StyleProperty { Name: '" + _name + "', Value: '" + _value + "' }";
+        }
+
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// Get the name of the property.
+        /// </summary>
         public string Name
         {
             get { return _name; }
         }
 
+        /// <summary>
+        /// Get the property value.
+        /// </summary>
         public string Value
         {
             get { return _value; }
