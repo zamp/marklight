@@ -37,7 +37,7 @@ namespace MarkLight
         /// Sets value of field.
         /// </summary>
         public object SetValue(object inValue, HashSet<ViewFieldData> callstack, bool updateDefaultState = true,
-            ValueConverterContext context = null, bool notifyObservers = true)
+            ValueConverterContext context = null, bool notifyObservers = true, bool suppressAssignErrors = false)
         {
             if (callstack.Contains(this))
                 return null;
@@ -49,7 +49,12 @@ namespace MarkLight
                 var targetView = GetTargetView();
                 if (targetView == null)
                 {
-                    Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View along path is null.", SourceView.GameObjectName, inValue, ViewFieldPath));
+                    if (!suppressAssignErrors)
+                    {
+                        Debug.LogError(String.Format(
+                            "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View along path is null.",
+                            SourceView.GameObjectName, inValue, ViewFieldPath));
+                    }
                     return null;
                 }
 
@@ -63,10 +68,11 @@ namespace MarkLight
                 if (!ParseViewFieldPath())
                 {
                     // path can't be resolved at this point
-                    if (SevereParseError)
+                    if (SevereParseError && !suppressAssignErrors)
                     {
                         // severe parse error means the path is incorrect
-                        Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\". {2}", SourceView.GameObjectName, inValue, Utils.ErrorMessage));
+                        Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\". {2}",
+                            SourceView.GameObjectName, inValue, Utils.ErrorMessage));
                     }
 
                     // unsevere parse errors can be expected, e.g. value along path is null
@@ -93,7 +99,9 @@ namespace MarkLight
                 var conversionResult = ValueConverter.Convert(value, context);
                 if (!conversionResult.Success)
                 {
-                    Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". Value converion failed. {3}", SourceView.GameObjectName, value, ViewFieldPath, conversionResult.ErrorMessage));
+                    Debug.LogError(String.Format(
+                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". Value conversion failed. {3}",
+                        SourceView.GameObjectName, value, ViewFieldPath, conversionResult.ErrorMessage));
                     return null;
                 }
                 value = conversionResult.ConvertedValue;

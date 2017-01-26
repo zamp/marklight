@@ -31,7 +31,7 @@ namespace Marklight.Themes
         /// <param name="theme">The theme the style belongs to.</param>
         /// <param name="selector">A selector to copy from.</param>
         public Style(Theme theme, StyleSelector selector)
-            : this(theme, selector.ElementName, selector.Id, selector.ClassName, null) {
+            : this(theme, selector.ElementName, selector.Id, selector.ClassName, selector.CombinatorType, null) {
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace Marklight.Themes
         /// <param name="theme">The theme the style belongs to.</param>
         /// <param name="data">The style data to copy from.</param>
         public Style(Theme theme, StyleData data)
-            : this(theme, data.ElementName, data.Id, data.ClassName, data.BasedOn, data.Properties,
+            : this(theme, data.ElementName, data.Id, data.ClassName, data.CombinatorType, data.BasedOn, data.Properties,
                 GetParent(theme, data)) {
 
             _index = data.Index;
@@ -53,12 +53,14 @@ namespace Marklight.Themes
         /// <param name="elementName">The element name component of the style selector.</param>
         /// <param name="id">The ID component of the style selector.</param>
         /// <param name="className">The class name component of the style selector.</param>
+        /// <param name="combinatorType">The selector combinator type.</param>
         /// <param name="basedOn">The style to inherit from.</param>
         /// <param name="properties">Properties to copy or null.</param>
         /// <param name="parent">The parent style or null.</param>
-        public Style(Theme theme, string elementName, string id, string className, string basedOn,
+        public Style(Theme theme, string elementName, string id, string className,
+                     StyleCombinatorType combinatorType, string basedOn,
                      IEnumerable<StyleProperty> properties = null, StyleSelector parent = null)
-                     : base(elementName, id, className, parent) {
+                     : base(elementName, id, className, combinatorType, parent) {
 
             _children = null;
             _theme = theme;

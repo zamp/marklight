@@ -64,7 +64,9 @@ namespace Marklight.Themes
                 string id = null;
                 string className = null;
                 string basedOn = null;
-
+                var combinator = parentIndex == -1
+                    ? StyleCombinatorType.None
+                    : StyleCombinatorType.Descendant;
 
                 if (element.Name.LocalName != "Style")
                     elementName = element.Name.LocalName;
@@ -78,7 +80,9 @@ namespace Marklight.Themes
                 if (basedOnAttr != null)
                     basedOn = basedOnAttr.Value;
 
-                var styleData = new StyleData(context.StyleIndex, parentIndex, elementName, id, className, basedOn);
+                var styleData = new StyleData(
+                            context.StyleIndex, parentIndex, elementName, id, className, combinator, basedOn);
+
                 var properties = LoadAttributes(element);
 
                 var existingIndex = output.IndexOf(styleData);

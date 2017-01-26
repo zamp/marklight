@@ -28,6 +28,9 @@ namespace Marklight.Themes
         private string _className;
 
         [SerializeField]
+        private StyleCombinatorType _combinatorType;
+
+        [SerializeField]
         private string _basedOn;
 
         [SerializeField]
@@ -55,10 +58,12 @@ namespace Marklight.Themes
         /// <param name="elementName">The element name component of the style selector.</param>
         /// <param name="id">The id component of the style selector.</param>
         /// <param name="className">The class name component of the style selector.</param>
+        /// <param name="combinatorType">The type of selector combinator.</param>
         /// <param name="basedOn">The style that is inherited.</param>
         /// <exception cref="InvalidOperationException">When index and parentIndex are the same.</exception>
         public StyleData(int index, int parentIndex,
-                         string elementName, string id, string className, string basedOn = null) {
+                         string elementName, string id, string className,
+                         StyleCombinatorType combinatorType, string basedOn = null) {
 
             if (index == parentIndex)
                 throw new InvalidOperationException("Style cannot be a child of itself. " + index);
@@ -68,6 +73,7 @@ namespace Marklight.Themes
             _elementName = elementName ?? "";
             _id = id ?? "";
             _className = className ?? "";
+            _combinatorType = combinatorType;
             _basedOn = basedOn ?? "";
         }
 
@@ -150,6 +156,14 @@ namespace Marklight.Themes
         public string ClassName
         {
             get { return _className; }
+        }
+
+        /// <summary>
+        /// Get the style selector combinator type.
+        /// </summary>
+        public StyleCombinatorType CombinatorType
+        {
+            get { return _combinatorType; }
         }
 
         /// <summary>

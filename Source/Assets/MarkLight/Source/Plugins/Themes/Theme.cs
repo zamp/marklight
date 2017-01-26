@@ -171,7 +171,7 @@ namespace Marklight.Themes
                 AddProperties(s, properties);
             }
 
-            var selector = new StyleSelector(elementName, id, className);
+            var selector = new StyleSelector(elementName, id, className, StyleCombinatorType.None);
 
             Style existing;
             if (_styleLookup.TryGetValue(selector.Selector, out existing))
@@ -183,6 +183,7 @@ namespace Marklight.Themes
             var composite = new Style(this, selector);
             composite.Properties.AddRange(properties);
             _styleLookup[composite.Selector] = composite;
+
             return composite;
         }
 

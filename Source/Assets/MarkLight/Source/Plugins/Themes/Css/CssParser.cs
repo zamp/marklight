@@ -155,6 +155,7 @@ namespace Marklight.Themes
             _buffer.Length = 0;
             var result = new Selectors();
             var selectors = result.SelectorList;
+            var isStarted = false;
 
             for (; _index < _css.Length; _index++)
             {
@@ -163,29 +164,34 @@ namespace Marklight.Themes
                 {
                     TrimBuffer();
                     if (_buffer.Length > 0)
-                        selectors.Add(_buffer.ToString());
+                        selectors.Add(new CssSelector(_buffer.ToString()));
                     return result;
                 }
 
                 if (ch == ',')
                 {
                     TrimBuffer();
-                    selectors.Add(_buffer.ToString());
+                    selectors.Add(new CssSelector(_buffer.ToString()));
                     _buffer.Length = 0;
+                    isStarted = false;
                     continue;
                 }
 
                 if (ch == '}')
                     break;
 
+                // don't add leading whitespace
+                if (!isStarted && " \r\n\t".IndexOf(ch) != -1)
+                    continue;
+
+                isStarted = true;
                 _buffer.Append(ch);
             }
 
             TrimBuffer();
             if (_buffer.Length != 0)
             {
-                throw new CssParseException("End of document reached prematurely while parsing selectors: '" +
-                                            string.Join(", ", selectors.ToArray()) + "' ending with '" + _buffer + "'");
+                throw new CssParseException("End of document reached prematurely while parsing css.");
             }
 
             return null;
@@ -300,7 +306,7 @@ namespace Marklight.Themes
 
         public class Selectors
         {
-            public readonly List<string> SelectorList = new List<string>();
+            public readonly List<CssSelector> SelectorList = new List<CssSelector>();
             public readonly List<Property> PropertyList = new List<Property>();
         }
 

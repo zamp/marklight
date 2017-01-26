@@ -16,6 +16,7 @@ namespace Marklight.Themes
         private readonly string _id;
         private readonly string _className;
         private readonly StyleSelector _parent;
+        private readonly StyleCombinatorType _combinatorType;
         private readonly StyleSelectorType _selectorType;
         private readonly int _hash;
 
@@ -35,11 +36,15 @@ namespace Marklight.Themes
         /// <param name="elementName">The element name component of the style selector.</param>
         /// <param name="id">The ID component of the style selector.</param>
         /// <param name="className">The class name component of the style selector.</param>
+        /// <param name="combinatorType">The combinator type.</param>
         /// <param name="parent">The parent style selector or null. Default is null.</param>
-        public StyleSelector(string elementName, string id, string className, StyleSelector parent = null) {
+        public StyleSelector(string elementName, string id, string className,
+                                StyleCombinatorType combinatorType, StyleSelector parent = null) {
+
             _elementName = elementName ?? "";
             _id = id ?? "";
             _className = className ?? "";
+            _combinatorType = combinatorType;
             _parent = parent;
 
             if (_elementName != "")
@@ -58,7 +63,7 @@ namespace Marklight.Themes
         /// <summary>
         /// Constructor that parses a selector string.
         /// </summary>
-        public StyleSelector(string selector) {
+        public StyleSelector(string selector, StyleCombinatorType combinatorType) {
 
             var mode = StyleSelectorType.Element;
             var buffer = new StringBuilder(selector.Length);
@@ -113,6 +118,7 @@ namespace Marklight.Themes
             _elementName = elementName;
             _id = id;
             _className = className;
+            _combinatorType = combinatorType;
             _parent = null;
 
             if (_elementName != "")
@@ -212,7 +218,8 @@ namespace Marklight.Themes
         }
 
         private bool IsParentApplicable(View layoutParent) {
-            if (_parent == null || layoutParent == null)
+
+            if (_combinatorType == StyleCombinatorType.None)
                 return true;
 
             var viewParent = layoutParent;
@@ -220,6 +227,9 @@ namespace Marklight.Themes
             {
                 if (_parent.IsApplicable(viewParent))
                     return true;
+
+                if (_combinatorType == StyleCombinatorType.Child)
+                    break;
 
                 viewParent = viewParent.LayoutParent;
             }
@@ -371,6 +381,14 @@ namespace Marklight.Themes
         public StyleClass StyleClass
         {
             get { return _class ?? (_class = new StyleClass(_className)); }
+        }
+
+        /// <summary>
+        /// Get the selector combinator type.
+        /// </summary>
+        public StyleCombinatorType CombinatorType
+        {
+            get { return _combinatorType; }
         }
 
         /// <summary>

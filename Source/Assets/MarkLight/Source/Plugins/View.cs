@@ -397,9 +397,9 @@ namespace MarkLight
         /// <param name="updateDefaultState">Boolean indicating if the default state should be updated (if the view is in the default state).</param>
         /// <param name="callstack">Callstack used to prevent cyclical SetValue calls.</param>
         /// <param name="context">Value converter context.</param>
-        /// <param name="suppressErrors">True to suppress errors. Default is false.</param>
+        /// <param name="suppressAssignErrors">True to suppress errors. Default is false.</param>
         /// <returns>Returns the converted value set.</returns>
-        public object SetValue(string viewField, object value, bool updateDefaultState, HashSet<ViewFieldData> callstack, ValueConverterContext context, bool notifyObservers, bool suppressErrors = false)
+        public object SetValue(string viewField, object value, bool updateDefaultState, HashSet<ViewFieldData> callstack, ValueConverterContext context, bool notifyObservers, bool suppressAssignErrors = false)
         {
             callstack = callstack ?? new HashSet<ViewFieldData>();
             context = context ?? ValueConverterContext;
@@ -410,7 +410,7 @@ namespace MarkLight
             var viewFieldData = GetViewFieldData(viewField);
             if (viewFieldData == null)
             {
-                if (!suppressErrors)
+                if (!suppressAssignErrors)
                 {
                     Debug.LogError(String.Format(
                         "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View field not found.",
@@ -437,11 +437,12 @@ namespace MarkLight
             // set view field value
             try
             {
-                return viewFieldData.SetValue(value, callstack, updateDefaultState, context, notifyObservers);
+                return viewFieldData.SetValue(value, callstack, updateDefaultState,
+                                              context, notifyObservers, suppressAssignErrors);
             }
             catch (Exception e)
             {
-                if (!suppressErrors)
+                if (!suppressAssignErrors)
                 {
                     Debug.LogError(String.Format(
                         "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". Exception thrown: {3}",

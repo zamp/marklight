@@ -8,19 +8,17 @@ namespace Marklight.Themes
 {
     public class CssThemeLoader
     {
-        private static readonly char[] HierarchySplitter = new char[] {' '};
-
         /// <summary>
         /// Loads Theme CSS and returns Theme or null if failed.
         /// </summary>
         public Theme LoadCss(string css, string cssAssetName) {
 
             var parser = new CssParser(css);
-            List<CssParser.Selectors> selectors;
+            List<CssParser.Selectors> parsedSelectors;
 
             try
             {
-                selectors = parser.ParseCss();
+                parsedSelectors = parser.ParseCss();
             }
             catch (CssParseException e)
             {
@@ -28,17 +26,16 @@ namespace Marklight.Themes
                 return null;
             }
 
-            var styleDataList = new List<StyleData>(selectors.Count);
-            var styleDataDict = new Dictionary<string, StyleData>();
+            var rootStyleList = new List<StyleData>(parsedSelectors.Count);
             var themeProperties = new Dictionary<string, string>();
-
             var index = 0;
-            for (var i = 0; i < selectors.Count; i++)
+
+            for (var i = 0; i < parsedSelectors.Count; i++)
             {
-                var selector = selectors[i];
+                var selector = parsedSelectors[i];
 
                 // check for theme selector
-                if (selector.SelectorList.Count == 1 && selector.SelectorList[0] == "Theme")
+                if (selector.SelectorList.Count == 1 && selector.SelectorList[0].Raw == "Theme")
                 {
                     foreach (var prop in selector.PropertyList)
                     {
@@ -55,28 +52,32 @@ namespace Marklight.Themes
                     // get properties
                     foreach (var prop in selector.PropertyList)
                     {
-                        properties.Add(CreateProperty(sel, prop));
+                        properties.Add(CreateProperty(sel.Raw, prop));
                     }
 
-                    var hierarchy = sel.Split(HierarchySplitter, StringSplitOptions.RemoveEmptyEntries);
                     StyleData prev = null;
 
-                    for (var j = 0; j < hierarchy.Length; j++)
+                    var selectorCount = sel.Selectors.Count;
+                    var styleDataDict = new Dictionary<string, StyleData>();
+
+                    for (var j = 0; j < selectorCount; j++)
                     {
-                        var curr = hierarchy[j];
-                        var style = new StyleSelector(curr);
-                        var key = sel + ":" + style.LocalSelector;
+                        var curr = sel.Selectors[j];
+                        var combinator = sel.Combinators[j];
+                        var style = new StyleSelector(curr, combinator);
+                        var key = sel.Raw + ":" + style.LocalSelector;
+
                         StyleData data;
                         if (!styleDataDict.TryGetValue(key, out data))
                         {
                             data = new StyleData(index++, prev == null ? -1 : prev.Index,
-                                                 style.ElementName, style.Id, style.ClassName);
+                                                 style.ElementName, style.Id, style.ClassName, combinator);
 
-                            styleDataList.Add(data);
                             styleDataDict.Add(key, data);
+                            rootStyleList.Add(data);
                         }
 
-                        if (j == hierarchy.Length - 1)
+                        if (j == selectorCount - 1)
                         {
                             data.Properties.RemoveAll(x => properties.Contains(x));
                             data.Properties.AddRange(properties);
@@ -84,7 +85,6 @@ namespace Marklight.Themes
 
                         prev = data;
                     }
-
                 }
             }
 
@@ -107,7 +107,7 @@ namespace Marklight.Themes
             var isBaseDirectorySet = baseDirectory != null;
 
             return new Theme(themeName, baseDirectory, ParseUnitSize(unitSize, cssAssetName),
-                                    isBaseDirectorySet, isUnitSizeSet, styleDataList.ToArray());
+                                    isBaseDirectorySet, isUnitSizeSet, rootStyleList.ToArray());
         }
 
         private static StyleProperty CreateProperty(string selector, CssParser.Property cssProperty) {
