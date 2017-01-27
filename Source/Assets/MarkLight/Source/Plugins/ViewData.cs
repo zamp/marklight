@@ -589,7 +589,12 @@ namespace MarkLight
             }
 
             // create view game object with required components
-            var go = new GameObject(viewTypeData.ViewTypeName);
+            var go = new GameObject(viewTypeData.ViewTypeName)
+            {
+                // set layer to match view presenter layer
+                layer = ViewPresenter.Instance.gameObject.layer
+            };
+
             if (typeof(UIView).IsAssignableFrom(viewType))
             {
                 go.AddComponent<RectTransform>();
