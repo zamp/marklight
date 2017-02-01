@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Marklight.Themes
@@ -25,16 +26,14 @@ namespace Marklight.Themes
         /// <param name="selector">The combinated or non-combinated selector string.</param>
         public CssSelector(string selector) {
 
-            _raw = selector;
-
-            var buffer = new StringBuilder(_raw.Length);
+            var buffer = new StringBuilder(selector.Length + 10);
             var combinator = StyleCombinatorType.None;
             var nextCombinator = StyleCombinatorType.None;
             var hasCombinator = false;
 
-            for (var i = 0; i < _raw.Length; i++)
+            for (var i = 0; i < selector.Length; i++)
             {
-                var ch = _raw[i];
+                var ch = selector[i];
 
                 if (ch == ' ')
                 {
@@ -67,11 +66,40 @@ namespace Marklight.Themes
                 buffer.Append(ch);
             }
 
-            if (buffer.Length <= 0)
-                return;
+            if (buffer.Length > 0)
+            {
+                _selectors.Add(buffer.ToString());
+                _combinators.Add(combinator);
+            }
 
-            _selectors.Add(buffer.ToString());
-            _combinators.Add(combinator);
+
+            buffer.Length = 0;
+            for (var i = 0; i < _selectors.Count; i++)
+            {
+                if (i != 0)
+                {
+                    switch (_combinators[i])
+                    {
+                        case StyleCombinatorType.None:
+                            break;
+                        case StyleCombinatorType.Descendant:
+                            buffer.Append(' ');
+                            break;
+                        case StyleCombinatorType.Child:
+                            buffer.Append(" > ");
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+                buffer.Append(_selectors[i]);
+            }
+
+            _raw = buffer.ToString();
+        }
+
+        public override string ToString() {
+            return _raw;
         }
 
         #endregion
