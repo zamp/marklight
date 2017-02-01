@@ -26,58 +26,59 @@ namespace Marklight.Themes
                 return null;
             }
 
-            var rootStyleList = new List<StyleData>(parsedSelectors.Count);
+            var styleDataList = new List<StyleData>(parsedSelectors.Count);
+            var styleDataDict = new Dictionary<string, StyleData>(parsedSelectors.Count);
             var themeProperties = new Dictionary<string, string>();
             var index = 0;
 
             for (var i = 0; i < parsedSelectors.Count; i++)
             {
-                var selector = parsedSelectors[i];
+                // multiple selectors for a given set of properties (possibly)
+                var selectors = parsedSelectors[i];
 
                 // check for theme selector
-                if (selector.SelectorList.Count == 1 && selector.SelectorList[0].Raw == "Theme")
+                if (selectors.SelectorList.Count == 1 && selectors.SelectorList[0].Raw == "Theme")
                 {
-                    foreach (var prop in selector.PropertyList)
+                    foreach (var prop in selectors.PropertyList)
                     {
                         themeProperties.Add(prop.Name, prop.Value);
                     }
                     continue;
                 }
 
-                // get styles
-                foreach (var sel in selector.SelectorList)
+                // get styles from each selector
+                foreach (var selector in selectors.SelectorList)
                 {
                     var properties = new List<StyleProperty>();
 
                     // get properties
-                    foreach (var prop in selector.PropertyList)
+                    foreach (var prop in selectors.PropertyList)
                     {
-                        properties.Add(CreateProperty(sel.Raw, prop));
+                        properties.Add(CreateProperty(selector.Raw, prop));
                     }
 
                     StyleData prev = null;
 
-                    var selectorCount = sel.Selectors.Count;
-                    var styleDataDict = new Dictionary<string, StyleData>();
+                    var combinateCount = selector.Selectors.Count;
 
-                    for (var j = 0; j < selectorCount; j++)
+                    for (var j = 0; j < combinateCount; j++)
                     {
-                        var curr = sel.Selectors[j];
-                        var combinator = sel.Combinators[j];
-                        var style = new StyleSelector(curr, combinator);
-                        var key = sel.Raw + ":" + style.LocalSelector;
+                        var current = selector.Selectors[j];
+                        var combinator = selector.Combinators[j];
+                        var style = new StyleSelector(current, combinator);
+                        var key = selector + ":" + j;
 
                         StyleData data;
                         if (!styleDataDict.TryGetValue(key, out data))
                         {
                             data = new StyleData(index++, prev == null ? -1 : prev.Index,
-                                                 style.ElementName, style.Id, style.ClassName, combinator);
+                                style.ElementName, style.Id, style.ClassName, combinator);
 
                             styleDataDict.Add(key, data);
-                            rootStyleList.Add(data);
+                            styleDataList.Add(data);
                         }
 
-                        if (j == selectorCount - 1)
+                        if (j == combinateCount - 1)
                         {
                             data.Properties.RemoveAll(x => properties.Contains(x));
                             data.Properties.AddRange(properties);
@@ -107,7 +108,7 @@ namespace Marklight.Themes
             var isBaseDirectorySet = baseDirectory != null;
 
             return new Theme(themeName, baseDirectory, ParseUnitSize(unitSize, cssAssetName),
-                                    isBaseDirectorySet, isUnitSizeSet, rootStyleList.ToArray());
+                                    isBaseDirectorySet, isUnitSizeSet, styleDataList.ToArray());
         }
 
         private static StyleProperty CreateProperty(string selector, CssParser.Property cssProperty) {

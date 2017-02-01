@@ -286,7 +286,7 @@ namespace Marklight.Themes
             _styles = new List<Style>(50);
             foreach (var data in _styleData)
             {
-                if (data.ParentIndex < 0)
+                if (data.Properties.Count > 0)
                     _styles.Add(data.GetStyle(this));
             }
 
