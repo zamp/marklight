@@ -1748,6 +1748,9 @@ namespace MarkLight.Views.UI
 
             // initialize view
             newItemView.InitializeViews();
+
+            if (ListPanel != null)
+                ListPanel.ScrollRect.UnblockDragEvents(newItemView);
         }
 
         /// <summary>
