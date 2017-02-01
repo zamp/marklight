@@ -330,7 +330,7 @@ namespace MarkLight.Views.UI
         [NotSetFromXuml]
         public bool StaticTabsGenerated;
 
-        private IObservableList _oldItems;
+        private IObservableList _items;
         private List<Tab> _presentedTabs;
         private Tab _tabItemTemplate;
         private object _selectedItem;
@@ -577,7 +577,7 @@ namespace MarkLight.Views.UI
                 var tabHeader = TabHeaderList.Content.Find<TabHeader>(x => x.ParentTab == tab, false);
                 if (tabHeader != null && !tabHeader.IsSelected)
                 {
-                    TabHeaderList.SelectItem(tabHeader, false);
+                    tabHeader.IsSelected.Value = false;
                 }
 
                 // item selected
@@ -586,7 +586,9 @@ namespace MarkLight.Views.UI
                 SelectedTab = tab;
                 if (Items != null)
                 {
-                    Items.SetSelected(_selectedItem);
+                    var observable = Items.GetObservable(_selectedItem);
+                    if (observable != null)
+                        observable.IsSelected = true;
                 }
 
                 // trigger item selected action
@@ -609,48 +611,19 @@ namespace MarkLight.Views.UI
         }
 
         /// <summary>
-        /// Called when the list of items has been changed.
-        /// </summary>
-        private void OnListChanged(object sender, ListChangedEventArgs e)
-        {
-            // update list of tabs
-            if (e.ListChangeAction == ListChangeAction.Clear)
-            {
-                Clear();
-            }
-            else if (e.ListChangeAction == ListChangeAction.Add)
-            {
-                AddRange(e.StartIndex, e.EndIndex);
-            }
-            else if (e.ListChangeAction == ListChangeAction.Remove)
-            {
-                RemoveRange(e.StartIndex, e.EndIndex);
-            }
-            else if (e.ListChangeAction == ListChangeAction.Select)
-            {                
-                SelectTab(e.StartIndex, true);
-            }
-
-            if (ListChanged.HasEntries)
-            {
-                ListChanged.Trigger(new ListChangedActionData { ListChangeAction = e.ListChangeAction, StartIndex = e.StartIndex, EndIndex = e.EndIndex });
-            }
-
-            LayoutChanged();
-        }
-
-        /// <summary>
         /// Rebuilds the list of tabs.
         /// </summary>
         public void Rebuild()
         {
             // assume a completely new list has been set
-            if (_oldItems != null)
+            if (_items != null)
             {
                 // unsubscribe from change events in the old list
-                _oldItems.ListChanged -= OnListChanged;
+                _items.ItemsAdded -= OnItemsAdded;
+                _items.ItemsRemoved -= OnItemsRemoved;
+                _items.ItemSelectChanged -= OnItemSelectChanged;
             }
-            _oldItems = Items;
+            _items = Items;
 
             // clear tab and header list
             Clear();
@@ -659,7 +632,9 @@ namespace MarkLight.Views.UI
             if (Items != null)
             {
                 // subscribe to change events in the new list
-                Items.ListChanged += OnListChanged;
+                _items.ItemsAdded += OnItemsAdded;
+                _items.ItemsRemoved += OnItemsRemoved;
+                _items.ItemSelectChanged += OnItemSelectChanged;
 
                 // add list items
                 if (Items.Count > 0)
@@ -669,6 +644,49 @@ namespace MarkLight.Views.UI
                     // select first tab by default
                     SelectTab(0, false);
                 }
+            }
+        }
+
+        private void OnItemsAdded(object sender, DataItemsAddedEventArgs args)
+        {
+            AddRange(args.StartIndex, args.EndIndex);
+
+            if (ListChanged.HasEntries)
+                ListChanged.Trigger(args.ActionData);
+
+            LayoutChanged();
+        }
+
+        private void OnItemsRemoved(object sender, DataItemsRemovedEventArgs args)
+        {
+            switch (args.RemoveReason)
+            {
+                case DataItemsRemovedReason.Remove:
+                    RemoveRange(args.StartIndex, args.EndIndex);
+                    break;
+                case DataItemsRemovedReason.Clear:
+                    Clear();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (ListChanged.HasEntries)
+                ListChanged.Trigger(args.ActionData);
+
+            LayoutChanged();
+        }
+
+        private void OnItemSelectChanged(object sender, DataItemSelectChangedEventArgs args)
+        {
+            if (args.IsSelected)
+            {
+                SelectTab(args.Index, true);
+
+                if (ListChanged.HasEntries)
+                    ListChanged.Trigger(args.ActionData);
+
+                LayoutChanged();
             }
         }
 
@@ -870,8 +888,10 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void TabHeaderSelected(ItemSelectionActionData actionData)
         {
-            var tabHeader = actionData.ItemView as TabHeader;
-            SelectTab(tabHeader.ParentTab, true, false);
+            var tabItem = _presentedTabs.FirstOrDefault(
+                x => x != null && x.Item.Value == actionData.Item.Value);
+
+            SelectTab(tabItem);
         }
 
         /// <summary>

@@ -86,6 +86,7 @@ namespace MarkLight
                 { typeof(_object), () => new _object() },
                 { typeof(_IObservableList), () => new _IObservableList() },
                 { typeof(_GenericObservableList), () => new _GenericObservableList() },
+                { typeof(ItemDataViewField), () => new ItemDataViewField() },
                 { typeof(ViewFieldBase), () => new ViewFieldBase() }
             };
         }

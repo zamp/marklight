@@ -207,6 +207,8 @@ namespace MarkLight.Views.UI
         /// <d>The list that created this list item.</d>
         public List ParentList;
 
+        private IObservableItem _observableItem;
+
         #endregion
 
         #region Methods
@@ -314,13 +316,8 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void ListItemMouseClick()
         {
-            if (ParentList == null || State == "Disabled")
-                return;
-
-            if (!ParentList.SelectOnMouseUp.Value)
-                return;
-
-            ParentList.SelectItem(this, true);
+            if (ParentList.SelectOnMouseUp.Value)
+                ToggleSelected();
         }
 
         /// <summary>
@@ -370,7 +367,7 @@ namespace MarkLight.Views.UI
 
             if (!ParentList.SelectOnMouseUp.Value)
             {
-                ParentList.SelectItem(this, true);
+                ToggleSelected();
             }
             else
             {
@@ -405,6 +402,36 @@ namespace MarkLight.Views.UI
         }
 
         /// <summary>
+        /// Toggle list item selected state due to a mouse interaction.
+        /// </summary>
+        private void ToggleSelected()
+        {
+            if (ParentList == null || State == "Disabled")
+                return;
+
+            if (!ParentList.CanSelect)
+                return;
+
+            var observable = Item.ObservableItem;
+            if (observable == null)
+                return;
+
+            if (observable.IsSelected && !ParentList.CanDeselect)
+            {
+                if (ParentList.CanReselect)
+                    observable.ForceSelected(true);
+
+                return;
+            }
+
+            observable.IsSelected = !observable.IsSelected;
+
+            // should this item immediately be deselected?
+            if (observable.IsSelected && ParentList.DeselectAfterSelect)
+                observable.IsSelected = false;
+        }
+
+        /// <summary>
         /// Called when the IsSelected field changes.
         /// </summary>
         public virtual void IsSelectedChanged()
@@ -412,14 +439,10 @@ namespace MarkLight.Views.UI
             if (State == "Disabled")
                 return;
 
-            if (IsSelected)
-            {
-                SetState("Selected");
-            }
-            else
-            {
-                SetState(DefaultItemStyle);
-            }
+            var observable = Item.ObservableItem;
+            var isSelected = observable != null ? observable.IsSelected : IsSelected;
+
+            SetState(isSelected ? "Selected" : DefaultItemStyle);
         }
 
         /// <summary>
@@ -462,6 +485,54 @@ namespace MarkLight.Views.UI
             SetState(DefaultItemStyle);
         }
 
+        public override void ItemChanged()
+        {
+            base.ItemChanged();
+
+            if (_observableItem != null)
+            {
+                _observableItem.ItemSelectChanged -= OnObservableItemSelectChanged;
+                _observableItem.ItemIndexChanged -= OnObservableItemIndexChanged;
+                _observableItem.ItemModified -= OnObservableItemModified;
+            }
+
+            _observableItem = Item.ObservableItem;
+
+            if (_observableItem != null)
+            {
+                SetValue("IsSelected", _observableItem.IsSelected);
+                SetSortIndex(_observableItem.Index + 1);
+
+                _observableItem.ItemSelectChanged += OnObservableItemSelectChanged;
+                _observableItem.ItemIndexChanged += OnObservableItemIndexChanged;
+                _observableItem.ItemModified += OnObservableItemModified;
+            }
+        }
+
+        /// <summary>
+        /// Called when the current Item's index position is changed.
+        /// </summary>
+        protected virtual void OnObservableItemIndexChanged(object sender, DataItemIndexChangedEventArgs args)
+        {
+            SetSortIndex(args.NewIndex + 1);
+        }
+
+        /// <summary>
+        /// Called when the current Item's selection state is changed.
+        /// </summary>
+        protected virtual void OnObservableItemSelectChanged(object sender, DataItemSelectChangedEventArgs args)
+        {
+            IsSelected.Value = args.IsSelected;
+        }
+
+        /// <summary>
+        /// Called when the current Item's data is modified.
+        /// </summary>
+        protected virtual void OnObservableItemModified(object sender, DataItemsModifiedEventArgs args)
+        {
+            NotifyDependentValueObservers(args.FieldPath == "" ? "Item" : "Item." + args.FieldPath, true);
+        }
+
         /// <summary>
         /// Sets the state of the view.
         /// </summary>
@@ -472,6 +543,14 @@ namespace MarkLight.Views.UI
             {
                 ItemLabel.SetState(state);
             }
+        }
+
+        private void SetSortIndex(int index)
+        {
+            SortIndex.Value = index;
+
+            if (ParentList != null)
+                IsAlternate.Value = ParentList.AlternateItems.Value && Utils.IsOdd(index);
         }
 
         #endregion

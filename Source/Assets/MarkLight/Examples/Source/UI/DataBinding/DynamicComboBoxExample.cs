@@ -52,10 +52,10 @@ namespace MarkLight.Examples.UI.DataBinding
         public void Add()
         {
             var newItem = new MenuItem { Text = "Menu " + _newMenuCount, Description = "Description", Color = Utils.GetRandomColor() };
-            Menus.Add(newItem);
+            var observable = Menus.Add(newItem);
 
             // select the item we've added
-            ComboBox.ComboBoxList.SelectItem(newItem);
+            observable.IsSelected = true;
             ++_newMenuCount;
         }
 
@@ -68,7 +68,9 @@ namespace MarkLight.Examples.UI.DataBinding
             CanRemove.Value = Menus.Count > 1;
 
             // select last item in list
-            ComboBox.ComboBoxList.SelectItem(Menus.LastOrDefault());
+            var observable = Menus.Observables.LastOrDefault();
+            if (observable != null)
+                observable.IsSelected = true;
         }
 
         /// <summary>

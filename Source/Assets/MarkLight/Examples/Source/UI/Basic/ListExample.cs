@@ -30,7 +30,7 @@ namespace MarkLight.Examples.UI.Basic
         /// </summary>
         public void ListItemSelected(ItemSelectionActionData itemSelectData)
         {
-            SelectedItemLabel.Text.Value = itemSelectData.ItemView.Text;
+            SelectedItemLabel.Text.Value = (itemSelectData.Item.Value ?? String.Empty).ToString();
         }
 
         #endregion

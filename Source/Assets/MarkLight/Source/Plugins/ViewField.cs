@@ -23,7 +23,7 @@ namespace MarkLight
         /// <summary>
         /// Gets or sets view field notifying observers if the value has changed.
         /// </summary>
-        public T Value
+        public virtual T Value
         {
             get
             {
@@ -51,7 +51,7 @@ namespace MarkLight
         /// <summary>
         /// Gets or sets view field notifying observers if the value has changed.
         /// </summary>
-        public object ObjectValue
+        public virtual object ObjectValue
         {
             get
             {
@@ -79,7 +79,7 @@ namespace MarkLight
         /// <summary>
         /// Sets view field directly without notifying observers that the value has changed.
         /// </summary>
-        public T DirectValue
+        public virtual T DirectValue
         {
             set
             {
@@ -98,7 +98,7 @@ namespace MarkLight
         /// <summary>
         /// Sets view field directly without notifying observers that the value has changed.
         /// </summary>
-        public object DirectObjectValue
+        public virtual object DirectObjectValue
         {
             set
             {
@@ -117,7 +117,7 @@ namespace MarkLight
         /// <summary>
         /// Gets boolean indicating if the value has been set. 
         /// </summary>
-        public bool IsSet
+        public virtual bool IsSet
         {
             get
             {
@@ -135,7 +135,7 @@ namespace MarkLight
         /// <summary>
         /// Gets or sets internal value without considering mappings and without notifying observers.
         /// </summary>
-        public T InternalValue
+        public virtual T InternalValue
         {
             get
             {

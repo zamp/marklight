@@ -2,6 +2,7 @@
 using MarkLight.ValueConverters;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -628,7 +629,8 @@ namespace MarkLight.Views.UI
         /// Selected items in the data list.
         /// </summary>
         /// <d>Contains selected items in the user-defined list data. Can contain more than one item if IsMultiSelect is true.</d>
-        public _GenericObservableList SelectedItems;
+        [ChangeHandler("SelectedItemsChanged")]
+        public _IObservableList SelectedItems;
 
         /// <summary>
         /// Item selected view action.
@@ -651,10 +653,10 @@ namespace MarkLight.Views.UI
         /// <actionData>ListChangedActionData</actionData>
         public ViewAction ListChanged;
 
-        private IObservableList _oldItems;
+        private IObservableList _items;
+        private IObservableList _selectedItems;
         private List<ListItem> _presentedListItems;
         private List<ListItem> _listItemTemplates;
-        private object _selectedItem;
         private bool _updateWidth;
         private bool _updateHeight;
         private Dictionary<View, ViewPool> _viewPools;
@@ -725,7 +727,7 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Called whenever the list is scrolled or items are added, removed or rearranged.
         /// </summary>
-        public void UpdateVirtualizedItems()
+        private void UpdateVirtualizedItems()
         {
             float vpMin = 0;
             float vpMax = 0;
@@ -754,7 +756,7 @@ namespace MarkLight.Views.UI
             var newItems = _virtualizedItems.GetItemsInRange(vpMin, vpMax);
 
             // remove any items not in new list from viewport to virtualized list
-            var previousItems = Content.GetChildren<ListItem>(x => x.IsLive, false);
+            var previousItems = Content.GetChildren<ListItem>(x => x.IsLive && !x.IsTemplate, false);
             foreach (var item in previousItems)
             {
                 if (!_virtualizedItems.IsInRange(item, vpMin, vpMax))
@@ -1116,7 +1118,7 @@ namespace MarkLight.Views.UI
                 listItems.AddRange(_virtualizedItems.VirtualizedItemsContainer.GetChildren<ListItem>(x => x.IsLive, false));
             }
 
-            listItems.AddRange(Content.GetChildren<ListItem>(x => x.IsLive, false));
+            listItems.AddRange(Content.GetChildren<ListItem>(x => x.IsLive && !x.IsTemplate, false));
             return listItems;
         }
 
@@ -1193,246 +1195,305 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Called when the selected item of the list has been changed.
         /// </summary>
-        public virtual void SelectedItemChanged()
+        protected virtual void SelectedItemChanged()
         {
-            if (_selectedItem == SelectedItem.Value)
-            {
+            if (_items == null)
                 return;
-            }
 
-            SelectItem(SelectedItem.Value);
+            if (SelectedItem.IsSet)
+                _items.SelectedItem = SelectedItem.Value;
         }
 
         /// <summary>
-        /// Selects item in the list.
+        /// Called when the SselectedItems field value is changed.
         /// </summary>
-        public void SelectItem(ListItem listItem, bool triggeredByClick = false)
-        {
-            if (listItem == null || (triggeredByClick && !CanSelect))
-                return;
+        protected virtual void SelectedItemsChanged() {
+            if (SelectedItems.IsSet)
+                SetSelectedItems(SelectedItems.Value);
+        }
 
-            // is item already selected?
-            if (listItem.IsSelected)
+        /// <summary>
+        /// Set the internal selected items observable list.
+        /// </summary>
+        private void SetSelectedItems(IObservableList selectedItems) {
+
+            if (_selectedItems != null)
             {
-                // yes. can it be deselected?
-                if (triggeredByClick && !CanDeselect)
+                if (_items != null)
                 {
-                    // no. should it be re-selected?
-                    if (CanReselect)
+                    var selected = new List<IObservableItem>(_selectedItems.Observables);
+                    foreach (var item in selected)
                     {
-                        // yes. select it again
-                        SetSelected(listItem, true);
+                        var observable = _items.GetObservable(item.Value);
+                        if (observable != null)
+                            observable.IsSelected = false;
                     }
-
-                    return; // no.
                 }
 
-                // deselect and trigger actions
-                SetSelected(listItem, false);
+                ListenSelectedItems(false);
+            }
+
+            _selectedItems = selectedItems ?? new ObservableList<object>();
+
+            ListenSelectedItems(true);
+        }
+
+        /// <summary>
+        /// Called to setup or teardown SelectedItems event listeners.
+        /// </summary>
+        protected virtual void ListenSelectedItems(bool listen)
+        {
+            if (listen)
+            {
+                _selectedItems.ItemsAdded += OnSelectedItemsAdded;
+                _selectedItems.ItemsRemoved += OnSelectedItemsRemoved;
             }
             else
             {
-                // select
-                SetSelected(listItem, true);
-
-                // deselect other items if we can't multi-select
-                if (!CanMultiSelect)
-                {
-                    foreach (var presentedListItem in _presentedListItems)
-                    {
-                        if (presentedListItem == listItem)
-                            continue;
-
-                        // deselect and trigger actions
-                        SetSelected(presentedListItem as ListItem, false);
-                    }
-                }
-
-                // should this item immediately be deselected?
-                if (DeselectAfterSelect)
-                {
-                    // yes.
-                    SetSelected(listItem, false);
-                }
+                _selectedItems.ItemsAdded -= OnSelectedItemsAdded;
+                _selectedItems.ItemsRemoved -= OnSelectedItemsRemoved;
             }
         }
 
         /// <summary>
-        /// Selects item in the list.
+        /// Called when items are added to the SelectedItems observable list
         /// </summary>
-        public void SelectItem(int index)
+        protected virtual void OnSelectedItemsAdded(object sender, DataItemsAddedEventArgs args)
         {
-            if (index >= _presentedListItems.Count)
-            {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to select list item. Index out of bounds.", GameObjectName));
+            if (_items == null)
                 return;
-            }
 
-            SelectItem(_presentedListItems[index] as ListItem, false);
+            // selected items in the Items observable list
+            foreach (var selected in args.Added)
+            {
+                var observable = _items.GetObservable(selected.Value);
+                if (observable != null)
+                    observable.IsSelected = true;
+            }
         }
 
         /// <summary>
-        /// Selects item in the list.
+        /// Called when items are removed from the SelectedItems observable list
         /// </summary>
-        public void SelectItem(object itemData)
+        protected virtual void OnSelectedItemsRemoved(object sender, DataItemsRemovedEventArgs args)
         {
-            var listItem = _presentedListItems.FirstOrDefault(x =>
-            {
-                var item = x as ListItem;
-                return item != null ? item.Item.Value == itemData : false;
-            });
-
-            if (listItem == null)
-            {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to select list item. Item not found.", GameObjectName));
-                return;
-            }
-
-            SelectItem(listItem as ListItem, false);
-        }
-
-        /// <summary>
-        /// Selects or deselects a list item.
-        /// </summary>
-        private void SetSelected(ListItem listItem, bool selected)
-        {
-            if (listItem == null)
+            if (_items == null)
                 return;
 
-            listItem.IsSelected.Value = selected;
-            if (selected)
+            // deselect items in Items observable list
+            foreach (var deselected in args.Removed)
             {
-                // item selected
-                _selectedItem = listItem.Item.Value;
-                SelectedItem.Value = _selectedItem;
-                IsItemSelected.Value = true;
-                if (Items.Value != null)
-                {
-                    Items.Value.SetSelected(_selectedItem);
-                }
-
-                // add to list of selected items
-                if (!SelectedItems.Value.Contains(listItem.Item.Value))
-                {
-                    SelectedItems.Value.Add(listItem.Item.Value);
-                }
-
-                // trigger item selected action
-                if (ItemSelected.HasEntries)
-                {
-                    ItemSelected.Trigger(new ItemSelectionActionData { IsSelected = true, ItemView = listItem, Item = listItem.Item.Value });
-                }
-            }
-            else
-            {
-                // remove from list of selected items
-                SelectedItems.Value.Remove(listItem.Item.Value);
-
-                // set selected item
-                if (SelectedItem.Value == listItem.Item.Value)
-                {
-                    _selectedItem = SelectedItems.Value.LastOrDefault();
-                    SelectedItem.Value = _selectedItem;
-
-                    if (Items.Value != null)
-                    {
-                        Items.Value.SetSelected(_selectedItem);
-                    }
-                }
-                IsItemSelected.Value = SelectedItems.Value.Count > 0;
-
-                // trigger item deselected action
-                if (ItemDeselected.HasEntries)
-                {
-                    ItemDeselected.Trigger(new ItemSelectionActionData { IsSelected = selected, ItemView = listItem, Item = listItem.Item.Value });
-                }
+                var observable = _items.GetObservable(deselected.Value);
+                if (observable != null)
+                    observable.IsSelected = false;
             }
         }
 
         /// <summary>
         /// Called when the list of items has been changed.
         /// </summary>
-        public virtual void ItemsChanged()
+        protected virtual void ItemsChanged()
         {
             if (ListItemTemplates.Count <= 0)
-                return; // static list 
+                return; // static list
 
             Rebuild();
             LayoutChanged();
         }
 
         /// <summary>
-        /// Called when the list of items has been changed.
+        /// Updates the sort index on the list items.
         /// </summary>
-        private void OnListChanged(object sender, ListChangedEventArgs e)
+        private void UpdateSortIndex()
         {
-            bool layoutChanged = false;
+            // update not needed for observable list items
+            if (_items != null)
+                return;
 
-            // update list of items
-            if (e.ListChangeAction == ListChangeAction.Clear)
+            var index = 0;
+
+            _presentedListItems.ForEach(x =>
             {
-                Clear();
-                layoutChanged = true;
-            }
-            else if (e.ListChangeAction == ListChangeAction.Add)
+                if (!x.IsLive)
+                    return;
+
+                x.SortIndex.DirectValue = index + 1;
+                x.IsAlternate.Value = AlternateItems.Value && Utils.IsOdd(index + 1);
+                ++index;
+            });
+        }
+
+        /// <summary>
+        /// Rebuilds the entire list.
+        /// </summary>
+        protected virtual void Rebuild()
+        {
+            // assume a completely new list has been set
+            if (_items != null)
             {
-                AddRange(e.StartIndex, e.EndIndex);
-                layoutChanged = true;
-            }
-            else if (e.ListChangeAction == ListChangeAction.Remove)
-            {
-                RemoveRange(e.StartIndex, e.EndIndex);
-                layoutChanged = true;
-            }
-            else if (e.ListChangeAction == ListChangeAction.Modify)
-            {
-                ItemsModified(e.StartIndex, e.EndIndex, e.FieldPath);
-            }
-            else if (e.ListChangeAction == ListChangeAction.Select)
-            {
-                SelectItem(e.StartIndex);
-            }
-            else if (e.ListChangeAction == ListChangeAction.Replace)
-            {
-                ItemsReplaced(e.StartIndex, e.EndIndex);
-                layoutChanged = true;
-            }
-            else if (e.ListChangeAction == ListChangeAction.ScrollTo)
-            {
-                ScrollTo(e.StartIndex, e.Alignment, e.Offset);
-            }
-            else if (e.ListChangeAction == ListChangeAction.Move)
-            {
-                layoutChanged = true;
+                // unsubscribe from change events in the old list
+                _items.ItemsAdded -= OnItemsAdded;
+                _items.ItemsRemoved -= OnItemsRemoved;
+                _items.ItemsModified -= OnItemsModified;
+                _items.ItemsMoved -= OnItemsMoved;
+                _items.ItemSelectChanged -= OnItemSelectChanged;
+                _items.ScrolledTo -= OnScrolledTo;
             }
 
-            if (ListChanged.HasEntries)
-            {
-                ListChanged.Trigger(new ListChangedActionData { ListChangeAction = e.ListChangeAction, StartIndex = e.StartIndex, EndIndex = e.EndIndex, FieldPath = e.FieldPath });
-            }
+            _items = Items.Value;
 
-            // update sort index
-            UpdateSortIndex();
+            // clear list
+            ClearPresentedItems();
 
-            if (layoutChanged)
+            // add new list
+            if (_items != null)
             {
-                if (ListPanel != null)
+                // subscribe to change events in the new list
+                _items.ItemsAdded += OnItemsAdded;
+                _items.ItemsRemoved += OnItemsRemoved;
+                _items.ItemsModified += OnItemsModified;
+                _items.ItemsMoved += OnItemsMoved;
+                _items.ItemSelectChanged += OnItemSelectChanged;
+                _items.ScrolledTo += OnScrolledTo;
+
+                // add list items
+                if (_items.Count > 0)
                 {
-                    ListPanel.ScrollRect.UpdateNormalizedPosition.Value = true; // set to retain scroll position as content updates
+                    AddRange(0, _items.Count - 1);
                 }
 
-                // inform parents of update
-                NotifyLayoutChanged();
+                // silently clear selected items
+                ListenSelectedItems(false);
+                _selectedItems.Clear();
+                ListenSelectedItems(true);
+
+                // update selected items to match new Items data model
+                var selectedItems = new List<IObservableItem>(_items.SelectedObservables);
+                foreach (var item in selectedItems)
+                {
+                    item.ForceSelected(true);
+                }
+                SelectedItem.Value = _items.SelectedItem;
             }
         }
 
         /// <summary>
-        /// Scrolls to item at index.
+        /// Event handler for when items are added
         /// </summary>
-        private void ScrollTo(int index, ElementAlignment? alignment, ElementMargin offset)
+        protected virtual void OnItemsAdded(object sender, DataItemsAddedEventArgs args)
+        {
+            switch (args.AddReason)
+            {
+                case DataItemAddReason.Add:
+                case DataItemAddReason.Insert:
+                    AddRange(args.StartIndex, args.EndIndex);
+                    break;
+                case DataItemAddReason.Replace:
+                    ItemsReplaced(args.StartIndex, args.EndIndex);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // inform parents of update
+            NotifyListChanged(true, args.ActionData);
+        }
+
+        /// <summary>
+        /// Event handler for when items are removed
+        /// </summary>
+        protected virtual void OnItemsRemoved(object sender, DataItemsRemovedEventArgs args)
+        {
+            switch (args.RemoveReason)
+            {
+                case DataItemsRemovedReason.Remove:
+                    RemoveRange(args.StartIndex, args.EndIndex);
+                    break;
+                case DataItemsRemovedReason.Clear:
+                    ClearPresentedItems();
+                    break;
+                case DataItemsRemovedReason.Replace:
+                    return;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // inform parents of update
+            NotifyListChanged(true, args.ActionData);
+        }
+
+        /// <summary>
+        /// Event handler for when items are modified
+        /// </summary>
+        protected virtual void OnItemsModified(object sender, DataItemsModifiedEventArgs args)
+        {
+            NotifyListChanged(false, args.ActionData);
+        }
+
+        /// <summary>
+        /// Event handler for when items are moved
+        /// </summary>
+        protected virtual void OnItemsMoved(object sender, DataItemsMovedEventArgs args)
+        {
+            // inform parents of update
+            NotifyListChanged(true, args.ActionData);
+        }
+
+        /// <summary>
+        /// Event handler for when items are selected or deselected
+        /// </summary>
+        protected virtual void OnItemSelectChanged(object sender, DataItemSelectChangedEventArgs args)
+        {
+            var observable = sender as IObservableItem;
+            if (observable == null)
+                return;
+
+            if (args.IsSelected)
+            {
+                if (!_selectedItems.Contains(observable.Value))
+                {
+                    SelectedItem.Value = observable.Value;
+                    _selectedItems.Add(observable.Value);
+                    if (!CanMultiSelect)
+                    {
+                        var selected = new List<IObservableItem>(_items.SelectedObservables);
+                        foreach (var selItem in selected)
+                        {
+                            if (!Equals(selItem, observable))
+                                selItem.IsSelected = false;
+                        }
+                    }
+
+                    // trigger item selected action
+                    if (ItemSelected.HasEntries)
+                        ItemSelected.Trigger(new ItemSelectionActionData(observable));
+                }
+            }
+            else
+            {
+                if (_selectedItems.Remove(observable.Value))
+                {
+                    if (Equals(SelectedItem.Value, observable.Value))
+                        SelectedItem.Value = _selectedItems.Values.FirstOrDefault();
+
+                    // trigger item deselected action
+                    if (ItemDeselected.HasEntries)
+                        ItemDeselected.Trigger(new ItemSelectionActionData(observable));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Event handler for when list is scrolled to a specific item.
+        /// </summary>
+        protected virtual void OnScrolledTo(object sender, DataScrollToEventArgs args)
         {
             if (ListPanel == null)
                 return;
+
+            var index = args.Index;
+            var alignment = args.Alignment;
+            var offset = args.Offset;
 
             if (index >= _presentedListItems.Count || index < 0)
                 return;
@@ -1442,138 +1503,112 @@ namespace MarkLight.Views.UI
                 offset = new ElementMargin();
             }
 
-            bool verticalScrollDirection = Overflow.Value == OverflowMode.Overflow && Orientation.Value == ElementOrientation.Vertical ||
-                Overflow.Value == OverflowMode.Wrap && Orientation.Value == ElementOrientation.Horizontal;
+            var verticalScrollDirection = Overflow.Value == OverflowMode.Overflow && Orientation.Value == ElementOrientation.Vertical ||
+                                           Overflow.Value == OverflowMode.Wrap && Orientation.Value == ElementOrientation.Horizontal;
 
             if (verticalScrollDirection)
             {
                 // set vertical scroll distance
-                float viewportHeight = ListPanel.ScrollRect.ActualHeight;
-                float scrollRegionHeight = ScrollContent.Layout.Height.Pixels;
-                float scrollHeight = scrollRegionHeight - viewportHeight;
+                var viewportHeight = ListPanel.ScrollRect.ActualHeight;
+                var scrollRegionHeight = ScrollContent.Layout.Height.Pixels;
+                var scrollHeight = scrollRegionHeight - viewportHeight;
                 if (scrollHeight <= 0)
                 {
                     return;
                 }
 
                 // calculate the scroll position based on alignment and offset
-                float itemPosition = _presentedListItems[index].OffsetFromParent.Value.Top.Pixels;
-                float itemHeight = _presentedListItems[index].Layout.Height.Pixels;
+                var itemPosition = _presentedListItems[index].OffsetFromParent.Value.Top.Pixels;
+                var itemHeight = _presentedListItems[index].Layout.Height.Pixels;
 
                 if (alignment == null || alignment.Value.HasFlag(ElementAlignment.Bottom))
                 {
                     // scroll so item is at bottom of viewport
-                    float scrollOffset = itemPosition - (viewportHeight - itemHeight) + offset.Top.Pixels + offset.Bottom.Pixels;
+                    var scrollOffset = itemPosition - (viewportHeight - itemHeight) + offset.Top.Pixels + offset.Bottom.Pixels;
                     VerticalNormalizedPosition.Value = (1 - scrollOffset / scrollHeight).Clamp(0, 1);
                 }
                 else if (alignment.Value.HasFlag(ElementAlignment.Left) || alignment.Value.HasFlag(ElementAlignment.Right) ||
-                    alignment.Value == ElementAlignment.Center)
+                         alignment.Value == ElementAlignment.Center)
                 {
                     // scroll so item is at center of viewport
-                    float scrollOffset = itemPosition - viewportHeight / 2 + itemHeight / 2 + offset.Top.Pixels + offset.Bottom.Pixels;
+                    var scrollOffset = itemPosition - viewportHeight / 2 + itemHeight / 2 + offset.Top.Pixels + offset.Bottom.Pixels;
                     VerticalNormalizedPosition.Value = (1 - scrollOffset / scrollHeight).Clamp(0, 1);
                 }
                 else
                 {
                     // scroll so item is at top of viewport
-                    float scrollOffset = itemPosition + offset.Top.Pixels + offset.Bottom.Pixels;
+                    var scrollOffset = itemPosition + offset.Top.Pixels + offset.Bottom.Pixels;
                     VerticalNormalizedPosition.Value = (1 - scrollOffset / scrollHeight).Clamp(0, 1);
                 }
             }
             else
             {
                 // set horizontal scroll distance
-                float viewportWidth = ListPanel.ScrollRect.ActualWidth;
-                float scrollRegionWidth = ScrollContent.Layout.Width.Pixels;
-                float scrollWidth = scrollRegionWidth - viewportWidth;
+                var viewportWidth = ListPanel.ScrollRect.ActualWidth;
+                var scrollRegionWidth = ScrollContent.Layout.Width.Pixels;
+                var scrollWidth = scrollRegionWidth - viewportWidth;
                 if (scrollWidth <= 0)
                 {
                     return;
                 }
 
                 // calculate the scroll position based on alignment and offset
-                float itemPosition = _presentedListItems[index].OffsetFromParent.Value.Left.Pixels;
-                float itemWidth = _presentedListItems[index].Layout.Width.Pixels;
+                var itemPosition = _presentedListItems[index].OffsetFromParent.Value.Left.Pixels;
+                var itemWidth = _presentedListItems[index].Layout.Width.Pixels;
 
                 if (alignment == null || alignment.Value.HasFlag(ElementAlignment.Right))
                 {
                     // scroll so item is the right side of viewport
-                    float scrollOffset = itemPosition - (viewportWidth - itemWidth) + offset.Left.Pixels + offset.Right.Pixels;
+                    var scrollOffset = itemPosition - (viewportWidth - itemWidth) + offset.Left.Pixels + offset.Right.Pixels;
                     HorizontalNormalizedPosition.Value = (scrollOffset / scrollWidth).Clamp(0, 1);
                 }
                 else if (alignment.Value.HasFlag(ElementAlignment.Top) || alignment.Value.HasFlag(ElementAlignment.Bottom) ||
-                    alignment.Value == ElementAlignment.Center)
+                         alignment.Value == ElementAlignment.Center)
                 {
                     // scroll so item is at center of viewport
-                    float scrollOffset = itemPosition - viewportWidth / 2 + itemWidth / 2 + offset.Left.Pixels + offset.Right.Pixels;
+                    var scrollOffset = itemPosition - viewportWidth / 2 + itemWidth / 2 + offset.Left.Pixels + offset.Right.Pixels;
                     HorizontalNormalizedPosition.Value = (scrollOffset / scrollWidth).Clamp(0, 1);
                 }
                 else
                 {
                     // scroll so item is at left side of viewport
-                    float scrollOffset = itemPosition + offset.Left.Pixels + offset.Right.Pixels;
+                    var scrollOffset = itemPosition + offset.Left.Pixels + offset.Right.Pixels;
                     HorizontalNormalizedPosition.Value = (scrollOffset / scrollWidth).Clamp(0, 1);
                 }
             }
+            NotifyListChanged(false, args.ActionData);
+        }
+
+        protected virtual void NotifyListChanged(bool layoutUpdated, ActionData actionData) {
+
+            if (ListChanged.HasEntries)
+                ListChanged.Trigger(actionData);
+
+            if (ListPanel != null)
+                ListPanel.ScrollRect.UpdateNormalizedPosition.Value = true; // set to retain scroll position as content updates
+
+            // inform parents of update
+            if (layoutUpdated)
+                NotifyLayoutChanged();
         }
 
         /// <summary>
-        /// Updates the sort index on the list items.
+        /// Clears the list items if there is no data source.
         /// </summary>
-        public void UpdateSortIndex()
+        public bool Clear()
         {
-            int index = 0;
-
-            _presentedListItems.ForEach(x =>
-            {
-                if (!x.IsLive)
-                    return;
-
-                int itemIndex = Items.Value != null ? Items.Value.GetIndex(x.Item.Value) : index;
-                x.SortIndex.DirectValue = itemIndex + 1;
-                x.IsAlternate.Value = AlternateItems.Value && Utils.IsOdd(itemIndex + 1);
-                ++index;
-            });
-        }
-
-        /// <summary>
-        /// Rebuilds the entire list.
-        /// </summary>
-        public void Rebuild()
-        {
-            // assume a completely new list has been set
-            if (_oldItems != null)
-            {
-                // unsubscribe from change events in the old list
-                _oldItems.ListChanged -= OnListChanged;
-            }
-            _oldItems = Items.Value;
-
-            // clear list
-            Clear();
-
-            // add new list
+            // clear through data model if present
             if (Items.Value != null)
-            {
-                // subscribe to change events in the new list
-                Items.Value.ListChanged += OnListChanged;
+                return false;
 
-                // add list items
-                if (Items.Value.Count > 0)
-                {
-                    AddRange(0, Items.Value.Count - 1);
-                }
-            }
-
-            // update sort index
-            UpdateSortIndex();
+            ClearPresentedItems();
+            return true;
         }
 
         /// <summary>
         /// Clears the list items.
         /// </summary>
-        public void Clear()
-        {
+        private void ClearPresentedItems() {
             foreach (var presentedItem in _presentedListItems)
             {
                 DestroyListItem(presentedItem);
@@ -1587,7 +1622,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         private void AddRange(int startIndex, int endIndex)
         {
-            if (Items == null)
+            if (_items == null)
                 return;
 
             // make sure we have a template
@@ -1598,9 +1633,9 @@ namespace MarkLight.Views.UI
             }
 
             // validate input
-            int lastIndex = Items.Value.Count - 1;
+            int lastIndex = _items.Count - 1;
             int insertCount = (endIndex - startIndex) + 1;
-            bool listMatch = _presentedListItems.Count == (Items.Value.Count - insertCount);
+            bool listMatch = _presentedListItems.Count == (_items.Count - insertCount);
             if (startIndex < 0 || startIndex > lastIndex ||
                 endIndex < startIndex || endIndex > lastIndex || !listMatch)
             {
@@ -1643,54 +1678,13 @@ namespace MarkLight.Views.UI
         }
 
         /// <summary>
-        /// Called when item data in the list have been modified.
-        /// </summary>
-        private void ItemsModified(int startIndex, int endIndex, string fieldPath = "")
-        {
-            // validate input
-            int lastIndex = _presentedListItems.Count - 1;
-            bool listMatch = _presentedListItems.Count == Items.Value.Count;
-            if (startIndex < 0 || startIndex > lastIndex || endIndex < startIndex || endIndex > lastIndex || !listMatch)
-            {
-                Debug.LogWarning(String.Format("[MarkLight] {0}: List mismatch. Rebuilding list.", GameObjectName));
-                Rebuild();
-                return;
-            }
-
-            // notify observers that item has changed
-            for (int i = startIndex; i <= endIndex; ++i)
-            {
-                ItemModified(i, fieldPath);
-            }
-        }
-
-        /// <summary>
-        /// Called when item data in list has been modified.
-        /// </summary>
-        private void ItemModified(int index, string fieldPath = "")
-        {
-            object itemData = Items.Value[index];
-            var listItem = _presentedListItems[index];
-            var path = String.IsNullOrEmpty(fieldPath) ? "Item" : "Item." + fieldPath;
-
-            listItem.ForThisAndEachChild<UIView>(x =>
-            {
-                // TODO can be made faster if a HasItemBinding flag is implemented, also we can stop traversing the tree if another item is set
-                if (x.Item.Value == itemData)
-                {
-                    x.NotifyDependentValueObservers(path, true);
-                }
-            });
-        }
-
-        /// <summary>
         /// Called when item data in the list have been replaced.
         /// </summary>
         private void ItemsReplaced(int startIndex, int endIndex)
         {
             // validate input
             int lastIndex = _presentedListItems.Count - 1;
-            bool listMatch = _presentedListItems.Count == Items.Value.Count;
+            bool listMatch = _presentedListItems.Count ==_items.Count;
             if (startIndex < 0 || startIndex > lastIndex || endIndex < startIndex || endIndex > lastIndex || !listMatch)
             {
                 Debug.LogWarning(String.Format("[MarkLight] {0}: List mismatch. Rebuilding list.", GameObjectName));
@@ -1710,16 +1704,15 @@ namespace MarkLight.Views.UI
         /// </summary>
         private void ItemReplaced(int index)
         {
-            object newItemData = Items.Value[index];
+            var observableItem = _items.Observables[index];
             var listItem = _presentedListItems[index];
-            var oldItemData = listItem.Item.Value;
 
             listItem.ForThisAndEachChild<UIView>(x =>
             {
                 // TODO can be made faster if a HasItemBinding flag is implemented, also we can stop traversing the tree if another item is set
-                if (x.Item.Value == oldItemData)
+                if (x.SortIndex.Value == observableItem.Index + 1)
                 {
-                    x.Item.Value = newItemData;
+                    x.Item.Value = observableItem;
                     x.NotifyDependentValueObservers("Item", true);
                 }
             });
@@ -1728,29 +1721,33 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Creates and initializes a new list item.
         /// </summary>
-        private ListItem CreateListItem(int index)
+        private void CreateListItem(int index)
         {
-            object itemData = Items.Value[index];
-            var template = GetListItemTemplate(itemData);
+            var observableItem = _items.Observables[index];
+            var template = GetListItemTemplate(observableItem.Value);
 
-            View content = UseVirtualization ? _virtualizedItems.VirtualizedItemsContainer : Content;
+            var content = UseVirtualization
+                ? _virtualizedItems.VirtualizedItemsContainer
+                : Content;
+
             var newItemView = content.CreateView(template, -1, _viewPools.Get(template));
             newItemView.Template = template;
+
             _presentedListItems.Insert(index, newItemView);
 
             // set item data
             newItemView.ForThisAndEachChild<UIView>(x =>
             {
-                if (x.FindParent<List>() == this)
+                if (ReferenceEquals(x.FindParent<List>(), this))
                 {
-                    x.Item.Value = itemData;
+                    x.SortIndex.DirectValue = index + 1;
+                    x.Item.Value = observableItem;
                 }
             });
             newItemView.Activate();
 
             // initialize view
             newItemView.InitializeViews();
-            return newItemView;
         }
 
         /// <summary>
@@ -1797,9 +1794,12 @@ namespace MarkLight.Views.UI
         private void DestroyListItem(ListItem presentedItem)
         {
             // deselect the item first
-            SetSelected(presentedItem, false);
+            presentedItem.Item.Value = null;
 
-            var viewPool = presentedItem.Template != null ? _viewPools.Get(presentedItem.Template) : null;
+            var viewPool = presentedItem.Template != null
+                ? _viewPools.Get(presentedItem.Template)
+                : null;
+
             presentedItem.Destroy(viewPool);
         }
 
@@ -1812,7 +1812,7 @@ namespace MarkLight.Views.UI
                 return null;
 
             // does a virtualized items container exist for this view?
-            var virtualizedItemsContainer = LayoutRoot.Find<VirtualizedItemsContainer>(x => x.Owner == this, false);
+            var virtualizedItemsContainer = LayoutRoot.Find<VirtualizedItemsContainer>(x => ReferenceEquals(x.Owner, this), false);
             if (virtualizedItemsContainer == null)
             {
                 // no. create a new one 
@@ -1837,7 +1837,7 @@ namespace MarkLight.Views.UI
 
             _updateWidth = Layout.Width.Unit == ElementSizeUnit.Percents;
             _updateHeight = Layout.Height.Unit == ElementSizeUnit.Percents;
-            SelectedItems.DirectValue = new GenericObservableList();
+            SetSelectedItems(new ObservableList<object>());
 
             // remove panel if not used
             if (ListPanel != null && !IsScrollable)
@@ -1862,10 +1862,6 @@ namespace MarkLight.Views.UI
             }
 
             _presentedListItems = new List<ListItem>();
-            if (ListItemTemplates.Count > 0)
-            {
-                ListItemTemplates.ForEach(x => x.Deactivate());
-            }
 
             // set up virtualization
             UseVirtualization.DirectValue = InitializeVirtualization();
@@ -1941,27 +1937,28 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Returns list item template.
         /// </summary>
-        public List<ListItem> ListItemTemplates
+        public IList<ListItem> ListItemTemplates
         {
             get
             {
                 if (_listItemTemplates == null)
                 {
                     _listItemTemplates = Content.GetChildren<ListItem>(x => x.IsTemplate, false);
+                    _listItemTemplates.ForEach(x => x.Deactivate());
                 }
 
-                return _listItemTemplates;
+                return _listItemTemplates.AsReadOnly();
             }
         }
 
         /// <summary>
         /// Returns list of presented list items.
         /// </summary>
-        public List<ListItem> PresentedListItems
+        public IList<ListItem> PresentedListItems
         {
             get
             {
-                return _presentedListItems;
+                return _presentedListItems.AsReadOnly();
             }
         }
 

@@ -13,9 +13,17 @@ namespace MarkLight.Views.UI
     {
         #region Fields
 
-        public ListItem ItemView;
-        public object Item;
-        public bool IsSelected;
+        public readonly IObservableItem Item;
+        public readonly bool IsSelected;
+
+        #endregion
+
+        #region Constructor
+
+        public ItemSelectionActionData(IObservableItem item) {
+            Item = item;
+            IsSelected = item.IsSelected;
+        }
 
         #endregion
     }
