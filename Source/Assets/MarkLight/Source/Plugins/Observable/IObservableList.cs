@@ -139,6 +139,11 @@ namespace MarkLight
         /// </summary>
         object this[int index] { get; }
 
+        /// <summary>
+        /// Get the last scroll event produced.
+        /// </summary>
+        DataScrollToEventArgs LastScroll { get; }
+
         #endregion
     }
 }

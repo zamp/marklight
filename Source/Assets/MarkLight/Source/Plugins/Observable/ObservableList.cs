@@ -931,7 +931,7 @@ namespace MarkLight
         /// <summary>
         /// Scrolls to item.
         /// </summary>
-        public void ScrollTo(T item, ElementAlignment? alignment = null, ElementMargin offset = null)
+        public void ScrollTo(T item, ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null)
         {
             var index = IndexOf(item);
             if (index >= 0)
@@ -943,9 +943,14 @@ namespace MarkLight
         /// <summary>
         /// Scrolls to item.
         /// </summary>
-        public void ScrollTo(int index, ElementAlignment? alignment = null, ElementMargin offset = null) {
+        public void ScrollTo(int index,
+            ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null) {
+
+            var args = new DataScrollToEventArgs(index, alignment, offset);
             if (ScrolledTo != null)
-                ScrolledTo(this, new DataScrollToEventArgs(index, alignment, offset));
+                ScrolledTo(this, args);
+
+            LastScroll = args;
         }
 
         private void CallSelectChangedEvent(IObservableItem item, DataItemSelectChangedEventArgs args) {
@@ -1145,6 +1150,11 @@ namespace MarkLight
             get { return _selectedItems.AsReadOnly(); }
         }
 
+        public DataScrollToEventArgs LastScroll
+        {
+            get; private set;
+        }
+
         #endregion
 
 
@@ -1249,7 +1259,7 @@ namespace MarkLight
                 _model.NotifyItemModified(Index);
             }
 
-            public void ScrollTo(ElementAlignment? alignment = null, ElementMargin offset = null) {
+            public void ScrollTo(ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null) {
                 _model.ScrollTo(Index, alignment, offset);
             }
 
