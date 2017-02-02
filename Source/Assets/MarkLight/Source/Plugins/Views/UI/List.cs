@@ -664,6 +664,7 @@ namespace MarkLight.Views.UI
         private float _previousViewportMin;
         private bool _updateVirtualization;
         private Resolution _prevResolution;
+        private DataScrollToEventArgs _scrollTo;
 
         #endregion
 
@@ -854,16 +855,17 @@ namespace MarkLight.Views.UI
                     ? view.Layout.InnerPixelHeight
                     : view.Layout.Height.Pixels;
 
+                // set offsets and alignment
+                var offset = new ElementMargin(
+                    new ElementSize(isHorizontal ? totalWidth + horizontalSpacing * childIndex : 0f,
+                        ElementSizeUnit.Pixels),
+                    new ElementSize(!isHorizontal ? totalHeight + verticalSpacing * childIndex : 0f,
+                        ElementSizeUnit.Pixels));
+
+                view.Layout.OffsetFromParent = offset;
+
                 if (Overflow == OverflowMode.Overflow)
                 {
-                    // set offsets and alignment
-                    var offset = new ElementMargin(
-                        new ElementSize(isHorizontal ? totalWidth + horizontalSpacing * childIndex : 0f,
-                            ElementSizeUnit.Pixels),
-                        new ElementSize(!isHorizontal ? totalHeight + verticalSpacing * childIndex : 0f,
-                            ElementSizeUnit.Pixels));
-
-                    view.Layout.OffsetFromParent = offset;
 
                     // set desired alignment if it is valid for the orientation otherwise use defaults
                     var alignment = isHorizontal
@@ -1105,6 +1107,16 @@ namespace MarkLight.Views.UI
             }
 
             return Layout.IsDirty;
+        }
+
+        public override void RenderLayout() {
+            base.RenderLayout();
+
+            if (_scrollTo != null)
+            {
+                ScrollTo(_scrollTo.Index, _scrollTo.Alignment, _scrollTo.Offset);
+                _scrollTo = null;
+            }
         }
 
         /// <summary>
@@ -1374,6 +1386,8 @@ namespace MarkLight.Views.UI
                     item.ForceSelected(true);
                 }
                 SelectedItem.Value = _items.SelectedItem;
+
+                _scrollTo = _items.LastScroll;
             }
         }
 
@@ -1488,50 +1502,67 @@ namespace MarkLight.Views.UI
         /// </summary>
         protected virtual void OnScrolledTo(object sender, DataScrollToEventArgs args)
         {
+            ScrollTo(args.Index, args.Alignment, args.Offset);
+        }
+
+        /// <summary>
+        /// Scroll to an item specified by index position.
+        /// </summary>
+        public virtual void ScrollTo(int index,
+                                     ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null)
+        {
             if (ListPanel == null)
                 return;
-
-            var index = args.Index;
-            var alignment = args.Alignment;
-            var offset = args.Offset;
 
             if (index >= _presentedListItems.Count || index < 0)
                 return;
 
             if (offset == null)
-            {
                 offset = new ElementMargin();
-            }
 
-            var verticalScrollDirection = Overflow.Value == OverflowMode.Overflow && Orientation.Value == ElementOrientation.Vertical ||
-                                           Overflow.Value == OverflowMode.Wrap && Orientation.Value == ElementOrientation.Horizontal;
 
-            if (verticalScrollDirection)
+            var listItem = _presentedListItems[index];
+            var itemLayout = listItem.Layout;
+            var parentLayout = ((UIView)listItem.LayoutParent).Layout;
+
+            var isVerticalScroll = Overflow.Value == OverflowMode.Overflow
+                                   && Orientation.Value == ElementOrientation.Vertical
+                                   ||
+                                   Overflow.Value == OverflowMode.Wrap
+                                   && Orientation.Value == ElementOrientation.Horizontal;
+
+            if (isVerticalScroll)
             {
                 // set vertical scroll distance
                 var viewportHeight = ListPanel.ScrollRect.ActualHeight;
                 var scrollRegionHeight = ScrollContent.Layout.Height.Pixels;
+
                 var scrollHeight = scrollRegionHeight - viewportHeight;
                 if (scrollHeight <= 0)
-                {
                     return;
-                }
 
                 // calculate the scroll position based on alignment and offset
-                var itemPosition = _presentedListItems[index].OffsetFromParent.Value.Top.Pixels;
-                var itemHeight = _presentedListItems[index].Layout.Height.Pixels;
+                var parentHeight = parentLayout.PixelHeight;
+                var itemHeight = listItem.Layout.PixelHeight;
+                var itemPosition = -(parentHeight -
+                                     itemLayout.AnchorMin.y * parentHeight + itemLayout.OffsetMax.y);
 
-                if (alignment == null || alignment.Value.HasFlag(ElementAlignment.Bottom))
+                if (alignment.HasFlag(ElementAlignment.Bottom))
                 {
                     // scroll so item is at bottom of viewport
-                    var scrollOffset = itemPosition - (viewportHeight - itemHeight) + offset.Top.Pixels + offset.Bottom.Pixels;
+                    var scrollOffset = itemPosition - (viewportHeight - itemHeight)
+                                       + offset.Top.Pixels + offset.Bottom.Pixels;
+
                     VerticalNormalizedPosition.Value = (1 - scrollOffset / scrollHeight).Clamp(0, 1);
                 }
-                else if (alignment.Value.HasFlag(ElementAlignment.Left) || alignment.Value.HasFlag(ElementAlignment.Right) ||
-                         alignment.Value == ElementAlignment.Center)
+                else if (alignment.HasFlag(ElementAlignment.Left)
+                         || alignment.HasFlag(ElementAlignment.Right)
+                         || alignment == ElementAlignment.Center)
                 {
                     // scroll so item is at center of viewport
-                    var scrollOffset = itemPosition - viewportHeight / 2 + itemHeight / 2 + offset.Top.Pixels + offset.Bottom.Pixels;
+                    var scrollOffset = itemPosition - viewportHeight / 2 + itemHeight / 2
+                                       + offset.Top.Pixels + offset.Bottom.Pixels;
+
                     VerticalNormalizedPosition.Value = (1 - scrollOffset / scrollHeight).Clamp(0, 1);
                 }
                 else
@@ -1546,27 +1577,33 @@ namespace MarkLight.Views.UI
                 // set horizontal scroll distance
                 var viewportWidth = ListPanel.ScrollRect.ActualWidth;
                 var scrollRegionWidth = ScrollContent.Layout.Width.Pixels;
+
                 var scrollWidth = scrollRegionWidth - viewportWidth;
                 if (scrollWidth <= 0)
-                {
                     return;
-                }
 
                 // calculate the scroll position based on alignment and offset
-                var itemPosition = _presentedListItems[index].OffsetFromParent.Value.Left.Pixels;
-                var itemWidth = _presentedListItems[index].Layout.Width.Pixels;
+                var parentWidth = parentLayout.PixelWidth;
+                var itemWidth = listItem.Layout.PixelWidth;
+                var itemPosition = -(parentWidth -
+                                     itemLayout.AnchorMin.x * parentWidth + itemLayout.OffsetMax.x);
 
-                if (alignment == null || alignment.Value.HasFlag(ElementAlignment.Right))
+                if (alignment.HasFlag(ElementAlignment.Right))
                 {
                     // scroll so item is the right side of viewport
-                    var scrollOffset = itemPosition - (viewportWidth - itemWidth) + offset.Left.Pixels + offset.Right.Pixels;
+                    var scrollOffset = itemPosition - (viewportWidth - itemWidth)
+                                       + offset.Left.Pixels + offset.Right.Pixels;
+
                     HorizontalNormalizedPosition.Value = (scrollOffset / scrollWidth).Clamp(0, 1);
                 }
-                else if (alignment.Value.HasFlag(ElementAlignment.Top) || alignment.Value.HasFlag(ElementAlignment.Bottom) ||
-                         alignment.Value == ElementAlignment.Center)
+                else if (alignment.HasFlag(ElementAlignment.Top)
+                         || alignment.HasFlag(ElementAlignment.Bottom)
+                         || alignment == ElementAlignment.Center)
                 {
                     // scroll so item is at center of viewport
-                    var scrollOffset = itemPosition - viewportWidth / 2 + itemWidth / 2 + offset.Left.Pixels + offset.Right.Pixels;
+                    var scrollOffset = itemPosition - viewportWidth / 2 + itemWidth / 2
+                                       + offset.Left.Pixels + offset.Right.Pixels;
+
                     HorizontalNormalizedPosition.Value = (scrollOffset / scrollWidth).Clamp(0, 1);
                 }
                 else
@@ -1576,16 +1613,17 @@ namespace MarkLight.Views.UI
                     HorizontalNormalizedPosition.Value = (scrollOffset / scrollWidth).Clamp(0, 1);
                 }
             }
-            NotifyListChanged(false, args.ActionData);
+
+            if (ListPanel != null)
+                ListPanel.ScrollRect.UpdateNormalizedPosition.Value = true;
+
+            NotifyListChanged(false, new ListChangedActionData(ListChangeAction.ScrollTo, index, index));
         }
 
         protected virtual void NotifyListChanged(bool layoutUpdated, ActionData actionData) {
 
             if (ListChanged.HasEntries)
                 ListChanged.Trigger(actionData);
-
-            if (ListPanel != null)
-                ListPanel.ScrollRect.UpdateNormalizedPosition.Value = true; // set to retain scroll position as content updates
 
             // inform parents of update
             if (layoutUpdated)

@@ -18,7 +18,7 @@ namespace MarkLight
         /// <summary>
         /// Get the scroll alignment.
         /// </summary>
-        public readonly ElementAlignment? Alignment;
+        public readonly ElementAlignment Alignment;
 
         /// <summary>
         /// Get the scroll offset.
@@ -32,7 +32,7 @@ namespace MarkLight
         /// <summary>
         /// Constructor.
         /// </summary>
-        public DataScrollToEventArgs(int index, ElementAlignment? alignment, ElementMargin offset) {
+        public DataScrollToEventArgs(int index, ElementAlignment alignment, ElementMargin offset) {
             Index = index;
             Alignment = alignment;
             Offset = offset;
