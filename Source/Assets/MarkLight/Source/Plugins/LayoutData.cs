@@ -30,6 +30,13 @@ namespace MarkLight {
         private ElementMargin _margin = new ElementMargin();
         private ElementMargin _padding = new ElementMargin();
 
+        private Vector2 _anchorMin;
+        private Vector2 _anchorMax;
+        private Vector2 _offsetMin;
+        private Vector2 _offsetMax;
+        private Vector3 _anchoredPosition;
+        private bool _isRectDirty = true;
+
         #endregion
 
         /// <summary>
@@ -41,6 +48,106 @@ namespace MarkLight {
         }
 
         #region Methods
+
+        /// <summary>
+        /// Update RectTransform information.
+        /// </summary>
+        private void UpdateRectData() {
+
+            if (!_isRectDirty)
+                return;
+
+            _isRectDirty = false;
+
+
+            // update rectTransform
+            // horizontal alignment and positioning
+            var width = View.OverrideWidth.IsSet ? View.OverrideWidth.Value : Width;
+            var height = View.OverrideHeight.IsSet ? View.OverrideHeight.Value : Height;
+
+            float xMin;
+            float xMax;
+            float offsetMinX;
+            float offsetMaxX;
+
+            if (Alignment.HasFlag(ElementAlignment.Left))
+            {
+                xMin = 0f;
+                xMax = width.Percent;
+                offsetMinX = 0f;
+                offsetMaxX = width.Pixels;
+            }
+            else if (Alignment.HasFlag(ElementAlignment.Right))
+            {
+                xMin = 1f - width.Percent;
+                xMax = 1f;
+                offsetMinX = -width.Pixels;
+                offsetMaxX = 0f;
+            }
+            else
+            {
+                xMin = 0.5f - width.Percent / 2f;
+                xMax = 0.5f + width.Percent / 2f;
+                offsetMinX = -width.Pixels / 2f;
+                offsetMaxX = width.Pixels / 2f;
+            }
+
+            //  vertical alignment
+            float yMin;
+            float yMax;
+            float offsetMinY;
+            float offsetMaxY;
+
+            if (Alignment.HasFlag(ElementAlignment.Top))
+            {
+                yMin = 1f - height.Percent;
+                yMax = 1f;
+                offsetMinY = -height.Pixels;
+                offsetMaxY = 0f;
+            }
+            else if (Alignment.HasFlag(ElementAlignment.Bottom))
+            {
+                yMin = 0f;
+                yMax = height.Percent;
+                offsetMinY = 0f;
+                offsetMaxY = height.Pixels;
+            }
+            else
+            {
+                yMin = 0.5f - height.Percent / 2f;
+                yMax = 0.5f + height.Percent / 2f;
+                offsetMinY = -height.Pixels / 2f;
+                offsetMaxY = height.Pixels / 2f;
+            }
+
+            _anchorMin = new Vector2(xMin + Margin.Left.Percent, yMin + Margin.Bottom.Percent);
+            _anchorMax = new Vector2(xMax - Margin.Right.Percent, yMax - Margin.Top.Percent);
+
+            // positioning and margins
+            _offsetMin = new Vector2(
+
+                offsetMinX + Margin.Left.Pixels + Offset.Left.Pixels
+                - Offset.Right.Pixels + OffsetFromParent.Left.Pixels
+                - OffsetFromParent.Right.Pixels,
+
+                offsetMinY + Margin.Bottom.Pixels - Offset.Top.Pixels
+                + Offset.Bottom.Pixels - OffsetFromParent.Top.Pixels
+                + OffsetFromParent.Bottom.Pixels);
+
+            _offsetMax = new Vector2(
+
+                offsetMaxX - Margin.Right.Pixels + Offset.Left.Pixels
+                - Offset.Right.Pixels + OffsetFromParent.Left.Pixels
+                - OffsetFromParent.Right.Pixels,
+
+                offsetMaxY - Margin.Top.Pixels - Offset.Top.Pixels
+                + Offset.Bottom.Pixels - OffsetFromParent.Top.Pixels
+                + OffsetFromParent.Bottom.Pixels);
+
+            _anchoredPosition = new Vector2(
+                _offsetMin.x / 2.0f + _offsetMax.x / 2.0f,
+                _offsetMin.y / 2.0f + _offsetMax.y / 2.0f);
+        }
 
         /// <summary>
         /// Copy values from one ElementSize to another.
@@ -182,6 +289,7 @@ namespace MarkLight {
                     return;
 
                 _alignment = value;
+                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -198,6 +306,7 @@ namespace MarkLight {
                     return;
 
                 _orientation = value;
+                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -214,6 +323,7 @@ namespace MarkLight {
                     return;
 
                 _width = value;
+                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -230,6 +340,7 @@ namespace MarkLight {
                     return;
 
                 _height = value;
+                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -246,6 +357,7 @@ namespace MarkLight {
                     return;
 
                 _offsetFromParent = value;
+                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -262,6 +374,7 @@ namespace MarkLight {
                     return;
 
                 _offset = value;
+                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -278,6 +391,7 @@ namespace MarkLight {
                     return;
 
                 _margin = value;
+                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -294,7 +408,68 @@ namespace MarkLight {
                     return;
 
                 _padding = value;
+                _isRectDirty = true;
                 IsDirty = true;
+            }
+        }
+
+        /// <summary>
+        /// The normalized position in the parent RectTransform that the lower left corner is anchored to.
+        /// </summary>
+        public Vector2 AnchorMin
+        {
+            get
+            {
+                UpdateRectData();
+                return _anchorMin;
+            }
+        }
+
+        /// <summary>
+        /// The normalized position in the parent RectTransform that the upper right corner is anchored to.
+        /// </summary>
+        public Vector2 AnchorMax
+        {
+            get
+            {
+                UpdateRectData();
+                return _anchorMax;
+            }
+        }
+
+        /// <summary>
+        /// The offset of the lower left corner of the rectangle relative to the lower left anchor.
+        /// </summary>
+        public Vector2 OffsetMin
+        {
+            get
+            {
+                UpdateRectData();
+                return _offsetMin;
+            }
+        }
+
+        /// <summary>
+        /// The offset of the upper right corner of the rectangle relative to the upper right anchor.
+        /// </summary>
+        public Vector2 OffsetMax
+        {
+            get
+            {
+                UpdateRectData();
+                return _offsetMax;
+            }
+        }
+
+        /// <summary>
+        /// The position of the pivot of this RectTransform relative to the anchor reference point.
+        /// </summary>
+        public Vector3 AnchoredPosition
+        {
+            get
+            {
+                UpdateRectData();
+                return _anchoredPosition;
             }
         }
 

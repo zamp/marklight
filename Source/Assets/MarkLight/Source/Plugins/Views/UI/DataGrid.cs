@@ -310,7 +310,7 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
-            Layout.Height = new ElementSize(DataGridList.Height.Value.Pixels + DataGridList.OffsetFromParent.Value.Top.Pixels);
+            Layout.Height = new ElementSize(DataGridList.Layout.Height.Pixels + DataGridList.Layout.OffsetFromParent.Top.Pixels);
             return Layout.IsDirty;
         }
 
@@ -331,7 +331,7 @@ namespace MarkLight.Views.UI
                 RowHeader.Alignment.DirectValue = MarkLight.ElementAlignment.Top;
 
                 // adjust list offset to row header
-                DataGridList.OffsetFromParent.Value.Top = RowHeader.Height.Value;
+                DataGridList.Layout.OffsetFromParent.Top = RowHeader.Layout.Height;
             }
         }
 
