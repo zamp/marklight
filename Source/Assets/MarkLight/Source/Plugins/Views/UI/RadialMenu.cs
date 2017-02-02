@@ -157,7 +157,7 @@ namespace MarkLight.Views.UI
                         float xOffset = Radius * Mathf.Sin(angle);
                         float yOffset = Radius * Mathf.Cos(angle);
 
-                        child.OffsetFromParent.DirectValue = new ElementMargin(xOffset + _menuOffset.x, -yOffset + _menuOffset.y, 0, 0);
+                        child.Layout.OffsetFromParent = new ElementMargin(xOffset + _menuOffset.x, -yOffset + _menuOffset.y, 0, 0);
                         child.Alignment.DirectValue = ElementAlignment.Center;
                         child.Activate();
                         child.NotifyLayoutChanged();
@@ -315,8 +315,8 @@ namespace MarkLight.Views.UI
                     offsetAnimator.TargetView = child;
                     _menuAnimators.Add(offsetAnimator);                    
 
-                    child.OffsetFromParent.DirectValue = new ElementMargin(_menuOffset.x, _menuOffset.y, 0, 0);
-                    child.Alignment.DirectValue = ElementAlignment.Center;
+                    child.Layout.OffsetFromParent = new ElementMargin(_menuOffset.x, _menuOffset.y, 0, 0);
+                    child.Layout.Alignment = ElementAlignment.Center;
                     child.Deactivate();
                     child.NotifyLayoutChanged();
                     angle += deltaAngle;

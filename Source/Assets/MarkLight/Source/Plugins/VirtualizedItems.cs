@@ -70,15 +70,15 @@ namespace MarkLight
         {
             if (Orientation == ElementOrientation.Vertical)
             {
-                float itemMin = item.OffsetFromParent.Value.Top.Pixels;
-                float itemMax = itemMin + item.Height.Value.Pixels;
+                float itemMin = item.Layout.OffsetFromParent.Top.Pixels;
+                float itemMax = itemMin + item.Layout.Height.Pixels;
 
                 return itemMax >= min && itemMin <= max;
             }
             else
             {
-                float itemMin = item.OffsetFromParent.Value.Left.Pixels;
-                float itemMax = itemMin + item.Width.Value.Pixels;
+                float itemMin = item.Layout.OffsetFromParent.Left.Pixels;
+                float itemMax = itemMin + item.Layout.Width.Pixels;
 
                 return itemMax >= min && itemMin <= max;
             }
