@@ -291,93 +291,13 @@ namespace MarkLight.Views.UI
             if (!UpdateRectTransform)
                 return; // rect transform is updated elsewhere
 
-            // update rectTransform
-            // horizontal alignment and positioning
-            var width = OverrideWidth.IsSet ? OverrideWidth.Value : Layout.Width;
-            var height = OverrideHeight.IsSet ? OverrideHeight.Value : Layout.Height;
-
-            float xMin;
-            float xMax;
-            float offsetMinX;
-            float offsetMaxX;
-
-            if (Layout.Alignment.HasFlag(ElementAlignment.Left))
-            {
-                xMin = 0f;
-                xMax = width.Percent;
-                offsetMinX = 0f;
-                offsetMaxX = width.Pixels;
-            }
-            else if (Layout.Alignment.HasFlag(ElementAlignment.Right))
-            {
-                xMin = 1f - width.Percent;
-                xMax = 1f;
-                offsetMinX = -width.Pixels;
-                offsetMaxX = 0f;
-            }
-            else
-            {
-                xMin = 0.5f - width.Percent / 2f;
-                xMax = 0.5f + width.Percent / 2f;
-                offsetMinX = -width.Pixels / 2f;
-                offsetMaxX = width.Pixels / 2f;
-            }
-
-            //  vertical alignment
-            float yMin;
-            float yMax;
-            float offsetMinY;
-            float offsetMaxY;
-
-            if (Layout.Alignment.HasFlag(ElementAlignment.Top))
-            {
-                yMin = 1f - height.Percent;
-                yMax = 1f;
-                offsetMinY = -height.Pixels;
-                offsetMaxY = 0f;
-            }
-            else if (Layout.Alignment.HasFlag(ElementAlignment.Bottom))
-            {
-                yMin = 0f;
-                yMax = height.Percent;
-                offsetMinY = 0f;
-                offsetMaxY = height.Pixels;
-            }
-            else
-            {
-                yMin = 0.5f - height.Percent / 2f;
-                yMax = 0.5f + height.Percent / 2f;
-                offsetMinY = -height.Pixels / 2f;
-                offsetMaxY = height.Pixels / 2f;
-            }
-
-            RectTransform.anchorMin = new Vector2(xMin + Layout.Margin.Left.Percent, yMin + Layout.Margin.Bottom.Percent);
-            RectTransform.anchorMax = new Vector2(xMax - Layout.Margin.Right.Percent, yMax - Layout.Margin.Top.Percent);
+            RectTransform.anchorMin = Layout.AnchorMin;
+            RectTransform.anchorMax = Layout.AnchorMax;
 
             // positioning and margins
-            RectTransform.offsetMin = new Vector2(
-
-                offsetMinX + Layout.Margin.Left.Pixels + Layout.Offset.Left.Pixels
-                - Layout.Offset.Right.Pixels + Layout.OffsetFromParent.Left.Pixels
-                - Layout.OffsetFromParent.Right.Pixels,
-
-                offsetMinY + Layout.Margin.Bottom.Pixels - Layout.Offset.Top.Pixels
-                + Layout.Offset.Bottom.Pixels - Layout.OffsetFromParent.Top.Pixels
-                + Layout.OffsetFromParent.Bottom.Pixels);
-
-            RectTransform.offsetMax = new Vector2(
-
-                offsetMaxX - Layout.Margin.Right.Pixels + Layout.Offset.Left.Pixels
-                - Layout.Offset.Right.Pixels + Layout.OffsetFromParent.Left.Pixels
-                - Layout.OffsetFromParent.Right.Pixels,
-
-                offsetMaxY - Layout.Margin.Top.Pixels - Layout.Offset.Top.Pixels
-                + Layout.Offset.Bottom.Pixels - Layout.OffsetFromParent.Top.Pixels
-                + Layout.OffsetFromParent.Bottom.Pixels);
-
-            RectTransform.anchoredPosition = new Vector2(
-                RectTransform.offsetMin.x / 2.0f + RectTransform.offsetMax.x / 2.0f,
-                RectTransform.offsetMin.y / 2.0f + RectTransform.offsetMax.y / 2.0f);
+            RectTransform.offsetMin = Layout.OffsetMin;
+            RectTransform.offsetMax = Layout.OffsetMax;
+            RectTransform.anchoredPosition = Layout.AnchoredPosition;
         }
 
         /// <summary>
@@ -391,91 +311,6 @@ namespace MarkLight.Views.UI
             LayoutData.Copy(Offset.Value, Layout.Offset);
             LayoutData.Copy(OffsetFromParent.Value, Layout.OffsetFromParent);
             RenderLayout();
-        }
-
-        /// <summary>
-        /// Called when fields affecting the rect transform of the view has changed.
-        /// </summary>
-        [Obsolete]
-        public virtual void RectTransformChanged()
-        {
-            if (!UpdateRectTransform)
-                return; // rect transform is updated elsewhere
-
-            // update rectTransform
-            // horizontal alignment and positioning
-            var width = OverrideWidth.IsSet ? OverrideWidth.Value : Layout.Width;
-            var height = OverrideHeight.IsSet ? OverrideHeight.Value : Layout.Height;
-
-            float xMin = 0f;
-            float xMax = 0f;
-            float offsetMinX = 0f;
-            float offsetMaxX = 0f;
-
-            if (Alignment.Value.HasFlag(ElementAlignment.Left))
-            {
-                xMin = 0f;
-                xMax = width.Percent;
-                offsetMinX = 0f;
-                offsetMaxX = width.Pixels;
-            }
-            else if (Alignment.Value.HasFlag(ElementAlignment.Right))
-            {
-                xMin = 1f - width.Percent;
-                xMax = 1f;
-                offsetMinX = -width.Pixels;
-                offsetMaxX = 0f;
-            }
-            else
-            {
-                xMin = 0.5f - width.Percent / 2f;
-                xMax = 0.5f + width.Percent / 2f;
-                offsetMinX = -width.Pixels / 2f;
-                offsetMaxX = width.Pixels / 2f;
-            }
-
-            //  vertical alignment
-            float yMin = 0f;
-            float yMax = 0f;
-            float offsetMinY = 0f;
-            float offsetMaxY = 0f;
-
-            if (Alignment.Value.HasFlag(ElementAlignment.Top))
-            {
-                yMin = 1f - height.Percent;
-                yMax = 1f;
-                offsetMinY = -height.Pixels;
-                offsetMaxY = 0f;
-            }
-            else if (Alignment.Value.HasFlag(ElementAlignment.Bottom))
-            {
-                yMin = 0f;
-                yMax = height.Percent;
-                offsetMinY = 0f;
-                offsetMaxY = height.Pixels;
-            }
-            else
-            {
-                yMin = 0.5f - height.Percent / 2f;
-                yMax = 0.5f + height.Percent / 2f;
-                offsetMinY = -height.Pixels / 2f;
-                offsetMaxY = height.Pixels / 2f;
-            }
-
-            RectTransform.anchorMin = new Vector2(xMin + Margin.Value.Left.Percent, yMin + Margin.Value.Bottom.Percent);
-            RectTransform.anchorMax = new Vector2(xMax - Margin.Value.Right.Percent, yMax - Margin.Value.Top.Percent);
-
-            // positioning and margins
-            RectTransform.offsetMin = new Vector2(
-                offsetMinX + Margin.Value.Left.Pixels + Offset.Value.Left.Pixels - Offset.Value.Right.Pixels + OffsetFromParent.Value.Left.Pixels - OffsetFromParent.Value.Right.Pixels,
-                offsetMinY + Margin.Value.Bottom.Pixels - Offset.Value.Top.Pixels + Offset.Value.Bottom.Pixels - OffsetFromParent.Value.Top.Pixels + OffsetFromParent.Value.Bottom.Pixels);
-            RectTransform.offsetMax = new Vector2(
-                offsetMaxX - Margin.Value.Right.Pixels + Offset.Value.Left.Pixels - Offset.Value.Right.Pixels + OffsetFromParent.Value.Left.Pixels - OffsetFromParent.Value.Right.Pixels,
-                offsetMaxY - Margin.Value.Top.Pixels - Offset.Value.Top.Pixels + Offset.Value.Bottom.Pixels - OffsetFromParent.Value.Top.Pixels + OffsetFromParent.Value.Bottom.Pixels);
-
-            RectTransform.anchoredPosition = new Vector2(
-                RectTransform.offsetMin.x / 2.0f + RectTransform.offsetMax.x / 2.0f,
-                RectTransform.offsetMin.y / 2.0f + RectTransform.offsetMax.y / 2.0f);
         }
 
         /// <summary>

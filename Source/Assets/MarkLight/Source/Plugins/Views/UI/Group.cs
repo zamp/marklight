@@ -137,7 +137,7 @@ namespace MarkLight.Views.UI
                         ? totalHeight + Spacing.Value.Pixels * childIndex
                         : 0f, ElementSizeUnit.Pixels));
 
-                view.OffsetFromParent.DirectValue = offset;
+                view.Layout.OffsetFromParent = offset;
 
                 // set desired alignment if it is valid for the orientation otherwise use defaults
                 var alignment = isHorizontal

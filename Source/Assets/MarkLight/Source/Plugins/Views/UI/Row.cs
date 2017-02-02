@@ -111,7 +111,7 @@ namespace MarkLight.Views.UI
                     column.TextMargin.Value = ParentDataGrid.ColumnTextMargin.Value;
                 }
 
-                column.OffsetFromParent.DirectValue = new ElementMargin(offset, 0, 0, 0);
+                column.Layout.OffsetFromParent = new ElementMargin(offset, 0, 0, 0);
                 offset += column.Width.Value.Pixels + ParentDataGrid.ColumnSpacing.Value.Pixels;
                 context.NotifyLayoutUpdated(column);
             }
