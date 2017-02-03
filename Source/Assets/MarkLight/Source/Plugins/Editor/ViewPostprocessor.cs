@@ -216,13 +216,13 @@ namespace MarkLight.Editor
                 {
                     bool isEnum = false;
                     var viewFieldData = view.GetViewFieldData(viewField);
-                    if (viewFieldData.ViewFieldType != null && viewFieldData.ViewFieldType.IsEnum)
+                    if (viewFieldData.Type != null && viewFieldData.Type.IsEnum)
                     {
                         isEnum = true;
-                        enums.Add(viewFieldData.ViewFieldType);
+                        enums.Add(viewFieldData.Type);
                     }
 
-                    sb.AppendFormat("    <xs:attribute name=\"{0}\" type=\"{1}\" />{2}", viewField, isEnum ? "Enum" + viewFieldData.ViewFieldTypeName : "xs:string", Environment.NewLine);
+                    sb.AppendFormat("    <xs:attribute name=\"{0}\" type=\"{1}\" />{2}", viewField, isEnum ? "Enum" + viewFieldData.TypeName : "xs:string", Environment.NewLine);
                 }
 
                 sb.AppendFormat("    <xs:anyAttribute processContents=\"skip\" />{0}", Environment.NewLine);

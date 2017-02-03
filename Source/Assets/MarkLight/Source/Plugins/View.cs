@@ -430,7 +430,7 @@ namespace MarkLight
                     ViewFieldStateValue defaultStateValue;
                     if (defaultStateValues.TryGetValue(viewField, out defaultStateValue))
                     {
-                        defaultStateValue.SetValue(value, viewFieldData.ValueConverter.ConvertToString(value));
+                        defaultStateValue.SetDefaultValue(value, viewFieldData.ValueConverter.ConvertToString(value));
                     }
                 }
             }
@@ -669,7 +669,7 @@ namespace MarkLight
                         // so that if we e.g. bind Text="{#Item.Score}" that Item.Score propagates to Text first. 
                         if (isLocalField && viewFieldData.TargetView == bindingView)
                         {
-                            sourceViewFieldData.PropagateFirst = true;
+                            sourceViewFieldData.IsPropagatedFirst = true;
                         }
                     }
                 }
@@ -775,13 +775,13 @@ namespace MarkLight
             }
 
             var currentStateValues = _stateValues[stateValue.State];
-            if (!currentStateValues.ContainsKey(stateValue.ViewFieldPath))
+            if (!currentStateValues.ContainsKey(stateValue.Path))
             {
-                currentStateValues.Add(stateValue.ViewFieldPath, stateValue);
+                currentStateValues.Add(stateValue.Path, stateValue);
             }
             else
             {
-                currentStateValues[stateValue.ViewFieldPath] = stateValue;
+                currentStateValues[stateValue.Path] = stateValue;
             }
         }
 
@@ -931,7 +931,7 @@ namespace MarkLight
             // initialize bindings
             foreach (var binding in ViewFieldBindings)
             {
-                SetBinding(binding.ViewField, binding.BindingString);
+                SetBinding(binding.FieldName, binding.BindingString);
             }
 
             // initialize state values
@@ -1068,13 +1068,13 @@ namespace MarkLight
             }
 
             // are we the owner of this field?
-            if (fieldData != null && !fieldData.IsOwner && depth > 0)
+            if (fieldData != null && fieldData.IsMapped && depth > 0)
             {
                 // no. go deeper if we can
                 var targetView = fieldData.GetTargetView();
                 if (targetView != null)
                 {
-                    fieldData = targetView.GetViewFieldData(fieldData.TargetViewFieldPath, --depth);
+                    fieldData = targetView.GetViewFieldData(fieldData.TargetPath, --depth);
                 }
             }
 
@@ -1139,7 +1139,7 @@ namespace MarkLight
         /// </summary>
         public void PropagateBindings()
         {
-            foreach (var viewFieldData in _viewFieldData.Values.OrderByDescending(x => x.PropagateFirst))
+            foreach (var viewFieldData in _viewFieldData.Values.OrderByDescending(x => x.IsPropagatedFirst))
             {
                 viewFieldData.NotifyBindingValueObservers(new HashSet<ViewFieldData>());
             }
@@ -1170,7 +1170,7 @@ namespace MarkLight
         /// </summary>
         internal void AddBinding(string viewField, string bindingString)
         {
-            ViewFieldBindings.Add(new ViewFieldBinding { ViewField = viewField, BindingString = bindingString });
+            ViewFieldBindings.Add(new ViewFieldBinding(bindingString, viewField));
         }
 
         /// <summary>
@@ -1196,42 +1196,32 @@ namespace MarkLight
             {
                 // only go down one level
                 var subViewFieldData = GetViewFieldData(viewField, 1);
-                subViewFieldData.SourceView.AddStateValue(state, subViewFieldData.ViewFieldPath, value, context, false);
+                subViewFieldData.SourceView.AddStateValue(state, subViewFieldData.Path, value, context, false);
             }
             else
             {
                 // get mapped view-field path
                 var viewTypeData = ViewData.GetViewTypeData(ViewTypeName);
-                var mappedViewField = viewTypeData.GetMappedViewField(viewField);
+                var mappedPath = viewTypeData.GetMappedViewField(viewField);
 
-                // overwrite state value if it exist otherwise create a new one 
-                var stateValue = ViewFieldStateValues.FirstOrDefault(x => x.State == state && x.ViewFieldPath == mappedViewField);
+                // overwrite state value if it exist otherwise create a new one
+                var stateValue = ViewFieldStateValues.FirstOrDefault(x => x.State == state && x.Path == mappedPath);
                 if (stateValue != null)
                 {
-                    stateValue.Value = value;
-                    stateValue.ValueConverterContext = context;
+                    stateValue.SetValue(value, context);
                 }
                 else
                 {
-                    ViewFieldStateValues.Add(new ViewFieldStateValue
-                    {
-                        State = state,
-                        ViewFieldPath = mappedViewField,
-                        Value = value,
-                        ValueConverterContext = context
-                    });
+                    ViewFieldStateValues.Add(new ViewFieldStateValue(mappedPath, state, value, context, true));
 
                     // for every state value we need to store the default value so we can revert back to it
-                    var defaultStateValue = ViewFieldStateValues.FirstOrDefault(x => x.State == DefaultStateName && x.ViewFieldPath == mappedViewField);
+                    var defaultStateValue =
+                        ViewFieldStateValues.FirstOrDefault(x => x.State == DefaultStateName && x.Path == mappedPath);
+
                     if (defaultStateValue == null)
                     {
-                        ViewFieldStateValues.Add(new ViewFieldStateValue
-                        {
-                            State = DefaultStateName,
-                            ViewFieldPath = mappedViewField,
-                            ValueConverterContext = ValueConverterContext.Empty,
-                            DefaultValueNotSet = true
-                        });
+                        ViewFieldStateValues.Add(
+                            new ViewFieldStateValue(mappedPath, DefaultStateName, null, ValueConverterContext.Empty, false));
                     }
                 }
             }
@@ -1423,21 +1413,21 @@ namespace MarkLight
                 {
                     foreach (var stateValue in defaultStateValues.Values)
                     {
-                        if (stateValue.DefaultValueNotSet)
+                        if (!stateValue.IsDefaultValueSet)
                         {
                             // get view field data
-                            var viewFieldData = GetViewFieldData(stateValue.ViewFieldPath);
+                            var viewFieldData = GetViewFieldData(stateValue.Path);
                             if (viewFieldData == null)
                             {
-                                Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign default state value to view field \"{1}\". View field not found.", GameObjectName, stateValue.ViewFieldPath));
+                                Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign default state value to view field \"{1}\". View field not found.", GameObjectName, stateValue.Path));
                             }
                             else
                             {
                                 // set default value
-                                var value = GetValue(stateValue.ViewFieldPath);
+                                var value = GetValue(stateValue.Path);
                                 if (viewFieldData.ValueConverter != null)
                                 {
-                                    stateValue.SetValue(value, viewFieldData.ValueConverter.ConvertToString(value));
+                                    stateValue.SetDefaultValue(value, viewFieldData.ValueConverter.ConvertToString(value));
                                 }
                             }
                         }
@@ -1461,17 +1451,18 @@ namespace MarkLight
                 if (_stateAnimation != null)
                 {
                     // is this view field animated?
-                    var animators = _stateAnimation.GetFieldAnimators(stateValue.ViewFieldPath);
+                    var animators = _stateAnimation.GetFieldAnimators(stateValue.Path);
                     if (animators != null)
                     {
-                        var animateTo = stateValue.GetValue();
+                        var animateTo = stateValue.Value;
 
                         // yes. set target value of animations
                         foreach (var animator in animators)
                         {
-                            if (animateTo is String)
+                            var animateToStr = animateTo as string;
+                            if (animateToStr != null)
                             {
-                                animator.ToStringValue = (String)animateTo;
+                                animator.ToStringValue = animateToStr;
                             }
                             else
                             {
@@ -1486,8 +1477,8 @@ namespace MarkLight
                 }
 
                 // set view value to state value
-                var value = SetValue(stateValue.ViewFieldPath, stateValue.GetValue(), false, null, stateValue.ValueConverterContext, true);
-                stateValue.SetValue(value); // store converted value to save conversion time
+                var value = SetValue(stateValue.Path, stateValue.Value, false, null, stateValue.ConverterContext, true);
+                stateValue.SetCachedValue(value); // store converted value to save conversion time
             }
 
             if (_stateAnimation != null)
@@ -1632,16 +1623,15 @@ namespace MarkLight
         {
             foreach (var viewFieldData in _viewFieldData.Values)
             {
-                if (!viewFieldData.IsOwner)
+                if (viewFieldData.IsMapped)
                     continue;
 
-                if (includeViewField && viewFieldData.ViewFieldPath == viewFieldPath)
+                if (includeViewField && viewFieldData.Path == viewFieldPath)
                 {
                     viewFieldData.NotifyValueObservers(new HashSet<ViewFieldData>());
                 }
 
-                if (viewFieldData.ViewFieldPathInfo.Dependencies.Count > 0 &&
-                    viewFieldData.ViewFieldPathInfo.Dependencies.Contains(viewFieldPath))
+                if (viewFieldData.HasDependency(viewFieldPath))
                 {
                     viewFieldData.NotifyValueObservers(new HashSet<ViewFieldData>());
                 }

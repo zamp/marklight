@@ -1,9 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
+﻿using UnityEngine;
 
 namespace MarkLight
 {   
@@ -14,7 +9,8 @@ namespace MarkLight
     {
         #region Fields
 
-        public T _internalValue;
+        [SerializeField]
+        protected T _internalValue;
 
         #endregion
 
@@ -29,7 +25,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    return (T)ParentView.GetValue(ViewFieldPath);
+                    return (T)ParentView.GetValue(Path);
                 }
 
                 return _internalValue;
@@ -38,7 +34,7 @@ namespace MarkLight
             {
                 if (ParentView != null)
                 {
-                    ParentView.SetValue(ViewFieldPath, value);
+                    ParentView.SetValue(Path, value);
                 }
                 else
                 {
@@ -57,7 +53,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    return ParentView.GetValue(ViewFieldPath);
+                    return ParentView.GetValue(Path);
                 }
 
                 return _internalValue;
@@ -66,7 +62,7 @@ namespace MarkLight
             {
                 if (ParentView != null)
                 {
-                    ParentView.SetValue(ViewFieldPath, value);
+                    ParentView.SetValue(Path, value);
                 }
                 else
                 {
@@ -85,7 +81,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    ParentView.SetValue(ViewFieldPath, value, true, null, null, false);
+                    ParentView.SetValue(Path, value, true, null, null, false);
                 }
                 else
                 {
@@ -104,7 +100,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    ParentView.SetValue(ViewFieldPath, value, true, null, null, false);
+                    ParentView.SetValue(Path, value, true, null, null, false);
                 }
                 else
                 {
@@ -121,14 +117,7 @@ namespace MarkLight
         {
             get
             {
-                if (ParentView != null)
-                {
-                    return ParentView.IsSet(ViewFieldPath);
-                }
-                else
-                {
-                    return _isSet;
-                }
+                return ParentView != null ? ParentView.IsSet(Path) : _isSet;
             }
         }
 

@@ -120,11 +120,11 @@ namespace MarkLight.Animation
                 return;
             }
 
-            _valueInterpolator = ViewData.GetValueInterpolatorForType(viewFieldData.ViewFieldTypeName);
+            _valueInterpolator = ViewData.GetValueInterpolatorForType(viewFieldData.TypeName);
             _easingFunction = EasingFunctions.GetEasingFunction(EasingFunction);
 
             // set converted to and from values
-            var converter = ViewData.GetValueConverterForType(viewFieldData.ViewFieldTypeName);
+            var converter = ViewData.GetValueConverterForType(viewFieldData.TypeName);
             if (From == null && !String.IsNullOrEmpty(FromStringValue))
             {
                 var result = converter.Convert(FromStringValue, ValueConverterContext.Default);

@@ -1,12 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
+﻿using System;
 
 namespace MarkLight
 {
@@ -17,9 +9,10 @@ namespace MarkLight
     {
         #region Fields
 
-        public ViewFieldData ViewFieldData;
-        public bool NegateValue;
-        private static string BoolTypeName = typeof(bool).Name;
+        public readonly ViewFieldData ViewFieldData;
+        public readonly bool IsValueNegated;
+
+        private static readonly string BoolTypeName = typeof(bool).Name;
 
         #endregion
 
@@ -28,10 +21,10 @@ namespace MarkLight
         /// <summary>
         /// Initializes a new instance of the class.
         /// </summary>
-        public ViewFieldBindingSource(ViewFieldData viewFieldData, bool negateValue = false)
+        public ViewFieldBindingSource(ViewFieldData viewFieldData, bool isValueNegated = false)
         {
             ViewFieldData = viewFieldData;
-            NegateValue = negateValue;
+            IsValueNegated = isValueNegated;
         }
 
         #endregion
@@ -46,9 +39,9 @@ namespace MarkLight
             var value = ViewFieldData.GetValue(out hasValue);
 
             // check if value is to be negated
-            if (NegateValue && ViewFieldData.ViewFieldTypeName == BoolTypeName)
+            if (IsValueNegated && ViewFieldData.TypeName == BoolTypeName)
             {
-                value = !((bool)value);
+                value = !(bool)value;
             }
 
             return value;
@@ -65,7 +58,7 @@ namespace MarkLight
         {
             get
             {
-                return String.Format("{0}.{1}", ViewFieldData.SourceView.ViewTypeName, ViewFieldData.ViewFieldPath);
+                return String.Format("{0}.{1}", ViewFieldData.SourceView.ViewTypeName, ViewFieldData.Path);
             }
         }
 

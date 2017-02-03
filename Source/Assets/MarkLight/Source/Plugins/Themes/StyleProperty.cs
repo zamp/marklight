@@ -48,7 +48,7 @@ namespace Marklight.Themes
                 context = new ValueConverterContext();
 
             // check if value contains a binding
-            if (ViewFieldBinding.ValueHasBindings(_value))
+            if (ViewFieldBinding.HasBindings(_value))
             {
                 view.AddBinding(_name, _value);
                 return;
@@ -90,9 +90,9 @@ namespace Marklight.Themes
                 return; // ignore if view does not have field
 
             // check if we are setting a view action handler
-            if (viewFieldData.ViewFieldTypeName == "ViewAction")
+            if (viewFieldData.TypeName == "ViewAction")
             {
-                viewFieldData.SourceView.AddViewActionEntry(viewFieldData.ViewFieldPath, _value, view.Parent);
+                viewFieldData.SourceView.AddViewActionEntry(viewFieldData.Path, _value, view.Parent);
             }
             else
             {

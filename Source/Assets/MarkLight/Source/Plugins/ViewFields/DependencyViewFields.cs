@@ -1,9 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
 
 namespace MarkLight
 {   

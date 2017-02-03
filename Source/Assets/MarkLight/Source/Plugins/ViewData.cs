@@ -649,7 +649,7 @@ namespace MarkLight
                 var dependencyFieldInstance = TypeHelper.CreateViewField(dependencyFieldInfo.FieldType);
                 dependencyFieldInfo.SetValue(view, dependencyFieldInstance);
                 dependencyFieldInstance.ParentView = view;
-                dependencyFieldInstance.ViewFieldPath = dependencyField;
+                dependencyFieldInstance.Path = dependencyField;
                 dependencyFieldInstance.IsMapped = !String.Equals(viewTypeData.GetMappedViewField(dependencyField), dependencyField);
             }
 
@@ -858,7 +858,7 @@ namespace MarkLight
                 }
 
                 // check if value contains a binding
-                if (ViewFieldBinding.ValueHasBindings(viewFieldValue))
+                if (ViewFieldBinding.HasBindings(viewFieldValue))
                 {
                     view.AddBinding(viewFieldPath, viewFieldValue);
                     continue;
@@ -892,9 +892,9 @@ namespace MarkLight
                 }
 
                 // check if we are setting a view action handler
-                if (viewFieldData.ViewFieldTypeName == "ViewAction")
+                if (viewFieldData.TypeName == "ViewAction")
                 {
-                    viewFieldData.SourceView.AddViewActionEntry(viewFieldData.ViewFieldPath, viewFieldValue, parent);
+                    viewFieldData.SourceView.AddViewActionEntry(viewFieldData.Path, viewFieldValue, parent);
                     continue;
                 }
 
