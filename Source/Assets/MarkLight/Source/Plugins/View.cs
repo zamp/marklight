@@ -6,16 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using System.Collections;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using MarkLight.Views.UI;
 #endregion
 
@@ -313,9 +308,6 @@ namespace MarkLight
         public string ViewXumlName;
 
         [NotSetFromXuml]
-        public List<ViewFieldBinding> ViewFieldBindings;
-
-        [NotSetFromXuml]
         public List<ViewActionEntry> ViewActionEntries;
 
         [NotSetFromXuml]
@@ -327,11 +319,14 @@ namespace MarkLight
         [NotSetFromXuml]
         public ValueConverterContext ValueConverterContext;
 
-        public static string DefaultStateName = "Default";
-        public static string AnyStateName = "Any";
+        public const string DefaultStateName = "Default";
+        public const string AnyStateName = "Any";
+
+        [SerializeField]
+        private ViewBindings _bindings;
 
         private ViewTypeData _viewTypeData;
-        private Dictionary<string, ViewFieldData> _viewFieldData;
+        private Dictionary<string, ViewFieldData> _fieldData;
         private Dictionary<string, Dictionary<string, ViewFieldStateValue>> _stateValues;
         private Dictionary<string, Dictionary<string, StateAnimation>> _stateAnimations;
         private HashSet<string> _setViewFields;
@@ -361,13 +356,13 @@ namespace MarkLight
         public View()
         {
             ViewTypeName = GetType().Name;
-            ViewFieldBindings = new List<ViewFieldBinding>();
             ViewActionEntries = new List<ViewActionEntry>();
             ViewFieldStateValues = new List<ViewFieldStateValue>();
             SetViewFieldNames = new List<string>();
 
             // initalize private data (also done in InitializeInternalDefaultValues because of being set to null during deserialization)
-            _viewFieldData = new Dictionary<string, ViewFieldData>();
+            _bindings = new ViewBindings(this);
+            _fieldData = new Dictionary<string, ViewFieldData>();
             _stateValues = new Dictionary<string, Dictionary<string, ViewFieldStateValue>>();
             _stateAnimations = new Dictionary<string, Dictionary<string, StateAnimation>>();
             _setViewFields = new HashSet<string>();
@@ -483,263 +478,6 @@ namespace MarkLight
             }
 
             viewFieldData.SetIsSet();
-        }
-
-        /// <summary>
-        /// Sets view field binding.
-        /// </summary>
-        public void SetBinding(string viewField, string viewFieldBinding)
-        {
-            // get view field data for binding target
-            var viewFieldData = GetViewFieldData(viewField);
-            if (viewFieldData == null)
-            {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". View field not found.", GameObjectName, viewFieldBinding, viewField));
-                return;
-            }
-
-            viewFieldData.SetIsSet();
-
-            // create BindingValueObserver and add it as observer to source view fields
-            var bindingValueObserver = new BindingValueObserver();
-            bindingValueObserver.Target = viewFieldData;
-
-            // parse view field binding string
-            char[] delimiterChars = { ' ', ',', '$', '(', ')', '{', '}' };
-            string trimmedBinding = viewFieldBinding.Trim();
-
-            if (trimmedBinding.StartsWith("$"))
-            {
-                // transformed multi-binding
-                string[] bindings = trimmedBinding.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
-                if (bindings.Length < 1)
-                {
-                    Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Improperly formatted binding string.", GameObjectName, viewFieldBinding, viewField));
-                    return;
-                }
-
-                bindingValueObserver.BindingType = BindingType.MultiBindingTransform;
-                bindingValueObserver.ParentView = Parent;
-
-                // get transformation method
-                string transformMethodName = bindings[0];
-                Type transformMethodViewType = Parent.GetType();
-
-                string[] transformStr = bindings[0].Split('.');
-                if (transformStr.Length == 2)
-                {
-                    transformMethodViewType = ViewData.GetViewType(transformStr[0]);
-                    transformMethodName = transformStr[1];
-
-                    if (transformMethodViewType == null)
-                    {
-                        Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". View \"{3}\" not found.", GameObjectName, viewFieldBinding, viewField, transformStr[0]));
-                        return;
-                    }
-                }
-
-                try
-                {
-                    bindingValueObserver.TransformMethod = transformMethodViewType.GetMethod(transformMethodName, BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Error assigning transform method \"{3}\" in view type \"{4}\". {5}", GameObjectName, viewFieldBinding, viewField, bindings[0], Parent.ViewTypeName, Utils.GetError(e)));
-                    return;
-                }
-
-                if (bindingValueObserver.TransformMethod == null)
-                {
-                    Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Transform method \"{3}\" not found in view type \"{4}\".", GameObjectName, viewFieldBinding, viewField, bindings[0], Parent.ViewTypeName));
-                    return;
-                }
-
-                foreach (var binding in bindings.Skip(1))
-                {
-                    bool isLocalField, isNegatedField, isOneWay, isResource;
-                    var sourceFieldName = ParseBindingString(binding, out isLocalField, out isNegatedField, out isOneWay, out isResource);
-
-                    // is this a binding to a resource in a resource dictionary?
-                    if (isResource)
-                    {
-                        // yes.
-                        SetResourceBinding(bindingValueObserver, sourceFieldName);
-                        continue;
-                    }
-
-                    // if the binding is defined as a local field (through the '#' notation) we are binding to a field on this view 
-                    // otherwise we are binding to our parent view
-                    var bindingView = isLocalField ? this : Parent;
-
-                    // get view field data for binding
-                    var sourceViewFieldData = bindingView.GetViewFieldData(sourceFieldName);
-                    if (sourceViewFieldData == null)
-                    {
-                        Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Source binding view field \"{3}\" not found.", GameObjectName, viewFieldBinding, viewField, binding));
-                        return;
-                    }
-                    //Debug.Log(String.Format("Creating binding {0} <-> {1}", sourceViewFieldData.ViewFieldPath, viewFieldData.ViewFieldPath));
-
-                    bindingValueObserver.Sources.Add(new ViewFieldBindingSource(sourceViewFieldData, isNegatedField));
-                    sourceViewFieldData.RegisterValueObserver(bindingValueObserver);
-                }
-            }
-            else
-            {
-                // check for bindings in string
-                string formatString = String.Empty;
-                List<Match> matches = new List<Match>();
-                foreach (Match match in ViewFieldBinding.BindingRegex.Matches(viewFieldBinding))
-                {
-                    matches.Add(match);
-                }
-
-                if (matches.Count <= 0)
-                {
-                    // no bindings found
-                    Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". String contains no binding.", GameObjectName, viewFieldBinding, viewField));
-                    return;
-                }
-
-                // is the binding a format string?
-                bool formatStringBinding = false;
-                if (matches.Count > 1 || (matches[0].Value.Length != viewFieldBinding.Length) || !String.IsNullOrEmpty(matches[0].Groups["format"].Value))
-                {
-                    // yes. 
-                    int matchCount = 0;
-                    formatString = ViewFieldBinding.BindingRegex.Replace(viewFieldBinding, x =>
-                    {
-                        string matchCountString = matchCount.ToString();
-                        ++matchCount;
-                        return String.Format("{{{0}{1}}}", matchCountString, x.Groups["format"]);
-                    });
-
-                    formatStringBinding = true;
-                    bindingValueObserver.BindingType = BindingType.MultiBindingFormatString;
-                    bindingValueObserver.FormatString = formatString;
-                }
-
-                // parse view fields for binding source(s)
-                foreach (var match in matches)
-                {
-                    var binding = match.Groups["field"].Value.Trim();
-                    bool isLocalField, isNegatedField, isOneWay, isResource;
-                    var sourceFieldName = ParseBindingString(binding, out isLocalField, out isNegatedField, out isOneWay, out isResource);
-                    
-                    // is this a binding to a resource in a resource dictionary?
-                    if (isResource)
-                    {
-                        // yes.
-                        SetResourceBinding(bindingValueObserver, sourceFieldName);
-                        continue;
-                    }
-
-                    // if the binding is defined as a local field (through the '#' notation) we are binding to a field on this view 
-                    // otherwise we are binding to our parent view
-                    var bindingView = isLocalField ? this : Parent;
-
-                    // get view field data for binding
-                    var sourceViewFieldData = bindingView.GetViewFieldData(sourceFieldName);
-                    if (sourceViewFieldData == null)
-                    {
-                        Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Source binding view field \"{3}\" not found.", GameObjectName, viewFieldBinding, viewField, sourceFieldName));
-                        return;
-                    }
-                    //Debug.Log(String.Format("Creating binding {0} <-> {1}", sourceViewFieldData.ViewFieldPath, viewFieldData.ViewFieldPath));
-
-                    bindingValueObserver.Sources.Add(new ViewFieldBindingSource(sourceViewFieldData, isNegatedField));
-                    sourceViewFieldData.RegisterValueObserver(bindingValueObserver);
-
-                    // handle two-way bindings
-                    if (!formatStringBinding && !isOneWay)
-                    {
-                        bindingValueObserver.BindingType = BindingType.SingleBinding;
-
-                        // create value observer for target
-                        var targetBindingValueObserver = new BindingValueObserver();
-                        targetBindingValueObserver.BindingType = BindingType.SingleBinding;
-                        targetBindingValueObserver.Target = sourceViewFieldData;
-                        targetBindingValueObserver.Sources.Add(new ViewFieldBindingSource(viewFieldData, isNegatedField));
-
-                        viewFieldData.RegisterValueObserver(targetBindingValueObserver);
-                        AddValueObserver(targetBindingValueObserver);
-
-                        // if this is a local binding and target view is the same as source view 
-                        // we need to make sure value propagation happens in an intuitive order
-                        // so that if we e.g. bind Text="{#Item.Score}" that Item.Score propagates to Text first. 
-                        if (isLocalField && viewFieldData.TargetView == bindingView)
-                        {
-                            sourceViewFieldData.IsPropagatedFirst = true;
-                        }
-                    }
-                }
-            }
-
-            AddValueObserver(bindingValueObserver);
-        }
-
-        /// <summary>
-        /// Sets resource binding.
-        /// </summary>
-        private void SetResourceBinding(BindingValueObserver bindingValueObserver, string sourceFieldName)
-        {
-            string dictionaryName = null;
-            string resourceKey = sourceFieldName;
-
-            int resourceIndex = sourceFieldName.IndexOf('.', 0);
-            if (resourceIndex > 0)
-            {
-                resourceKey = sourceFieldName.Substring(resourceIndex + 1);
-                dictionaryName = sourceFieldName.Substring(0, resourceIndex);
-            }
-
-            var resourceBindingSource = new ResourceBindingSource(dictionaryName, resourceKey);
-            bindingValueObserver.Sources.Add(resourceBindingSource);
-
-            // so here we want to register a resource binding observer in the dictionary
-            ResourceDictionary.RegisterResourceBindingObserver(dictionaryName, resourceKey, bindingValueObserver);
-        }
-
-        /// <summary>
-        /// Parses binding string and returns view field path.
-        /// </summary>
-        private string ParseBindingString(string binding, out bool isLocalField, out bool isNegatedField, out bool isOneWay, out bool isResource)
-        {
-            isLocalField = false;
-            isNegatedField = false;
-            isOneWay = false;
-            isResource = false;
-
-            var viewField = binding;
-            while (viewField.Length > 0)
-            {
-                if (viewField.StartsWith("#"))
-                {
-                    isLocalField = true;
-                    viewField = viewField.Substring(1);
-                }
-                else if (viewField.StartsWith("!"))
-                {
-                    isNegatedField = true;
-                    viewField = viewField.Substring(1);
-                }
-                else if (viewField.StartsWith("="))
-                {
-                    isOneWay = true;
-                    viewField = viewField.Substring(1);
-                }
-                else if (viewField.StartsWith("@"))
-                {
-                    isResource = true;
-                    viewField = viewField.Substring(1);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return viewField;
         }
 
         /// <summary>
@@ -910,7 +648,7 @@ namespace MarkLight
         public virtual void InitializeInternalDefaultValues()
         {
             // initialize lists and dictionaries
-            _viewFieldData = new Dictionary<string, ViewFieldData>();
+            _fieldData = new Dictionary<string, ViewFieldData>();
             _stateValues = new Dictionary<string, Dictionary<string, ViewFieldStateValue>>();
             _stateAnimations = new Dictionary<string, Dictionary<string, StateAnimation>>();
             _setViewFields = new HashSet<string>();
@@ -929,10 +667,7 @@ namespace MarkLight
         public virtual void InitializeInternal()
         {
             // initialize bindings
-            foreach (var binding in ViewFieldBindings)
-            {
-                SetBinding(binding.FieldName, binding.BindingString);
-            }
+            Bindings.InitializeInternal();
 
             // initialize state values
             foreach (var stateValue in ViewFieldStateValues)
@@ -1050,20 +785,20 @@ namespace MarkLight
             var viewTypeData = ViewData.GetViewTypeData(ViewTypeName);
             var mappedViewField = viewTypeData.GetMappedViewField(viewField);
 
-            if (_viewFieldData == null)
+            if (_fieldData == null)
             {
-                _viewFieldData = new Dictionary<string, ViewFieldData>();
+                _fieldData = new Dictionary<string, ViewFieldData>();
             }
 
             // is there data for this field?
-            var fieldData = _viewFieldData.Get(mappedViewField);
+            var fieldData = _fieldData.Get(mappedViewField);
             if (fieldData == null)
             {
                 // no. create new field data
                 fieldData = ViewFieldData.FromViewFieldPath(this, mappedViewField);
                 if (fieldData != null)
                 {
-                    _viewFieldData.Add(mappedViewField, fieldData);
+                    _fieldData.Add(mappedViewField, fieldData);
                 }
             }
 
@@ -1135,22 +870,11 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Called once to propagate bound values. Called in breadth-first order.
-        /// </summary>
-        public void PropagateBindings()
-        {
-            foreach (var viewFieldData in _viewFieldData.Values.OrderByDescending(x => x.IsPropagatedFirst))
-            {
-                viewFieldData.NotifyBindingValueObservers(new HashSet<ViewFieldData>());
-            }
-        }
-
-        /// <summary>
         /// Called once to queue all change handlers. Called in reverse breadth-first order.
         /// </summary>
         public void QueueAllChangeHandlers()
         {
-            var _viewFieldDataList = new List<ViewFieldData>(_viewFieldData.Values);                        
+            var _viewFieldDataList = new List<ViewFieldData>(_fieldData.Values);
             foreach (var viewFieldData in _viewFieldDataList)
             {
                 viewFieldData.NotifyChangeHandlerValueObservers(new HashSet<ViewFieldData>());
@@ -1163,14 +887,6 @@ namespace MarkLight
         internal void AddValueObserver(ValueObserver valueObserver)
         {
             _valueObservers.Add(valueObserver);
-        }
-
-        /// <summary>
-        /// Adds a binding to the view field that will be processed when the view is initialized.
-        /// </summary>
-        internal void AddBinding(string viewField, string bindingString)
-        {
-            ViewFieldBindings.Add(new ViewFieldBinding(bindingString, viewField));
         }
 
         /// <summary>
@@ -1621,7 +1337,7 @@ namespace MarkLight
         /// </summary>
         public void NotifyDependentValueObservers(string viewFieldPath, bool includeViewField = false)
         {
-            foreach (var viewFieldData in _viewFieldData.Values)
+            foreach (var viewFieldData in _fieldData.Values)
             {
                 if (viewFieldData.IsMapped)
                     continue;
@@ -1759,14 +1475,14 @@ namespace MarkLight
 #if !DISABLE_INIT_TRYCATCH
             try
             {
-                PropagateBindings();
+                Bindings.Propagate();
             }
             catch (Exception e)
             {
                 Debug.LogError(String.Format("[MarkLight] {0}: PropagateBindings() failed. Exception thrown: {1}", GameObjectName, Utils.GetError(e)));
             }
 #else
-            PropagateBindings();
+            Bindings.PropagateBindings();
 #endif
         }
 
@@ -1902,6 +1618,14 @@ namespace MarkLight
         #region Properties
 
         /// <summary>
+        /// Get the views binding manager.
+        /// </summary>
+        public ViewBindings Bindings
+        {
+            get { return _bindings; }
+        }
+
+        /// <summary>
         /// Gets boolean indicating if this view is live (enabled and not destroyed).
         /// </summary>
         public bool IsLive
@@ -1958,13 +1682,24 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Gets view field data of the view.
+        /// Get readonly collection of view field data.
         /// </summary>
-        public Dictionary<string, ViewFieldData> ViewFieldDataDictionary
+        public ICollection<ViewFieldData> FieldDataValues
         {
             get
             {
-                return _viewFieldData;
+                return _fieldData.Values;
+            }
+        }
+
+        /// <summary>
+        /// Gets view field data of the view.
+        /// </summary>
+        public IDictionary<string, ViewFieldData> FieldDataDictionary
+        {
+            get
+            {
+                return _fieldData;
             }
         }
 

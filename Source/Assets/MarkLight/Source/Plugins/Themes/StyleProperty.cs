@@ -50,7 +50,7 @@ namespace Marklight.Themes
             // check if value contains a binding
             if (ViewFieldBinding.HasBindings(_value))
             {
-                view.AddBinding(_name, _value);
+                view.Bindings.Add(_name, _value);
                 return;
             }
 

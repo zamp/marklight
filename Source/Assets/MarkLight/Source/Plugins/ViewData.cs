@@ -860,7 +860,7 @@ namespace MarkLight
                 // check if value contains a binding
                 if (ViewFieldBinding.HasBindings(viewFieldValue))
                 {
-                    view.AddBinding(viewFieldPath, viewFieldValue);
+                    view.Bindings.Add(viewFieldPath, viewFieldValue);
                     continue;
                 }
 

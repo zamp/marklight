@@ -879,7 +879,7 @@ namespace MarkLight.Views.UI
             }
 
             // make sure tab bindings are propagated to header
-            tab.PropagateBindings();
+            tab.Bindings.Propagate();
             TabHeaderList.UpdatePresentedListItems();
         }
 
