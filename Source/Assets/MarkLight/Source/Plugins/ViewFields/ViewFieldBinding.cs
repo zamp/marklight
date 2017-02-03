@@ -22,7 +22,7 @@ namespace MarkLight
         private string _bindingString;
 
         [SerializeField]
-        private string _fieldName;
+        private string _fieldPath;
 
         #endregion
 
@@ -37,10 +37,10 @@ namespace MarkLight
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ViewFieldBinding(string bindingString, string viewFieldName)
+        public ViewFieldBinding(string fieldPath, string bindingString)
         {
             _bindingString = bindingString;
-            _fieldName = viewFieldName;
+            _fieldPath = fieldPath;
         }
 
         #endregion
@@ -75,9 +75,9 @@ namespace MarkLight
         /// <summary>
         /// Get the name of the view field.
         /// </summary>
-        public string FieldName
+        public string FieldPath
         {
-            get { return _fieldName; }
+            get { return _fieldPath; }
         }
 
         #endregion

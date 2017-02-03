@@ -610,7 +610,7 @@ namespace MarkLight
             view.Theme = themeName;
             view.Content = view;
             view.ViewXumlName = viewTypeData.ViewTypeName;
-            view.ValueConverterContext = context;
+            view.Fields.ValueConverterContext = context;
 
             // set component fields
             foreach (var componentField in viewTypeData.ComponentFields)
@@ -650,7 +650,7 @@ namespace MarkLight
                 dependencyFieldInfo.SetValue(view, dependencyFieldInstance);
                 dependencyFieldInstance.ParentView = view;
                 dependencyFieldInstance.Path = dependencyField;
-                dependencyFieldInstance.IsMapped = !String.Equals(viewTypeData.GetMappedViewField(dependencyField), dependencyField);
+                dependencyFieldInstance.IsMapped = !String.Equals(viewTypeData.GetMappedFieldPath(dependencyField), dependencyField);
             }
 
             var result = new ViewRecursionNode(view, parent);
@@ -879,12 +879,12 @@ namespace MarkLight
                     }
 
                     // setting the state of the source view
-                    view.AddStateValue(state, stateViewField, attribute.Value, context, isSubState);
+                    view.States.AddValue(state, stateViewField, attribute.Value, context, isSubState);
                     continue;
                 }
 
                 // get view field data
-                var viewFieldData = view.GetViewFieldData(viewFieldPath);
+                var viewFieldData = view.Fields.GetData(viewFieldPath);
                 if (viewFieldData == null)
                 {
                     Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View field not found.", view.GameObjectName, viewFieldValue, viewFieldPath));
@@ -899,7 +899,7 @@ namespace MarkLight
                 }
 
                 // we are setting a normal view field
-                view.SetValue(attribute.Name.LocalName, attribute.Value, true, null, context, true);
+                view.Fields.SetValue(attribute.Name.LocalName, attribute.Value, true, null, context, true);
             }
         }
 

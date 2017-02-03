@@ -130,8 +130,8 @@ namespace MarkLight.Views.UI
                     {
                         ParentView = this,
                         SourceView = TransitionOutAnimation,
-                        ViewActionFieldName = "AnimationCompleted",
-                        ViewActionHandlerName = "TransitionOutCompleted"
+                        FieldName = "AnimationCompleted",
+                        HandlerName = "TransitionOutCompleted"
                     });
                 }
             }
@@ -150,8 +150,8 @@ namespace MarkLight.Views.UI
                     {
                         ParentView = this,
                         SourceView = TransitionOutReverseAnimation,
-                        ViewActionFieldName = "AnimationCompleted",
-                        ViewActionHandlerName = "TransitionOutCompleted"
+                        FieldName = "AnimationCompleted",
+                        HandlerName = "TransitionOutCompleted"
                     });
                 }
             }

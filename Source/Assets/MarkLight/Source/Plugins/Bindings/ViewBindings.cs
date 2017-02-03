@@ -19,7 +19,7 @@ namespace MarkLight
         public readonly View View;
 
         [SerializeField]
-        private List<ViewFieldBinding> _viewFieldBindings;
+        private List<ViewFieldBinding> _bindings;
 
         #endregion
 
@@ -28,9 +28,10 @@ namespace MarkLight
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ViewBindings(View view) {
+        public ViewBindings(View view)
+        {
             View = view;
-            _viewFieldBindings = new List<ViewFieldBinding>();
+            _bindings = new List<ViewFieldBinding>();
         }
 
         #endregion
@@ -42,7 +43,7 @@ namespace MarkLight
         /// </summary>
         public void Propagate()
         {
-            foreach (var viewFieldData in View.FieldDataValues.OrderByDescending(x => x.IsPropagatedFirst))
+            foreach (var viewFieldData in View.Fields.Data.OrderByDescending(x => x.IsPropagatedFirst))
             {
                 viewFieldData.NotifyBindingValueObservers(new HashSet<ViewFieldData>());
             }
@@ -51,22 +52,24 @@ namespace MarkLight
         /// <summary>
         /// Adds a binding to the view field that will be processed when the view is initialized.
         /// </summary>
-        public void Add(string viewField, string bindingString)
+        public void Add(string fieldPath, string bindingString)
         {
-            _viewFieldBindings.Add(new ViewFieldBinding(bindingString, viewField));
+            _bindings.Add(new ViewFieldBinding(fieldPath, bindingString));
         }
 
         /// <summary>
         /// Sets view field binding.
         /// </summary>
-        public void Set(string viewField, string viewFieldBinding) {
+        public void Set(string fieldPath, string bindingString)
+        {
             // get view field data for binding target
-            var viewFieldData = View.GetViewFieldData(viewField);
+            var viewFieldData = View.Fields.GetData(fieldPath);
             if (viewFieldData == null)
             {
                 Debug.LogError(String.Format(
-                    "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". View field not found.",
-                    View.GameObjectName, viewFieldBinding, viewField));
+                    "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
+                    "View field not found.",
+                    View.GameObjectName, bindingString, fieldPath));
                 return;
             }
 
@@ -80,18 +83,18 @@ namespace MarkLight
 
             // parse view field binding string
             char[] delimiterChars = {' ', ',', '$', '(', ')', '{', '}'};
-            var trimmedBinding = viewFieldBinding.Trim();
+            var trimmedBinding = bindingString.Trim();
 
             if (trimmedBinding.StartsWith("$"))
             {
                 // transformed multi-binding
-                string[] bindings = trimmedBinding.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
+                var bindings = trimmedBinding.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
                 if (bindings.Length < 1)
                 {
                     Debug.LogError(String.Format(
-                        "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Improperly "+
-                        "formatted binding string.",
-                        View.GameObjectName, viewFieldBinding, viewField));
+                        "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
+                        "Improperly formatted binding string.",
+                        View.GameObjectName, bindingString, fieldPath));
                     return;
                 }
 
@@ -100,7 +103,7 @@ namespace MarkLight
 
                 // get transformation method
                 var transformMethodName = bindings[0];
-                var transformMethodViewType = View.Parent.GetType();
+                var transformMethodViewType = View.LayoutParent.GetType();
 
                 var transformStr = bindings[0].Split('.');
                 if (transformStr.Length == 2)
@@ -113,7 +116,7 @@ namespace MarkLight
                         Debug.LogError(String.Format(
                             "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
                             "View \"{3}\" not found.",
-                            View.GameObjectName, viewFieldBinding, viewField, transformStr[0]));
+                            View.GameObjectName, bindingString, fieldPath, transformStr[0]));
                         return;
                     }
                 }
@@ -121,15 +124,15 @@ namespace MarkLight
                 try
                 {
                     valueObserver.TransformMethod = transformMethodViewType.GetMethod(transformMethodName,
-                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
-                        BindingFlags.Static);
+                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public |
+                        BindingFlags.NonPublic | BindingFlags.Static);
                 }
                 catch (Exception e)
                 {
                     Debug.LogError(String.Format(
-                        "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Error assigning "+
-                        "transform method \"{3}\" in view type \"{4}\". {5}",
-                        View.GameObjectName, viewFieldBinding, viewField, bindings[0], View.Parent.ViewTypeName,
+                        "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
+                        "Error assigning transform method \"{3}\" in view type \"{4}\". {5}",
+                        View.GameObjectName, bindingString, fieldPath, bindings[0], View.Parent.ViewTypeName,
                         Utils.GetError(e)));
                     return;
                 }
@@ -137,9 +140,9 @@ namespace MarkLight
                 if (valueObserver.TransformMethod == null)
                 {
                     Debug.LogError(String.Format(
-                        "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". Transform "+
-                        "method \"{3}\" not found in view type \"{4}\".",
-                        View.GameObjectName, viewFieldBinding, viewField, bindings[0], View.Parent.ViewTypeName));
+                        "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
+                        "Transform method \"{3}\" not found in view type \"{4}\".",
+                        View.GameObjectName, bindingString, fieldPath, bindings[0], View.Parent.ViewTypeName));
                     return;
                 }
 
@@ -166,13 +169,13 @@ namespace MarkLight
                     var bindingView = isLocalField ? View : View.Parent;
 
                     // get view field data for binding
-                    var sourceViewFieldData = bindingView.GetViewFieldData(sourceFieldName);
+                    var sourceViewFieldData = bindingView.Fields.GetData(sourceFieldName);
                     if (sourceViewFieldData == null)
                     {
                         Debug.LogError(String.Format(
                             "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
                             "Source binding view field \"{3}\" not found.",
-                            View.GameObjectName, viewFieldBinding, viewField, binding));
+                            View.GameObjectName, bindingString, fieldPath, binding));
                         return;
                     }
                     //Debug.Log(String.Format("Creating binding {0} <-> {1}", sourceViewFieldData.ViewFieldPath, viewFieldData.ViewFieldPath));
@@ -185,7 +188,7 @@ namespace MarkLight
             {
                 // check for bindings in string
                 var matches = new List<Match>();
-                foreach (Match match in ViewFieldBinding.BindingRegex.Matches(viewFieldBinding))
+                foreach (Match match in ViewFieldBinding.BindingRegex.Matches(bindingString))
                 {
                     matches.Add(match);
                 }
@@ -196,18 +199,18 @@ namespace MarkLight
                     Debug.LogError(String.Format(
                         "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
                         "String contains no binding.",
-                        View.GameObjectName, viewFieldBinding, viewField));
+                        View.GameObjectName, bindingString, fieldPath));
                     return;
                 }
 
                 // is the binding a format string?
                 var isBindingFormatString = false;
-                if (matches.Count > 1 || matches[0].Value.Length != viewFieldBinding.Length ||
+                if (matches.Count > 1 || matches[0].Value.Length != bindingString.Length ||
                     !String.IsNullOrEmpty(matches[0].Groups["format"].Value))
                 {
                     // yes.
                     var matchCount = 0;
-                    var formatString = ViewFieldBinding.BindingRegex.Replace(viewFieldBinding, x =>
+                    var formatString = ViewFieldBinding.BindingRegex.Replace(bindingString, x =>
                     {
                         var matchCountString = matchCount.ToString();
                         ++matchCount;
@@ -244,13 +247,13 @@ namespace MarkLight
                     var bindingView = isLocalField ? View : View.Parent;
 
                     // get view field data for binding
-                    var sourceFieldData = bindingView.GetViewFieldData(sourceFieldName);
+                    var sourceFieldData = bindingView.Fields.GetData(sourceFieldName);
                     if (sourceFieldData == null)
                     {
                         Debug.LogError(String.Format(
                             "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
                             "Source binding view field \"{3}\" not found.",
-                            View.GameObjectName, viewFieldBinding, viewField, sourceFieldName));
+                            View.GameObjectName, bindingString, fieldPath, sourceFieldName));
                         return;
                     }
                     //Debug.Log(String.Format("Creating binding {0} <-> {1}", sourceViewFieldData.ViewFieldPath, viewFieldData.ViewFieldPath));
@@ -274,7 +277,6 @@ namespace MarkLight
                             new ViewFieldBindingSource(viewFieldData, isNegatedField));
 
                         viewFieldData.RegisterValueObserver(targetObserver);
-                        View.AddValueObserver(targetObserver);
 
                         // if this is a local binding and target view is the same as source view
                         // we need to make sure value propagation happens in an intuitive order
@@ -286,8 +288,6 @@ namespace MarkLight
                     }
                 }
             }
-
-            View.AddValueObserver(valueObserver);
         }
 
         /// <summary>
@@ -295,9 +295,9 @@ namespace MarkLight
         /// </summary>
         internal void InitializeInternal()
         {
-            foreach (var binding in _viewFieldBindings)
+            foreach (var binding in _bindings)
             {
-                Set(binding.FieldName, binding.BindingString);
+                Set(binding.FieldPath, binding.BindingString);
             }
         }
 

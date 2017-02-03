@@ -25,7 +25,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    return (T)ParentView.GetValue(Path);
+                    return (T)ParentView.Fields.GetValue(Path);
                 }
 
                 return _internalValue;
@@ -34,7 +34,7 @@ namespace MarkLight
             {
                 if (ParentView != null)
                 {
-                    ParentView.SetValue(Path, value);
+                    ParentView.Fields.SetValue(Path, value);
                 }
                 else
                 {
@@ -53,7 +53,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    return ParentView.GetValue(Path);
+                    return ParentView.Fields.GetValue(Path);
                 }
 
                 return _internalValue;
@@ -62,7 +62,7 @@ namespace MarkLight
             {
                 if (ParentView != null)
                 {
-                    ParentView.SetValue(Path, value);
+                    ParentView.Fields.SetValue(Path, value);
                 }
                 else
                 {
@@ -81,7 +81,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    ParentView.SetValue(Path, value, true, null, null, false);
+                    ParentView.Fields.SetValue(Path, value, true, null, null, false);
                 }
                 else
                 {
@@ -100,7 +100,7 @@ namespace MarkLight
             {
                 if (ParentView != null && IsMapped)
                 {
-                    ParentView.SetValue(Path, value, true, null, null, false);
+                    ParentView.Fields.SetValue(Path, value, true, null, null, false);
                 }
                 else
                 {
@@ -117,7 +117,7 @@ namespace MarkLight
         {
             get
             {
-                return ParentView != null ? ParentView.IsSet(Path) : _isSet;
+                return ParentView != null ? ParentView.Fields.IsSet(Path) : _isSet;
             }
         }
 

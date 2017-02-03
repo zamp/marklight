@@ -42,7 +42,7 @@ namespace MarkLight
         /// <summary>
         /// Gets field data from field path.
         /// </summary>
-        public static ViewFieldData FromViewFieldPath(View sourceView, string path)
+        public static ViewFieldData FromPath(View sourceView, string path)
         {
             if (String.IsNullOrEmpty(path) || sourceView == null)
                 return null;
@@ -65,7 +65,7 @@ namespace MarkLight
 
             // if no target view found, assume path refers to this view (in cases like x.SetValue(() => x.Field, value))
             return result.TargetView == null
-                ? FromViewFieldPath(sourceView, String.Join(".", pathInfo.Fields.Skip(1).ToArray()))
+                ? FromPath(sourceView, String.Join(".", pathInfo.Fields.Skip(1).ToArray()))
                 : result;
         }
 
@@ -83,7 +83,7 @@ namespace MarkLight
         {
             if (!_isSetInitialized)
             {
-                SourceView.AddIsSetField(Path);
+                SourceView.Fields.AddIsSetField(Path);
                 _isSetInitialized = true;
             }
             _isSet = true;
@@ -105,7 +105,7 @@ namespace MarkLight
                 var targetView = GetTargetView();
                 if (targetView != null)
                 {
-                    return targetView.SetValue(TargetPath, inValue, updateDefaultState, callstack, null,
+                    return targetView.Fields.SetValue(TargetPath, inValue, updateDefaultState, callstack, null,
                         notifyObservers);
                 }
 
@@ -137,7 +137,7 @@ namespace MarkLight
             var value = inValue;
             if (context == null)
             {
-                context = SourceView.ValueConverterContext ?? ValueConverterContext.Default;
+                context = SourceView.Fields.ValueConverterContext ?? ValueConverterContext.Default;
             }
 
             // get converted value            
@@ -147,7 +147,8 @@ namespace MarkLight
                 if (!conversionResult.Success)
                 {
                     Debug.LogError(String.Format(
-                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". Value conversion failed. {3}",
+                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". "+
+                        "Value conversion failed. {3}",
                         SourceView.GameObjectName, value, Path, conversionResult.ErrorMessage));
                     return null;
                 }
@@ -169,7 +170,7 @@ namespace MarkLight
                     NotifyValueObservers(callstack);
 
                     // find dependent view fields and notify their value observers
-                    SourceView.NotifyDependentValueObservers(Path);
+                    SourceView.Fields.NotifyDependentValueObservers(Path);
                 }
             }
 
@@ -184,7 +185,7 @@ namespace MarkLight
             {
                 var targetView = GetTargetView();
                 if (targetView != null)
-                    return targetView.GetValue(TargetPath, out hasValue);
+                    return targetView.Fields.GetValue(TargetPath, out hasValue);
 
                 hasValue = false;
                 //Debug.LogError(String.Format("[MarkLight] {0}: Unable to get value from view field \"{1}\". View along path is null.", SourceView.GameObjectName, ViewFieldPath)));
@@ -316,7 +317,7 @@ namespace MarkLight
 
             // check with source view if the view field has been set
             _isSetInitialized = true;
-            _isSet = SourceView.GetIsSetFieldValue(Path);
+            _isSet = SourceView.Fields.GetIsSetFieldValue(Path);
             return _isSet;
         }
 
@@ -369,10 +370,7 @@ namespace MarkLight
         /// </summary>
         public ValueConverter ValueConverter
         {
-            get
-            {
-                return _pathInfo.ValueConverter;
-            }
+            get { return _pathInfo.ValueConverter; }
         }
 
         /// <summary>
@@ -380,10 +378,7 @@ namespace MarkLight
         /// </summary>
         public string TypeName
         {
-            get
-            {
-                return _pathInfo.TypeName;
-            }
+            get { return _pathInfo.TypeName; }
         }
 
         /// <summary>
@@ -391,10 +386,7 @@ namespace MarkLight
         /// </summary>
         public Type Type
         {
-            get
-            {
-                return _pathInfo.Type;
-            }
+            get { return _pathInfo.Type; }
         }
 
         /// <summary>
@@ -402,10 +394,7 @@ namespace MarkLight
         /// </summary>
         public string Path
         {
-            get
-            {
-                return _pathInfo.Path;
-            }
+            get { return _pathInfo.Path; }
         }
 
         /// <summary>
@@ -413,10 +402,7 @@ namespace MarkLight
         /// </summary>
         public string TargetPath
         {
-            get
-            {
-                return _pathInfo.TargetPath;
-            }
+            get { return _pathInfo.TargetPath; }
         }
 
         /// <summary>
@@ -424,10 +410,7 @@ namespace MarkLight
         /// </summary>
         public bool IsParsed
         {
-            get
-            {
-                return _pathInfo.IsParsed;
-            }
+            get { return _pathInfo.IsParsed; }
         }
 
         /// <summary>
@@ -435,10 +418,7 @@ namespace MarkLight
         /// </summary>
         public bool IsMapped
         {
-            get
-            {
-                return _pathInfo.IsMapped;
-            }
+            get { return _pathInfo.IsMapped; }
         }
 
         /// <summary>

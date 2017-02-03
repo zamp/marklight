@@ -215,7 +215,7 @@ namespace MarkLight.Editor
                 foreach (var viewField in viewFields)
                 {
                     bool isEnum = false;
-                    var viewFieldData = view.GetViewFieldData(viewField);
+                    var viewFieldData = view.Fields.GetData(viewField);
                     if (viewFieldData.Type != null && viewFieldData.Type.IsEnum)
                     {
                         isEnum = true;

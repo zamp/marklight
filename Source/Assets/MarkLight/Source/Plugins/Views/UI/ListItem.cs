@@ -500,7 +500,7 @@ namespace MarkLight.Views.UI
 
             if (_observableItem != null)
             {
-                SetValue("IsSelected", _observableItem.IsSelected);
+                Fields.SetValue("IsSelected", _observableItem.IsSelected);
                 SetSortIndex(_observableItem.Index + 1);
 
                 _observableItem.ItemSelectChanged += OnObservableItemSelectChanged;
@@ -530,18 +530,18 @@ namespace MarkLight.Views.UI
         /// </summary>
         protected virtual void OnObservableItemModified(object sender, DataItemsModifiedEventArgs args)
         {
-            NotifyDependentValueObservers(args.FieldPath == "" ? "Item" : "Item." + args.FieldPath, true);
+            Fields.NotifyDependentValueObservers(args.FieldPath == "" ? "Item" : "Item." + args.FieldPath, true);
         }
 
         /// <summary>
         /// Sets the state of the view.
         /// </summary>
-        public override void SetState(string state)
+        public override void SetState(string stateName)
         {
-            base.SetState(state);
+            base.SetState(stateName);
             if (ItemLabel != null)
             {
-                ItemLabel.SetState(state);
+                ItemLabel.SetState(stateName);
             }
         }
 

@@ -113,7 +113,7 @@ namespace MarkLight.Animation
             }
 
             // get info regarding animated field
-            var viewFieldData = TargetView.GetViewFieldData(Field);
+            var viewFieldData = TargetView.Fields.GetData(Field);
             if (viewFieldData == null)
             {
                 Debug.LogError(String.Format("[MarkLight] Unable to animate view field \"{0}\" on view \"{1}\"\". Field not found.", Field, TargetView.GameObjectName));
@@ -153,7 +153,7 @@ namespace MarkLight.Animation
             if (From == null)
             {
                 // use current view field value as from value
-                From = TargetView.GetValue(Field);
+                From = TargetView.Fields.GetValue(Field);
             }
 
             ResetAnimation();
@@ -201,7 +201,7 @@ namespace MarkLight.Animation
             // set new value
             try
             {
-                TargetView.SetValue(Field, interpolatedValue, false, null, null, true);
+                TargetView.Fields.SetValue(Field, interpolatedValue, false, null, null, true);
             }
             catch (Exception e)
             {
@@ -327,7 +327,7 @@ namespace MarkLight.Animation
             _isReversing = false;
             _isPaused = false;
             _isCompleted = false;
-            TargetView.SetValue(Field, From, false, null, null, true);
+            TargetView.Fields.SetValue(Field, From, false, null, null, true);
         }
 
         #endregion

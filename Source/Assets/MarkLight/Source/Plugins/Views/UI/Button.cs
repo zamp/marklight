@@ -365,10 +365,10 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Sets the state of the view.
         /// </summary>
-        public override void SetState(string state)
+        public override void SetState(string stateName)
         {
-            base.SetState(state);
-            ButtonLabel.SetState(state);
+            base.SetState(stateName);
+            ButtonLabel.SetState(stateName);
         }
 
         /// <summary>

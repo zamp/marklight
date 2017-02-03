@@ -50,7 +50,7 @@ namespace MarkLight.Views
             // register the state animation in the parent
             if (LayoutParent != null)
             {
-                LayoutParent.AddStateAnimation(this);
+                LayoutParent.States.AddAnimation(this);
                 Target = LayoutParent;
             }
 

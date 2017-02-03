@@ -19,8 +19,8 @@ namespace MarkLight
     {
         #region Fields
 
-        public string ViewActionFieldName;
-        public string ViewActionHandlerName;
+        public string FieldName;
+        public string HandlerName;
         public View ParentView;
         public View SourceView;
 
@@ -106,7 +106,7 @@ namespace MarkLight
             }
             catch (Exception e)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Exception thrown when triggering view action handler \"{1}.{2}()\" for view action \"{3}\": {4}", SourceView.GameObjectName, ParentView.ViewTypeName, ViewActionHandlerName, ViewActionFieldName, Utils.GetError(e)));
+                Debug.LogError(String.Format("[MarkLight] {0}: Exception thrown when triggering view action handler \"{1}.{2}()\" for view action \"{3}\": {4}", SourceView.GameObjectName, ParentView.ViewTypeName, HandlerName, FieldName, Utils.GetError(e)));
             }
         }
 
@@ -116,10 +116,10 @@ namespace MarkLight
         private void Initialize()
         {
             // look for a method with the same name as the entry
-            _viewActionMethod = ParentView.GetType().GetMethod(ViewActionHandlerName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            _viewActionMethod = ParentView.GetType().GetMethod(HandlerName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (_viewActionMethod == null)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to initialize view action handler \"{1}.{2}()\" for view action \"{3}\". View action handler not found.", SourceView.GameObjectName, ParentView.ViewTypeName, ViewActionHandlerName, ViewActionFieldName));
+                Debug.LogError(String.Format("[MarkLight] {0}: Unable to initialize view action handler \"{1}.{2}()\" for view action \"{3}\". View action handler not found.", SourceView.GameObjectName, ParentView.ViewTypeName, HandlerName, FieldName));
                 return;
             }
 
@@ -137,7 +137,7 @@ namespace MarkLight
                 {
                     if (!viewActionMethodParameters[i].ParameterType.IsAssignableFrom(SourceView.GetType()))
                     {
-                        Debug.LogError(String.Format("[MarkLight] View action \"{0}.{1}\" has parameter \"{2}\" with invalid type. Expected type (or baseclass of) \"{3}\".", ParentView.ViewTypeName, ViewActionHandlerName, viewActionMethodParameters[i].Name, SourceView.ViewTypeName));
+                        Debug.LogError(String.Format("[MarkLight] View action \"{0}.{1}\" has parameter \"{2}\" with invalid type. Expected type (or baseclass of) \"{3}\".", ParentView.ViewTypeName, HandlerName, viewActionMethodParameters[i].Name, SourceView.ViewTypeName));
                     }
 
                     _parameters[i] = SourceView;

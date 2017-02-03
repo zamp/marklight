@@ -145,10 +145,10 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Sets the state of the view.
         /// </summary>
-        public override void SetState(string state)
+        public override void SetState(string stateName)
         {
-            base.SetState(state);
-            ColumnLabel.SetState(state);
+            base.SetState(stateName);
+            ColumnLabel.SetState(stateName);
         }
 
         #endregion

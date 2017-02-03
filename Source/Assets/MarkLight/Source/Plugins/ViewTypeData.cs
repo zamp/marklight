@@ -94,7 +94,7 @@ namespace MarkLight
         /// <summary>
         /// Gets mapped view field. Returns the same field if no mapped field exist.
         /// </summary>
-        public string GetMappedViewField(string viewField)
+        public string GetMappedFieldPath(string viewField)
         {
             if (_mappedViewFields == null)
             {

@@ -80,12 +80,12 @@ namespace Marklight.Themes
                 }
 
                 // setting the state of the source view
-                view.AddStateValue(state, stateViewField, _value, context, isSubState);
+                view.States.AddValue(state, stateViewField, _value, context, isSubState);
                 return;
             }
 
             // get view field data
-            var viewFieldData = view.GetViewFieldData(_name);
+            var viewFieldData = view.Fields.GetData(_name);
             if (viewFieldData == null)
                 return; // ignore if view does not have field
 
@@ -97,7 +97,7 @@ namespace Marklight.Themes
             else
             {
                 // we are setting a normal view field
-                view.SetValue(_name, _value, true, null, context, true, true);
+                view.Fields.SetValue(_name, _value, true, null, context, true, true);
             }
         }
 

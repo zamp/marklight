@@ -1751,7 +1751,7 @@ namespace MarkLight.Views.UI
                 if (x.SortIndex.Value == observableItem.Index + 1)
                 {
                     x.Item.Value = observableItem;
-                    x.NotifyDependentValueObservers("Item", true);
+                    x.Fields.NotifyDependentValueObservers("Item", true);
                 }
             });
         }
