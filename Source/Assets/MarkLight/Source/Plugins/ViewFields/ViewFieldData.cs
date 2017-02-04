@@ -19,6 +19,7 @@ namespace MarkLight
 
         private ViewFieldPathInfo _pathInfo;
         private HashSet<ValueObserver> _valueObservers;
+        private HashSet<ValueObserver> _removeValueObservers;
         private bool _isSet;
         private bool _isSetInitialized;
 
@@ -215,6 +216,20 @@ namespace MarkLight
         }
 
         /// <summary>
+        /// Registers a value observer.
+        /// </summary>
+        public void UnregisterValueObserver(ValueObserver valueObserver)
+        {
+            if (_valueObservers == null || !_valueObservers.Contains(valueObserver))
+                return;
+
+            if (_removeValueObservers == null)
+                _removeValueObservers = new HashSet<ValueObserver>();
+
+            _removeValueObservers.Add(valueObserver);
+        }
+
+        /// <summary>
         /// Notifies all value observers that value has been set.
         /// </summary>
         public void NotifyValueObservers(HashSet<ViewFieldData> callstack)
@@ -222,26 +237,26 @@ namespace MarkLight
             if (_valueObservers == null)
                 return;
 
-            List<ValueObserver> removedObservers = null;
+            List<ValueObserver> removed = null;
             foreach (var valueObserver in _valueObservers)
             {
                 // notify observer
-                bool isRemoved = !valueObserver.Notify(callstack);
-                if (isRemoved)
-                {
-                    if (removedObservers == null)
-                    {
-                        removedObservers = new List<ValueObserver>();
-                    }
+                var shouldRemove = _removeValueObservers != null && _removeValueObservers.Contains(valueObserver)
+                                    || !valueObserver.Notify(callstack);
+                if (!shouldRemove)
+                    continue;
 
-                    removedObservers.Add(valueObserver);
-                }
+                if (removed == null)
+                    removed = new List<ValueObserver>();
+
+                removed.Add(valueObserver);
             }
 
-            if (removedObservers != null)
-            {
-                removedObservers.ForEach(x => _valueObservers.Remove(x));
-            }
+            if (removed != null)
+                removed.ForEach(x => _valueObservers.Remove(x));
+
+            if (_removeValueObservers != null)
+                _removeValueObservers.Clear();
         }
 
         /// <summary>
@@ -252,28 +267,29 @@ namespace MarkLight
             if (_valueObservers == null)
                 return;
 
-            List<ValueObserver> removedObservers = null;
+            List<ValueObserver> removed = null;
             foreach (var valueObserver in _valueObservers)
             {
-                if (valueObserver is BindingValueObserver)
-                {
-                    bool isRemoved = !valueObserver.Notify(callstack);
-                    if (isRemoved)
-                    {
-                        if (removedObservers == null)
-                        {
-                            removedObservers = new List<ValueObserver>();
-                        }
+                if (!(valueObserver is BindingValueObserver))
+                    continue;
 
-                        removedObservers.Add(valueObserver);
-                    }
-                }
+                var shouldRemove = _removeValueObservers != null && _removeValueObservers.Contains(valueObserver)
+                                   || !valueObserver.Notify(callstack);
+
+                if (!shouldRemove)
+                    continue;
+
+                if (removed == null)
+                    removed = new List<ValueObserver>();
+
+                removed.Add(valueObserver);
             }
 
-            if (removedObservers != null)
-            {
-                removedObservers.ForEach(x => _valueObservers.Remove(x));
-            }
+            if (removed != null)
+                removed.ForEach(x => _valueObservers.Remove(x));
+
+            if (_removeValueObservers != null)
+                _removeValueObservers.Clear();
         }
 
         /// <summary>

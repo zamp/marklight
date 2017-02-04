@@ -55,7 +55,7 @@ namespace MarkLight
             var startBracketIndex = value.IndexOf('{');
             if (startBracketIndex >= 0)
             {
-                return value.IndexOf('}') > startBracketIndex;  //BindingRegex.IsMatch(value) || TransformBindingRegex.IsMatch(value);
+                return value.IndexOf('}') > startBracketIndex;
             }
             return false;
         }

@@ -1,39 +1,30 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
 
 namespace MarkLight
 {
     /// <summary>
     /// Binding value observer.
     /// </summary>
-    public class BindingValueObserver : ValueObserver
+    public abstract class BindingValueObserver : ValueObserver
     {
         #region Fields
 
-        public List<BindingSource> Sources;
-        public ViewFieldData Target;
-        public BindingType BindingType;
-        public string FormatString;
-        public MethodInfo TransformMethod;
-        public View ParentView;        
+        private readonly List<BindingSource> _sources;
+        private readonly ViewFieldData _target;
 
         #endregion
 
         #region Constructor
 
         /// <summary>
-        /// Initializes static instance of the class.
+        /// Constructor.
         /// </summary>
-        public BindingValueObserver()
+        protected BindingValueObserver(ViewFieldData target)
         {
-            Sources = new List<BindingSource>();
+            _target = target;
+            _sources = new List<BindingSource>();
         }
 
         #endregion
@@ -41,106 +32,66 @@ namespace MarkLight
         #region Methods
 
         /// <summary>
-        /// Notifies the binding value observer that value has changed.
+        /// Add a binding source to the observer.
         /// </summary>
-        public override bool Notify(HashSet<ViewFieldData> callstack)
-        {
-            try
-            {
-                base.Notify(callstack);
-                bool hasValue;
-
-                // check if target has been destroyed
-                if (Target.SourceView == null)
-                {
-                    return false; 
-                }
-
-                //Debug.Log(String.Format("Source(s) updated. Updating target field: {0}", Target.ViewFieldPath));
-                switch (BindingType)
-                {
-                    default:
-                    case BindingType.SingleBinding:
-                        var value = Sources[0].GetValue(out hasValue);
-                        if (hasValue)
-                        {
-                            // use to debug
-                            //Debug.Log(String.Format("Propagating Value \"{4}\": {0}.{1} -> {2}.{3}", Sources[0].ViewFieldData.TargetView.ViewTypeName, Sources[0].ViewFieldData.TargetViewFieldPath,
-                            //    Target.TargetView.ViewTypeName, Target.TargetViewFieldPath, value.ToString()));
-
-                            // set value
-                            Target.SetValue(value, callstack); 
-                        }
-                        break;
-
-                    case BindingType.MultiBindingTransform:
-                        object[] pars = Sources.Count > 0 ? new object[Sources.Count] : null;
-                        for (int i = 0; i < pars.Length; ++i)
-                        {
-                            pars[i] = Sources[i].GetValue(out hasValue);
-                        }
-
-                        // set transformed value
-                        if (TransformMethod.IsStatic)
-                        {
-                            Target.SetValue(TransformMethod.Invoke(null, pars), callstack);
-                        }
-                        else
-                        {
-                            Target.SetValue(TransformMethod.Invoke(ParentView, pars), callstack);                            
-                        }
-                        break;
-
-                    case BindingType.MultiBindingFormatString:
-                        object[] formatPars = Sources.Count > 0 ? new object[Sources.Count] : null;
-                        for (int i = 0; i < formatPars.Length; ++i)
-                        {
-                            formatPars[i] = Sources[i].GetValue(out hasValue);
-                        }
-
-                        // set format string value
-                        Target.SetValue(String.Format(FormatString, formatPars), callstack);
-                        break;
-
-                }
-            }
-            catch (Exception e)
-            {
-                PrintBindingError(e);
-            }
-
-            return true;
+        internal void AddBindingSource(BindingSource source) {
+            _sources.Add(source);
         }
 
         /// <summary>
-        /// Prints a formatted error message.
+        /// Remove a binding source from the observer.
         /// </summary>
-        private void PrintBindingError(Exception e)
-        {
-            switch (BindingType)
+        internal void RemoveBindingSource(BindingSource source) {
+            _sources.Remove(source);
+        }
+
+        /// <summary>
+        /// Join the binding source string in Sources into a comma delimited string.
+        /// </summary>
+        protected string JoinSources() {
+
+            var sb = new StringBuilder();
+            foreach (var source in Sources)
             {
-                default:
-                case BindingType.SingleBinding:
-                    Debug.LogError(String.Format("[MarkLight] Exception thrown when propagating single binding value from source \"{0}\" to target \"{1}.{2}\": {3}", Sources[0].BindingSourceString, Target.SourceView.ViewTypeName, Target.Path, Utils.GetError(e)));
-                    break;
+                if (source != Sources[0])
+                {
+                    sb.Append(", ");
+                }
 
-                case BindingType.MultiBindingTransform:
-                case BindingType.MultiBindingFormatString:
-                    StringBuilder sb = new StringBuilder();
-                    foreach (var source in Sources)
-                    {
-                        if (source != Sources[0])
-                        {
-                            sb.Append(", ");
-                        }
-
-                        sb.AppendFormat(source.BindingSourceString);
-                    }
-
-                    Debug.LogError(String.Format("[MarkLight] Exception thrown when propagating single binding value from sources \"{0}\" to target \"{1}.{2}\": {3}", sb.ToString(), Target.SourceView.ViewTypeName, Target.Path, Utils.GetError(e)));
-                    break;
+                sb.AppendFormat(source.BindingSourceString);
             }
-        }    
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Get the binding type.
+        /// </summary>
+        public abstract BindingType BindingType { get; }
+
+        /// <summary>
+        /// Determine if the observer can only do one-way bindings or not.
+        /// </summary>
+        public abstract bool IsOneWayOnly { get; }
+
+        /// <summary>
+        /// Get a readonly list of binding sources.
+        /// </summary>
+        public ReadOnlyCollection<BindingSource> Sources
+        {
+            get { return _sources.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Get the view field target that source values will be applied to.
+        /// </summary>
+        public ViewFieldData Target
+        {
+            get { return _target; }
+        }
 
         #endregion
     }

@@ -1,12 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
+﻿using System;
 
 namespace MarkLight
 {
@@ -17,8 +9,8 @@ namespace MarkLight
     {
         #region Fields
 
-        public string DictionaryName;
-        public string ResourceKey;
+        public readonly string DictionaryName;
+        public readonly string ResourceKey;
 
         #endregion
 
@@ -56,14 +48,9 @@ namespace MarkLight
         {
             get
             {
-                if (String.IsNullOrEmpty(DictionaryName))
-                {
-                    return String.Format("@{0}", ResourceKey);
-                }
-                else
-                {
-                    return String.Format("@{0}.{1}", DictionaryName, ResourceKey);
-                }
+                return String.IsNullOrEmpty(DictionaryName)
+                    ? String.Format("@{0}", ResourceKey)
+                    : String.Format("@{0}.{1}", DictionaryName, ResourceKey);
             }
         }
 
