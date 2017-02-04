@@ -429,6 +429,14 @@ namespace MarkLight
             get { return _pathInfo.IsMappedToDescendants; }
         }
 
+        /// <summary>
+        /// Determine if the field is a generic field.
+        /// </summary>
+        public bool IsGeneric
+        {
+            get { return _pathInfo.IsGeneric; }
+        }
+
         #endregion
     }
 }

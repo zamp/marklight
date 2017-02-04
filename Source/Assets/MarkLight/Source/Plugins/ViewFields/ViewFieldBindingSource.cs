@@ -10,7 +10,7 @@ namespace MarkLight
         #region Fields
 
         public readonly ViewFieldData ViewFieldData;
-        public readonly bool IsValueNegated;
+        public readonly bool IsNegated;
 
         private static readonly string BoolTypeName = typeof(bool).Name;
 
@@ -21,10 +21,10 @@ namespace MarkLight
         /// <summary>
         /// Initializes a new instance of the class.
         /// </summary>
-        public ViewFieldBindingSource(ViewFieldData viewFieldData, bool isValueNegated = false)
+        public ViewFieldBindingSource(ViewFieldData viewFieldData, bool isNegated = false)
         {
             ViewFieldData = viewFieldData;
-            IsValueNegated = isValueNegated;
+            IsNegated = isNegated;
         }
 
         #endregion
@@ -39,7 +39,7 @@ namespace MarkLight
             var value = ViewFieldData.GetValue(out hasValue);
 
             // check if value is to be negated
-            if (IsValueNegated && ViewFieldData.TypeName == BoolTypeName)
+            if (IsNegated && ViewFieldData.TypeName == BoolTypeName)
             {
                 value = !(bool)value;
             }

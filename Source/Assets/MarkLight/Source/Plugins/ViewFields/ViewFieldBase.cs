@@ -88,7 +88,7 @@ namespace MarkLight
             set
             {
                 if (_isMappedSet)
-                    throw new InvalidOperationException("ParentView can only be set once.");
+                    throw new InvalidOperationException("IsMapped can only be set once.");
 
                 _isMapped = value;
                 _isMappedSet = true;
