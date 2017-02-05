@@ -92,7 +92,7 @@ namespace MarkLight
                 if (mainView != null)
                 {
                     viewPresenter.RootView = mainView.View.gameObject;
-                    ApplyParentChildStyles(mainView, new ValueConverterContext());
+                    ApplyParentChildStyles(mainView, ValueConverterContext.Default);
                 }
             }
 
@@ -661,7 +661,7 @@ namespace MarkLight
                 var childViewIdAttr = childElement.Attribute("Id");
                 var childViewStyleAttr = childElement.Attribute("Style");
                 var childThemeAttr = childElement.Attribute("Theme");
-                var childContext = GetValueConverterContext(context, childElement, view.GameObjectName);
+                var childContext = new ValueConverterContext(context, childElement, view.GameObjectName);
 
                 var childView = CreateView(childElement.Name.LocalName, result, result, childContext,
                     childThemeAttr != null ? childThemeAttr.Value : themeName,
@@ -696,7 +696,7 @@ namespace MarkLight
                     var contentElementIdAttr = contentElement.Attribute("Id");
                     var contentElementStyleAttr = contentElement.Attribute("Style");
                     var contentThemeAttr = contentElement.Attribute("Theme");
-                    var contentContext = GetValueConverterContext(context, contentElement, view.GameObjectName);
+                    var contentContext = new ValueConverterContext(context, contentElement, view.GameObjectName);
 
                     var contentView = CreateView(contentElement.Name.LocalName, contentLayoutParent, parent, contentContext,
                         contentThemeAttr != null ? contentThemeAttr.Value : themeName,
@@ -787,39 +787,6 @@ namespace MarkLight
             {
                 ApplyParentChildStyles(child, context);
             };
-        }
-
-
-        /// <summary>
-        /// Creates value converter context from element settings.
-        /// </summary>
-        private static ValueConverterContext GetValueConverterContext(ValueConverterContext parentContext, XElement element, string viewName)
-        {
-            var elementContext = new ValueConverterContext(parentContext);
-
-            var baseDirectoryAttr = element.Attribute("BaseDirectory");
-            var unitSizeAttr = element.Attribute("UnitSize");
-            if (baseDirectoryAttr != null)
-            {
-                elementContext.BaseDirectory = baseDirectoryAttr.Value;
-            }
-            if (unitSizeAttr != null)
-            {
-                var unitSizeString = unitSizeAttr.Value;
-                var converter = new Vector3ValueConverter();
-                var result = converter.Convert(unitSizeString);
-                if (result.Success)
-                {
-                    elementContext.UnitSize = (Vector3)result.ConvertedValue;
-                }
-                else
-                {
-                    Debug.LogError(String.Format("[MarkLight] {0}: Error parsing XUML. Unable to parse UnitSize attribute value \"{1}\".", viewName, unitSizeString));
-                    elementContext.UnitSize = ViewPresenter.Instance.UnitSize;
-                }
-            }
-
-            return elementContext;
         }
 
         /// <summary>

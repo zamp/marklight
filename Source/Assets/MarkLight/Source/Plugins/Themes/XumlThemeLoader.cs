@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using MarkLight;
 using MarkLight.ValueConverters;
 using UnityEngine;
 
@@ -23,18 +22,21 @@ namespace Marklight.Themes
 
             var baseDirectoryAttr = rootElement.Attribute("BaseDirectory");
             var unitSizeAttr = rootElement.Attribute("UnitSize");
-            var hasBaseDirectory = baseDirectoryAttr != null;
-            var hasUnitSize = unitSizeAttr != null;
+            var hexColorTypeAttr = rootElement.Attribute("HexColorType");
 
-            var baseDirectory = baseDirectoryAttr != null ? baseDirectoryAttr.Value : "";
-            var unitSize = ParseUnitSize(hasUnitSize ? unitSizeAttr.Value : null, xumlAssetName);
+            var baseDirectory = baseDirectoryAttr != null ? baseDirectoryAttr.Value : null;
+            var unitSize = unitSizeAttr != null
+                ? ParseUnitSize(unitSizeAttr.Value, xumlAssetName)
+                : null;
+            var hexColorType = hexColorTypeAttr != null
+                ? ParseHexColorType(hexColorTypeAttr.Value, xumlAssetName)
+                : null;
 
             try
             {
                 var styles = LoadStyles(rootElement, new LoadStyleContext(), -1, new List<StyleData>(50));
 
-                return new Theme(themeNameAttr.Value,
-                    baseDirectory, unitSize, hasBaseDirectory, hasUnitSize, styles.ToArray());
+                return new Theme(themeNameAttr.Value, baseDirectory, unitSize, hexColorType, styles.ToArray());
             }
             catch (Exception e)
             {
@@ -143,24 +145,38 @@ namespace Marklight.Themes
             return result;
         }
 
-        private static Vector3 ParseUnitSize(string unitSize, string xumlAssetName) {
+        private static HexColorType? ParseHexColorType(string hexColorType, string xumlAssetName)
+        {
+            if (string.IsNullOrEmpty(hexColorType))
+                return null;
+
+            var result = EnumValueConverter.HexColorType.Convert(hexColorType);
+            if (result.Success)
+                return (HexColorType) result.ConvertedValue;
+
+            Debug.LogError(string.Format(
+                "[MarkLight] {0}: Error parsing theme XUML. Unable to parse HexColorType attribute value \"{1}\".",
+                xumlAssetName, hexColorType));
+
+            return null;
+        }
+
+        private static Vector3? ParseUnitSize(string unitSize, string xumlAssetName)
+        {
             if (string.IsNullOrEmpty(unitSize))
-            {
-                // use default unit size
-                return ViewPresenter.Instance.UnitSize;
-            }
+                return null;
+
             var converter = new Vector3ValueConverter();
             var result = converter.Convert(unitSize);
+
             if (result.Success)
-            {
                 return (Vector3) result.ConvertedValue;
-            }
 
             Debug.LogError(string.Format(
                 "[MarkLight] {0}: Error parsing theme XUML. Unable to parse UnitSize attribute value \"{1}\".",
                 xumlAssetName, unitSize));
 
-            return ViewPresenter.Instance.UnitSize;
+            return null;
         }
     }
 }

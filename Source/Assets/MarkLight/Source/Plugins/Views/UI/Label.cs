@@ -341,7 +341,7 @@ namespace MarkLight.Views.UI
                 {
                     // parse size value
                     var vc = new IntValueConverter();
-                    var convertResult = vc.Convert(tagNoWs.Substring(5), ValueConverterContext.Empty);
+                    var convertResult = vc.Convert(tagNoWs.Substring(5), ValueConverterContext.Default);
                     if (!convertResult.Success)
                     {
                         // unable to parse token
@@ -362,7 +362,7 @@ namespace MarkLight.Views.UI
                 {
                     // parse color value
                     var vc = new ColorValueConverter();
-                    var convertResult = vc.Convert(tagNoWs.Substring(6), ValueConverterContext.Empty);
+                    var convertResult = vc.Convert(tagNoWs.Substring(6), ValueConverterContext.Default);
                     if (!convertResult.Success)
                     {
                         // unable to parse token

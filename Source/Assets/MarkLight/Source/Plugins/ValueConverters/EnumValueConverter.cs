@@ -1,12 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine;
-using System.Globalization;
-#endregion
+﻿using System;
+using Marklight;
 
 namespace MarkLight.ValueConverters
 {
@@ -15,9 +8,11 @@ namespace MarkLight.ValueConverters
     /// </summary>
     public class EnumValueConverter : ValueConverter
     {
-        #region Fields 
+        #region Fields
 
-        private Type _enumType;
+        public static readonly EnumValueConverter HexColorType = new EnumValueConverter(typeof(HexColorType));
+
+        private readonly Type _enumType;
 
         #endregion
 
@@ -48,30 +43,28 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
+                return base.Convert(null, context);
 
-            Type valueType = value.GetType();
+            var valueType = value.GetType();
             if (valueType == _enumType)
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
-            {
-                var stringValue = (string)value;
-                try
-                {
-                    var convertedValue = Enum.Parse(_enumType, stringValue, true);
-                    return new ConversionResult(convertedValue);
-                }
-                catch (Exception e)
-                {
-                    return ConversionFailed(value, e);
-                }
-            }
 
-            return ConversionFailed(value);
+            if (valueType != _stringType)
+                return ConversionFailed(value);
+
+            var stringValue = value as string;
+            if (stringValue == null)
+                return StringConversionFailed(value);
+
+            try
+            {
+                var convertedValue = Enum.Parse(_enumType, stringValue, true);
+                return new ConversionResult(convertedValue);
+            }
+            catch (Exception e)
+            {
+                return ConversionFailed(value, e);
+            }
         }
 
         /// <summary>

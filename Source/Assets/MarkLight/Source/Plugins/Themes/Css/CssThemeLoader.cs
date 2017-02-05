@@ -104,11 +104,10 @@ namespace Marklight.Themes
 
             var unitSize = themeProperties.Get("UnitSize");
             var baseDirectory = themeProperties.Get("BaseDirectory");
-            var isUnitSizeSet = unitSize != null;
-            var isBaseDirectorySet = baseDirectory != null;
+            var hexColorType = themeProperties.Get("HexColorType");
 
             return new Theme(themeName, baseDirectory, ParseUnitSize(unitSize, cssAssetName),
-                                    isBaseDirectorySet, isUnitSizeSet, styleDataList.ToArray());
+                                    ParseHexColorType(hexColorType, cssAssetName), styleDataList.ToArray());
         }
 
         private static StyleProperty CreateProperty(string selector, CssParser.Property cssProperty) {
@@ -140,24 +139,38 @@ namespace Marklight.Themes
             return new StyleProperty(name, cssProperty.Value);
         }
 
-        private static Vector3 ParseUnitSize(string unitSize, string cssAssetName) {
+        private static HexColorType? ParseHexColorType(string hexColorType, string xumlAssetName)
+        {
+            if (string.IsNullOrEmpty(hexColorType))
+                return null;
+
+            var result = EnumValueConverter.HexColorType.Convert(hexColorType);
+            if (result.Success)
+                return (HexColorType) result.ConvertedValue;
+
+            Debug.LogError(string.Format(
+                "[MarkLight] {0}: Error parsing theme CSS. Unable to parse HexColorType attribute value \"{1}\".",
+                xumlAssetName, hexColorType));
+
+            return null;
+        }
+
+        private static Vector3? ParseUnitSize(string unitSize, string xumlAssetName)
+        {
             if (string.IsNullOrEmpty(unitSize))
-            {
-                // use default unit size
-                return ViewPresenter.Instance.UnitSize;
-            }
+                return null;
+
             var converter = new Vector3ValueConverter();
             var result = converter.Convert(unitSize);
+
             if (result.Success)
-            {
                 return (Vector3) result.ConvertedValue;
-            }
 
             Debug.LogError(string.Format(
                 "[MarkLight] {0}: Error parsing theme CSS. Unable to parse UnitSize attribute value \"{1}\".",
-                cssAssetName, unitSize));
+                xumlAssetName, unitSize));
 
-            return ViewPresenter.Instance.UnitSize;
+            return null;
         }
     }
 }

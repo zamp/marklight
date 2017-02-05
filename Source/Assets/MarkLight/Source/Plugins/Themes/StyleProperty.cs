@@ -45,7 +45,7 @@ namespace Marklight.Themes
         public void ApplyTo(View view, ValueConverterContext context) {
 
             if (context == null)
-                context = new ValueConverterContext();
+                context = ValueConverterContext.Default;
 
             // check if value contains a binding
             if (ViewFieldBinding.HasBindings(_value))

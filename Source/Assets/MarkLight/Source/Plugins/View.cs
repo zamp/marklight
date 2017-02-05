@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System.Collections;
+using Marklight;
 using MarkLight.Views.UI;
 #endregion
 
@@ -72,6 +73,12 @@ namespace MarkLight
         /// <d>Specifies the user-defined unit size to be used by the view and its children. Used when element size
         ///  is specified in user-defined units to convert it into pixels.</d>
         public Vector3 UnitSize;
+
+        /// <summary>
+        /// Color hex type.
+        /// </summary>
+        /// <d>Specifies the component order to expect color hexidecimals to be provided in.</d>
+        public HexColorType HexColorType;
 
         /// <summary>
         /// Layout parent view.

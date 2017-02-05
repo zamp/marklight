@@ -68,7 +68,9 @@ namespace MarkLight
             ResourceDictionaries = new List<ResourceDictionary>();
             ViewTypeNames = new List<string>();
             ThemeNames = new List<string>();
-            UnitSize = new Vector3(40, 40, 40);
+            BaseDirectory = ValueConverterContext.DefaultBaseDirectory;
+            UnitSize = ValueConverterContext.DefaultUnitSize;
+            HexColorType = ValueConverterContext.DefaultHexColorType;
         }
 
         #endregion

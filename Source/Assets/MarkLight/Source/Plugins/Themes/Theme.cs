@@ -25,10 +25,16 @@ namespace Marklight.Themes
         private Vector3 _unitSize;
 
         [SerializeField]
+        private HexColorType _hexColorType;
+
+        [SerializeField]
         private bool _isBaseDirectorySet;
 
         [SerializeField]
         private bool _isUnitSizeSet;
+
+        [SerializeField]
+        private bool _isColorHextTypeSet;
 
         [SerializeField]
         private StyleData[] _styleData;
@@ -64,17 +70,18 @@ namespace Marklight.Themes
         /// <param name="name">The name of the theme.</param>
         /// <param name="baseDirectory">Base directory of the theme.</param>
         /// <param name="unitSize">The themes unit size.</param>
-        /// <param name="isBaseDirectorySet">True if baseDirectory has a value.</param>
-        /// <param name="isUnitSizeSet">True if unitSize has a value.</param>
+        /// <param name="hexColorType">The themse color hex component arrangment type.</param>
         /// <param name="styles">Array of the themes style data.</param>
-        public Theme(string name, string baseDirectory, Vector3 unitSize,
-                     bool isBaseDirectorySet, bool isUnitSizeSet, StyleData[] styles) {
-
+        public Theme(string name,
+                     string baseDirectory, Vector3? unitSize, HexColorType? hexColorType, StyleData[] styles)
+        {
             _name = name;
-            _baseDirectory = baseDirectory;
-            _unitSize = unitSize;
-            _isBaseDirectorySet = isBaseDirectorySet;
-            _isUnitSizeSet = isUnitSizeSet;
+            _baseDirectory = baseDirectory ?? ValueConverterContext.DefaultBaseDirectory;
+            _unitSize = unitSize != null ? unitSize.Value : ValueConverterContext.DefaultUnitSize;
+            _hexColorType = hexColorType != null ? hexColorType.Value : ValueConverterContext.DefaultHexColorType;
+            _isBaseDirectorySet = baseDirectory != null;
+            _isUnitSizeSet = unitSize != null;
+            _isColorHextTypeSet = hexColorType != null;
             _styleData = styles;
         }
 
@@ -118,13 +125,11 @@ namespace Marklight.Themes
             if (style == null)
                 return;
 
-            context = new ValueConverterContext(context);
+            var baseDirectory = _isBaseDirectorySet ? _baseDirectory : null;
+            var unitSize = _isUnitSizeSet ? (Vector3?)_unitSize : null;
+            var colorHexType = _isColorHextTypeSet ? (HexColorType?) _hexColorType : null;
 
-            if (_isBaseDirectorySet)
-                context.BaseDirectory = _baseDirectory;
-
-            if (_isUnitSizeSet)
-                context.UnitSize = _unitSize;
+            context = new ValueConverterContext(context, baseDirectory, unitSize, colorHexType);
 
             style.ApplyTo(view, context);
         }

@@ -126,7 +126,7 @@ namespace MarkLight
                     {
                         _stateValuesList.Add(
                             new ViewFieldStateValue(mappedPath, View.DefaultStateName, null,
-                                ValueConverterContext.Empty, false));
+                                ValueConverterContext.Default, false));
                     }
                 }
             }
