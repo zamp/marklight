@@ -49,9 +49,6 @@ namespace MarkLight.ValueConverters
             if (valueType == _enumType)
                 return base.Convert(value, context);
 
-            if (valueType != _stringType)
-                return ConversionFailed(value);
-
             var stringValue = value as string;
             if (stringValue == null)
                 return StringConversionFailed(value);

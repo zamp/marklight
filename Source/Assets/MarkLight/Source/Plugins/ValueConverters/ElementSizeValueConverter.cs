@@ -1,11 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine;
-#endregion
+﻿using System;
 
 namespace MarkLight.ValueConverters
 {
@@ -16,8 +9,8 @@ namespace MarkLight.ValueConverters
     {
         #region Fields
 
-        private Type _intType;
-        private Type _floatType;
+        private static readonly Type _intType = typeof(int);
+        private static readonly Type _floatType = typeof(float);
         
         #endregion
 
@@ -29,8 +22,6 @@ namespace MarkLight.ValueConverters
         public ElementSizeValueConverter()
         {
             _type = typeof(ElementSize);
-            _intType = typeof(int);
-            _floatType = typeof(float);
         }
 
         #endregion
@@ -43,36 +34,31 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
+                return base.Convert(null, context);
 
-            Type valueType = value.GetType();
+            var valueType = value.GetType();
             if (valueType == _type)
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
+
+            var stringValue = value as string;
+            if (stringValue != null)
             {
-                var stringValue = (string)value;
                 try
                 {
-                    var convertedValue = ElementSize.Parse(stringValue, context.UnitSize);
-                    return new ConversionResult(convertedValue);
+                    var result = ElementSize.Parse(stringValue, context.UnitSize, context.ParseBuffer);
+                    return new ConversionResult(result);
                 }
                 catch (Exception e)
                 {
                     return ConversionFailed(value, e);
                 }
             }
-            else if (valueType == _intType)
-            {
+
+            if (valueType == _intType)
                 return new ConversionResult(ElementSize.FromPixels((float)value));
-            }
-            else if (valueType == _floatType)
-            {
+
+            if (valueType == _floatType)
                 return new ConversionResult(ElementSize.FromPixels((float)value));
-            }
 
             return ConversionFailed(value);
         }
@@ -82,7 +68,7 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            ElementSize elementSize = value as ElementSize;
+            var elementSize = (ElementSize)value;
             return elementSize.ToString();
         }
 

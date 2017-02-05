@@ -113,7 +113,7 @@ namespace MarkLight
 
             var baseDirectoryAttr = element.Attribute("BaseDirectory");
             var unitSizeAttr = element.Attribute("UnitSize");
-            var colorHexAttr = element.Attribute("ColorHexType");
+            var hexColorAttr = element.Attribute("HexColorType");
 
             if (baseDirectoryAttr != null)
                 _baseDirectory = baseDirectoryAttr.Value;
@@ -136,10 +136,10 @@ namespace MarkLight
                 }
             }
 
-            if (colorHexAttr != null)
+            if (hexColorAttr != null)
             {
-                var colorHexTypeString = colorHexAttr.Value;
-                var result = EnumValueConverter.HexColorType.Convert(colorHexTypeString);
+                var hexColorTypeString = hexColorAttr.Value;
+                var result = EnumValueConverter.HexColorType.Convert(hexColorTypeString);
                 if (result.Success)
                 {
                     _unitSize = (Vector3) result.ConvertedValue;
@@ -147,9 +147,9 @@ namespace MarkLight
                 else
                 {
                     Debug.LogError(String.Format(
-                        "[MarkLight] {0}: Error parsing XUML. Unable to parse ColorHexType "+
+                        "[MarkLight] {0}: Error parsing XUML. Unable to parse HexColorType "+
                         "attribute value \"{1}\".",
-                        viewName, colorHexTypeString));
+                        viewName, hexColorTypeString));
                 }
             }
         }

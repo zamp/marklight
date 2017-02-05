@@ -1,12 +1,6 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
+﻿using System;
 using UnityEngine;
-using System.Globalization;
-#endregion
+using Marklight;
 
 namespace MarkLight.ValueConverters
 {
@@ -35,51 +29,49 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
+                return base.Convert(null, context);
 
-            Type valueType = value.GetType();
+            var valueType = value.GetType();
             if (valueType == _type)
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
+
+            var stringValue = value as string;
+            if (stringValue == null)
+                return ConversionFailed(value);
+
+            try
             {
-                var stringValue = (string)value;
-                float[] valueList;
-                try
-                {
-                    valueList = stringValue.Split(',').Select(x => System.Convert.ToSingle(x, CultureInfo.InvariantCulture)).ToArray();
-                }
-                catch (Exception e)
-                {
-                    return ConversionFailed(value, e);
-                }
+                var values = new ParsedNumber[4];
+                var size = ParseUtils.ParseDelimitedNumbers(stringValue, values, -1, -1, context.ParseBuffer);
 
-                if (valueList.Length == 1)
+                switch (size)
                 {
-                    return new ConversionResult(new Vector4(valueList[0], valueList[0], valueList[0], valueList[0]));
-                }
-                else if (valueList.Length == 2)
-                {
-                    return new ConversionResult(new Vector4(valueList[0], valueList[1]));
-                }
-                else if (valueList.Length == 3)
-                {
-                    return new ConversionResult(new Vector4(valueList[0], valueList[1], valueList[2]));
-                }
-                else if (valueList.Length == 4)
-                {
-                    return new ConversionResult(new Vector4(valueList[0], valueList[1], valueList[2], valueList[3]));
-                }
-                else
-                {
-                    return StringConversionFailed(value);
+                    case 1:
+                        var xyzw = values[0].NumberAsFloat;
+                        return new ConversionResult(new Vector4(xyzw, xyzw, xyzw, xyzw));
+                    case 2:
+                        return new ConversionResult(new Vector4(
+                            values[0].NumberAsFloat,
+                            values[1].NumberAsFloat));
+                    case 3:
+                        return new ConversionResult(new Vector4(
+                            values[0].NumberAsFloat,
+                            values[1].NumberAsFloat,
+                            values[2].NumberAsFloat));
+                    case 4:
+                        return new ConversionResult(new Vector4(
+                            values[0].NumberAsFloat,
+                            values[1].NumberAsFloat,
+                            values[2].NumberAsFloat,
+                            values[3].NumberAsFloat));
+                    default:
+                        return StringConversionFailed(value);
                 }
             }
-
-            return ConversionFailed(value);
+            catch (Exception e)
+            {
+                return ConversionFailed(value, e);
+            }
         }
 
         /// <summary>
@@ -87,7 +79,7 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            Vector4 v = (Vector4)value;
+            var v = (Vector4)value;
             return String.Format("{0},{1},{2},{3}", v.x, v.y, v.z, v.w);
         }
 

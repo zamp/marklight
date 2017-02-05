@@ -1,15 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
+﻿using System;
 using UnityEngine;
-using System.IO;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-#endregion
 
 namespace MarkLight.ValueConverters
 {
@@ -47,7 +37,7 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            return value != null ? (value as SpriteAsset).Path : String.Empty;            
+            return value != null ? ((SpriteAsset)value).Path : String.Empty;
         }
 
         #endregion

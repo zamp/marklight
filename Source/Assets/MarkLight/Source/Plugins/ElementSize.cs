@@ -1,10 +1,8 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
-using System.Linq;
+using System.Text;
+using Marklight;
 using UnityEngine;
-#endregion
 
 namespace MarkLight
 {
@@ -75,7 +73,7 @@ namespace MarkLight
         /// </summary>
         public static implicit operator ElementSize(float value)
         {
-            return ElementSize.FromPixels(value);
+            return FromPixels(value);
         }
 
         /// <summary>
@@ -97,68 +95,24 @@ namespace MarkLight
         /// <summary>
         /// Parses string into element size.
         /// </summary>
-        public static ElementSize Parse(string value, Vector3 unitSize)
+        public static ElementSize Parse(string value, Vector3 unitSize, StringBuilder buffer = null)
         {
-            ElementSize elementSize = new ElementSize();
-            string trimmedValue = value.Trim();
-            if (trimmedValue == "*")
-            {
-                elementSize.Value = 1;
-                elementSize.Unit = ElementSizeUnit.Percents;
-                elementSize.Fill = true;
-            }
-            else if (trimmedValue.EndsWith("%"))
-            {
-                int lastIndex = trimmedValue.LastIndexOf("%", StringComparison.OrdinalIgnoreCase);
-                elementSize.Value = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture) / 100.0f;
-                elementSize.Unit = ElementSizeUnit.Percents;
-            }
-            else if (trimmedValue.EndsWith("px"))
-            {
-                int lastIndex = trimmedValue.LastIndexOf("px", StringComparison.OrdinalIgnoreCase);
-                elementSize.Value = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture);
-                elementSize.Unit = ElementSizeUnit.Pixels;
-            }
-            else if (trimmedValue.EndsWith("ux"))
-            {
-                int lastIndex = trimmedValue.LastIndexOf("ux", StringComparison.OrdinalIgnoreCase);
-                elementSize.Value = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture) * unitSize.x;
-                elementSize.Unit = ElementSizeUnit.Pixels;
-            }
-            else if (trimmedValue.EndsWith("uy"))
-            {
-                int lastIndex = trimmedValue.LastIndexOf("uy", StringComparison.OrdinalIgnoreCase);
-                elementSize.Value = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture) * unitSize.y;
-                elementSize.Unit = ElementSizeUnit.Pixels;
-            }
-            else if (trimmedValue.EndsWith("uz"))
-            {
-                int lastIndex = trimmedValue.LastIndexOf("uz", StringComparison.OrdinalIgnoreCase);
-                elementSize.Value = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture) * unitSize.z;
-                elementSize.Unit = ElementSizeUnit.Pixels;
-            }
-            else
-            {
-                elementSize.Value = System.Convert.ToSingle(trimmedValue, CultureInfo.InvariantCulture);
-                elementSize.Unit = ElementSizeUnit.Pixels;
-            }
+            value = value.Trim();
 
-            return elementSize;
+            var values = new ParsedNumber[1];
+            ParseUtils.ParseDelimitedNumbers(value, values, -1, -1, buffer);
+            return values[0].ToElementSize(unitSize);
         }
 
         /// <summary>
         /// Converts element size to string.
         /// </summary>
-        public override string ToString()
-        {
+        public override string ToString() {
             if (Unit == ElementSizeUnit.Percents)
             {
-                return Value.ToString() + "%";
+                return Value + "%";
             }
-            else
-            {
-                return Value.ToString();
-            }
+            return Value.ToString(CultureInfo.InvariantCulture);
         }
 
         public override int GetHashCode() {
@@ -199,14 +153,9 @@ namespace MarkLight
         {
             get
             {
-                if (_unit == ElementSizeUnit.Pixels)
-                {
-                    return _value;
-                }
-                else
-                {
-                    return 0f;
-                }
+                return _unit == ElementSizeUnit.Pixels
+                    ? _value
+                    : 0f;
             }
         }
 
@@ -217,7 +166,9 @@ namespace MarkLight
         {
             get
             {
-                return _unit == ElementSizeUnit.Percents ? _value : 0f;
+                return _unit == ElementSizeUnit.Percents
+                    ? _value
+                    : 0f;
             }
         }
         

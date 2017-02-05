@@ -1,12 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine;
+﻿using System;
 using System.Globalization;
-#endregion
 
 namespace MarkLight.ValueConverters
 {
@@ -35,51 +28,56 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
+                return base.Convert(null, context);
 
-            Type valueType = value.GetType();
+            var valueType = value.GetType();
             if (valueType == _type)
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
+
+            var str = value as string;
+            if (str == null)
+                return ConversionFailed(value);
+
+            try
             {
-                var stringValue = (string)value;
-                try
+                str = str.Trim();
+                float duration;
+                var endIndex = str.Length - 1;
+
+                if (str.Length > 1 && str.LastIndexOf("s", StringComparison.OrdinalIgnoreCase) == endIndex)
                 {
-                    float duration = 0;
-                    string trimmedValue = stringValue.Trim();
-                    if (trimmedValue.EndsWith("ms", StringComparison.OrdinalIgnoreCase))
+                    if (str.Length > 2 && str.LastIndexOf("m", StringComparison.OrdinalIgnoreCase) == endIndex - 1)
                     {
-                        int lastIndex = trimmedValue.LastIndexOf("ms", StringComparison.OrdinalIgnoreCase);
-                        duration = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture) / 1000f;
-                    }
-                    else if (trimmedValue.EndsWith("s", StringComparison.OrdinalIgnoreCase))
-                    {
-                        int lastIndex = trimmedValue.LastIndexOf("s", StringComparison.OrdinalIgnoreCase);
-                        duration = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture);
-                    }
-                    else if (trimmedValue.EndsWith("min", StringComparison.OrdinalIgnoreCase))
-                    {
-                        int lastIndex = trimmedValue.LastIndexOf("min", StringComparison.OrdinalIgnoreCase);
-                        duration = System.Convert.ToSingle(trimmedValue.Substring(0, lastIndex), CultureInfo.InvariantCulture) * 60f;
+                        // milliseconds
+                        duration =
+                            System.Convert.ToSingle(
+                                str.Substring(0, endIndex - 2), CultureInfo.InvariantCulture) / 1000f;
                     }
                     else
                     {
-                        duration = System.Convert.ToSingle(trimmedValue, CultureInfo.InvariantCulture);
+                        // seconds
+                        duration = System.Convert.ToSingle(
+                            str.Substring(0, endIndex - 1), CultureInfo.InvariantCulture);
                     }
-
-                    return new ConversionResult(duration);
                 }
-                catch (Exception e)
+                else if (str.Length > 3 && str.LastIndexOf("min", StringComparison.OrdinalIgnoreCase) == endIndex - 3)
                 {
-                    return ConversionFailed(value, e);
+                    // minutes
+                    duration = System.Convert.ToSingle(
+                                   str.Substring(0, endIndex - 4), CultureInfo.InvariantCulture) * 60f;
                 }
-            }
+                else
+                {
+                    // seconds
+                    duration = System.Convert.ToSingle(str, CultureInfo.InvariantCulture);
+                }
 
-            return ConversionFailed(value);
+                return new ConversionResult(duration);
+            }
+            catch (Exception e)
+            {
+                return ConversionFailed(value, e);
+            }
         }
 
         /// <summary>
@@ -87,7 +85,7 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            return value.ToString() + "s";
+            return value + "s";
         }
 
         #endregion

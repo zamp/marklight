@@ -1,12 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
+﻿using System;
 using UnityEngine;
-using System.Globalization;
-#endregion
 
 namespace MarkLight.ValueConverters
 {
@@ -17,8 +10,8 @@ namespace MarkLight.ValueConverters
     {
         #region Fields
 
-        private Type _vector3Type;
-        private Vector3ValueConverter _vector3ValueConverter;
+        private static readonly Type _vector3Type = typeof(Vector3);
+        private readonly Vector3ValueConverter _vector3ValueConverter;
 
         #endregion
 
@@ -30,7 +23,6 @@ namespace MarkLight.ValueConverters
         public QuaternionValueConverter()
         {
             _type = typeof(Quaternion);
-            _vector3Type = typeof(Vector3);
             _vector3ValueConverter = new Vector3ValueConverter();
         }
 
@@ -44,31 +36,24 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
-                        
-            Type valueType = value.GetType();
+                return base.Convert(null, context);
+
+            var valueType = value.GetType();
             if (valueType == _type)
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
-            {
-                var result = _vector3ValueConverter.Convert(value, context);
-                if (result.Success)
-                {
-                    return new ConversionResult(Quaternion.Euler((Vector3)result.ConvertedValue));
-                }
 
-                return StringConversionFailed(value);
-            }
-            else if (valueType == _vector3Type)
+            var stringValue = value as string;
+            if (stringValue != null)
             {
-                return new ConversionResult(Quaternion.Euler((Vector3)value));
+                var result = _vector3ValueConverter.Convert(stringValue, context);
+                return result.Success
+                    ? new ConversionResult(Quaternion.Euler((Vector3)result.ConvertedValue))
+                    : StringConversionFailed(stringValue);
             }
 
-            return ConversionFailed(value);
+            return valueType == _vector3Type
+                ? new ConversionResult(Quaternion.Euler((Vector3)value))
+                : ConversionFailed(value);
         }
 
         /// <summary>
@@ -76,8 +61,8 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            Quaternion quaternion = (Quaternion)value;
-            Vector3 eulerAngles = quaternion.eulerAngles;
+            var quaternion = (Quaternion)value;
+            var eulerAngles = quaternion.eulerAngles;
             return String.Format("{0},{1},{2}", eulerAngles.x, eulerAngles.y, eulerAngles.z);
         }
 

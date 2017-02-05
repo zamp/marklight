@@ -1,12 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine;
+﻿using System;
 using System.Globalization;
-#endregion
 
 namespace MarkLight.ValueConverters
 {
@@ -35,27 +28,21 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
+                return base.Convert(null, context);
 
-            if (value.GetType() == _stringType)
+            var stringValue = value as string;
+            if (stringValue != null)
+                return new ConversionResult(stringValue)
+                    ;
+            // attempt to convert using system type converter
+            try
             {
-                var stringValue = (string)value;
-                return new ConversionResult(stringValue);
+                var convertedValue = System.Convert.ToString(value, CultureInfo.InvariantCulture);
+                return new ConversionResult(convertedValue);
             }
-            else
+            catch (Exception e)
             {
-                // attempt to convert using system type converter
-                try
-                {
-                    var convertedValue = System.Convert.ToString(value, CultureInfo.InvariantCulture);
-                    return new ConversionResult(convertedValue);
-                }
-                catch (Exception e)
-                {
-                    return ConversionFailed(value, e);
-                }
+                return ConversionFailed(value, e);
             }
         }
 

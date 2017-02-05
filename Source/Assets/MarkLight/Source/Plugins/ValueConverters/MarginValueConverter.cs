@@ -1,12 +1,6 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine;
+﻿using System;
 using System.Globalization;
-#endregion
+using Marklight;
 
 namespace MarkLight.ValueConverters
 {
@@ -35,72 +29,66 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
+                return base.Convert(null, context);
 
-            Type valueType = value.GetType();
+            var valueType = value.GetType();
             if (valueType == _type)
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
+
+            var stringValue = value as string;
+            if (stringValue != null)
             {
-                var stringValue = (string)value;
                 try
                 {
-                    string[] valueList;
-                    valueList = stringValue.Split(',').ToArray();
-                    ElementMargin convertedValue = null;
-                    if (valueList.Length == 1)
+                    var values = new ParsedNumber[4];
+                    var size = ParseUtils.ParseDelimitedNumbers(stringValue, values, -1, -1, context.ParseBuffer);
+
+                    ElementMargin result;
+                    switch (size)
                     {
-                        convertedValue = new ElementMargin(ElementSize.Parse(valueList[0], context.UnitSize));
-                    }
-                    else if (valueList.Length == 2)
-                    {
-                        convertedValue = new ElementMargin(
-                            ElementSize.Parse(valueList[0], context.UnitSize),
-                            ElementSize.Parse(valueList[1], context.UnitSize));
-                    }
-                    else if (valueList.Length == 3)
-                    {
-                        convertedValue = new ElementMargin(
-                            ElementSize.Parse(valueList[0], context.UnitSize),
-                            ElementSize.Parse(valueList[1], context.UnitSize),
-                            ElementSize.Parse(valueList[2], context.UnitSize));
-                    }
-                    else if (valueList.Length == 4)
-                    {
-                        convertedValue = new ElementMargin(
-                            ElementSize.Parse(valueList[0], context.UnitSize),
-                            ElementSize.Parse(valueList[1], context.UnitSize),
-                            ElementSize.Parse(valueList[2], context.UnitSize),
-                            ElementSize.Parse(valueList[3], context.UnitSize));
-                    }
-                    else
-                    {
-                        return StringConversionFailed(value);
+                        case 1:
+                            result = new ElementMargin(
+                                values[0].ToElementSize(context.UnitSize));
+                            break;
+                        case 2:
+                            result = new ElementMargin(
+                                values[0].ToElementSize(context.UnitSize),
+                                values[1].ToElementSize(context.UnitSize));
+                            break;
+                        case 3:
+                            result = new ElementMargin(
+                                values[0].ToElementSize(context.UnitSize),
+                                values[1].ToElementSize(context.UnitSize),
+                                values[2].ToElementSize(context.UnitSize));
+                            break;
+                        case 4:
+                            result = new ElementMargin(
+                                values[0].ToElementSize(context.UnitSize),
+                                values[1].ToElementSize(context.UnitSize),
+                                values[2].ToElementSize(context.UnitSize),
+                                values[3].ToElementSize(context.UnitSize));
+                            break;
+                        default:
+                            return StringConversionFailed(value);
                     }
 
-                    return new ConversionResult(convertedValue);
+                    return new ConversionResult(result);
                 }
                 catch (Exception e)
                 {
                     return ConversionFailed(value, e);
                 }
             }
-            else
+
+            // attempt to convert using system type converter
+            try
             {
-                // attempt to convert using system type converter
-                try
-                {
-                    var convertedValue = System.Convert.ToInt32(value, CultureInfo.InvariantCulture);
-                    return new ConversionResult(convertedValue);
-                }
-                catch (Exception e)
-                {
-                    return ConversionFailed(value, e);
-                }
+                var convertedValue = System.Convert.ToInt32(value, CultureInfo.InvariantCulture);
+                return new ConversionResult(new ElementMargin(convertedValue));
+            }
+            catch (Exception e)
+            {
+                return ConversionFailed(value, e);
             }
         }
 
@@ -109,7 +97,7 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            ElementMargin margin = value as ElementMargin;
+            var margin = (ElementMargin)value;
             return margin.ToString();
         }
 

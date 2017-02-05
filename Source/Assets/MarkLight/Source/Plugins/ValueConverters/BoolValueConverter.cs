@@ -1,12 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine;
+﻿using System;
 using System.Globalization;
-#endregion
 
 namespace MarkLight.ValueConverters
 {
@@ -32,21 +25,19 @@ namespace MarkLight.ValueConverters
         /// <summary>
         /// Value converter for bool type.
         /// </summary>
-        public override ConversionResult Convert(object value, ValueConverterContext context)
-        {
+        public override ConversionResult Convert(object value, ValueConverterContext context) {
             if (value == null)
             {
-                return base.Convert(value, context);
+                return base.Convert(null, context);
             }
 
-            Type valueType = value.GetType();
+            var valueType = value.GetType();
             if (valueType == _type)
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
+
+            var stringValue = value as string;
+            if (stringValue != null)
             {
-                var stringValue = (string)value;
                 try
                 {
                     var convertedValue = Boolean.Parse(stringValue);
@@ -57,18 +48,16 @@ namespace MarkLight.ValueConverters
                     return ConversionFailed(value, e);
                 }
             }
-            else
+
+            // attempt to convert using system type converter
+            try
             {
-                // attempt to convert using system type converter
-                try
-                {
-                    var convertedValue = System.Convert.ToBoolean(value, CultureInfo.InvariantCulture);
-                    return new ConversionResult(convertedValue);
-                }
-                catch (Exception e)
-                {
-                    return ConversionFailed(value, e);
-                }
+                var convertedValue = System.Convert.ToBoolean(value, CultureInfo.InvariantCulture);
+                return new ConversionResult(convertedValue);
+            }
+            catch (Exception e)
+            {
+                return ConversionFailed(value, e);
             }
         }
 
@@ -77,7 +66,7 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            return value.ToString();
+            return ((bool)value).ToString();
         }
 
         #endregion

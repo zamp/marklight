@@ -1,15 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
-using UnityEngine;
-using System.IO;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-#endregion
+﻿using UnityEngine;
 
 namespace MarkLight.ValueConverters
 {

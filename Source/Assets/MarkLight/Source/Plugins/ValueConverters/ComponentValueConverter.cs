@@ -1,12 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine.UI;
+﻿using System;
 using UnityEngine;
-using System.Globalization;
-#endregion
 
 namespace MarkLight.ValueConverters
 {
@@ -17,7 +10,7 @@ namespace MarkLight.ValueConverters
     {
         #region Fields 
 
-        private Type _componentType;
+        private readonly Type _componentType;
 
         #endregion
 
@@ -50,36 +43,28 @@ namespace MarkLight.ValueConverters
         public override ConversionResult Convert(object value, ValueConverterContext context)
         {
             if (value == null)
-            {
-                return base.Convert(value, context);
-            }
+                return base.Convert(null, context);
 
-            Type valueType = value.GetType();
+            var valueType = value.GetType();
             if (valueType.IsSubclassOf(_type))
-            {
                 return base.Convert(value, context);
-            }
-            else if (valueType == _stringType)
+
+            var stringValue = value as string;
+            if (stringValue == null)
+                return ConversionFailed(value);
+
+            try
             {
-                var stringValue = (string)value;
-                try
-                {
-                    var go = UnityEngine.GameObject.Find(stringValue);
-                    var component = go.GetComponent(_componentType);
-                    if (component == null)
-                    {
-                        return ConversionFailed(value);
-                    }
-
-                    return new ConversionResult(component);
-                }
-                catch (Exception e)
-                {
-                    return ConversionFailed(value, e);
-                }
+                var go = GameObject.Find(stringValue);
+                var component = go.GetComponent(_componentType);
+                return component == null
+                    ? ConversionFailed(value)
+                    : new ConversionResult(component);
             }
-
-            return ConversionFailed(value);
+            catch (Exception e)
+            {
+                return ConversionFailed(value, e);
+            }
         }
 
         /// <summary>
@@ -87,7 +72,7 @@ namespace MarkLight.ValueConverters
         /// </summary>
         public override string ConvertToString(object value)
         {
-            Component component = value as Component;
+            var component = (Component)value;
             return component.gameObject.name;
         }
 

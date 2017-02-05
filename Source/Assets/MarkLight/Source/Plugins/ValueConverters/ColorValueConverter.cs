@@ -166,9 +166,6 @@ namespace MarkLight.ValueConverters
             if (valueType == _type)
                 return base.Convert(value, context);
 
-            if (valueType != _stringType)
-                return ConversionFailed(value);
-
             var stringValue = value as string;
             if (String.IsNullOrEmpty(stringValue))
                 return ConversionFailed(value);
@@ -301,7 +298,7 @@ namespace MarkLight.ValueConverters
 
             var values = new string[4];
 
-            if (ParseUtils.ParseDelimitedValues(colorStr, values, 5, colorStr.Length - 2, buffer) != 4)
+            if (ParseUtils.ParseDelimitedStrings(colorStr, values, 5, colorStr.Length - 2, buffer) != 4)
                 return false;
 
             byte r;
@@ -339,7 +336,7 @@ namespace MarkLight.ValueConverters
 
             var values = new string[4];
 
-            var size = ParseUtils.ParseDelimitedValues(colorStr, values, -1, -1, buffer);
+            var size = ParseUtils.ParseDelimitedStrings(colorStr, values, -1, -1, buffer);
             if (size != 3 && size != 4)
                 return false;
 
