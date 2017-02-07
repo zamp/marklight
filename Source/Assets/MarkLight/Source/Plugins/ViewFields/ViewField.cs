@@ -19,7 +19,7 @@ namespace MarkLight
         /// <summary>
         /// Notify that current value has been modified without being set.
         /// </summary>
-        public void NotifyModified() {
+        public virtual void NotifyModified() {
             TriggerValueSet();
             if (ParentView != null)
                 ParentView.Fields.NotifyDependentValueObservers(Path, true);

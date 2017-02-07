@@ -9,8 +9,24 @@ namespace MarkLight
     [Serializable]
     public class ItemDataViewField : ViewField<object>
     {
+        #region Fields
+
         [NonSerialized]
         private IObservableItem _observableItem;
+
+        #endregion
+
+        #region Methods
+
+        public override void NotifyModified() {
+            base.NotifyModified();
+            if (_observableItem != null)
+                _observableItem.NotifyModified();
+        }
+
+        #endregion
+
+        #region Properties
 
         /// <summary>
         /// Get observable item, if any. Null if there is no
@@ -65,5 +81,7 @@ namespace MarkLight
                     : value;
             }
         }
+
+        #endregion
     }
 }
