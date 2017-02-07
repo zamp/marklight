@@ -14,6 +14,19 @@ namespace MarkLight
 
         #endregion
 
+        #region Methods
+
+        /// <summary>
+        /// Notify that current value has been modified without being set.
+        /// </summary>
+        public void NotifyModified() {
+            TriggerValueSet();
+            if (ParentView != null)
+                ParentView.Fields.NotifyDependentValueObservers(Path, true);
+        }
+
+        #endregion
+
         #region Properties
 
         /// <summary>
