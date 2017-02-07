@@ -310,6 +310,7 @@ namespace MarkLight.Views.UI
 
             LayoutData.Copy(Offset.Value, Layout.Offset);
             LayoutData.Copy(OffsetFromParent.Value, Layout.OffsetFromParent);
+            Layout.IsDirty = true;
             RenderLayout();
         }
 

@@ -16,11 +16,7 @@ namespace MarkLight {
         /// </summary>
         public readonly UIView View;
 
-        /// <summary>
-        /// Indicates a data value has been changed.
-        /// </summary>
-        public bool IsDirty;
-
+        private bool _isDirty;
         private ElementAlignment _alignment;
         private ElementOrientation _orientation;
         private ElementSize _width = new ElementSize();
@@ -175,6 +171,20 @@ namespace MarkLight {
         #region Properties
 
         /// <summary>
+        /// Indicates a data value has been changed.
+        /// </summary>
+        public bool IsDirty
+        {
+            get { return _isDirty; }
+            set
+            {
+                _isDirty = value;
+                if (value)
+                    _isRectDirty = true;
+            }
+        }
+
+        /// <summary>
         /// Get the LayoutData from the views LayoutParent. Returns null if there is no parent.
         /// </summary>
         public LayoutData Parent
@@ -289,7 +299,6 @@ namespace MarkLight {
                     return;
 
                 _alignment = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -306,7 +315,6 @@ namespace MarkLight {
                     return;
 
                 _orientation = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -323,7 +331,6 @@ namespace MarkLight {
                     return;
 
                 _width = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -340,7 +347,6 @@ namespace MarkLight {
                     return;
 
                 _height = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -357,7 +363,6 @@ namespace MarkLight {
                     return;
 
                 _offsetFromParent = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -374,7 +379,6 @@ namespace MarkLight {
                     return;
 
                 _offset = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -391,7 +395,6 @@ namespace MarkLight {
                     return;
 
                 _margin = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
@@ -408,7 +411,6 @@ namespace MarkLight {
                     return;
 
                 _padding = value;
-                _isRectDirty = true;
                 IsDirty = true;
             }
         }
