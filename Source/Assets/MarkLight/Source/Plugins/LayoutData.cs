@@ -26,6 +26,7 @@ namespace MarkLight {
         private ElementMargin _margin = new ElementMargin();
         private ElementMargin _padding = new ElementMargin();
 
+        private LayoutRectCalculator _layoutRect = LayoutRectCalculator.Default;
         private Vector2 _anchorMin;
         private Vector2 _anchorMax;
         private Vector2 _offsetMin;
@@ -55,94 +56,7 @@ namespace MarkLight {
 
             _isRectDirty = false;
 
-
-            // update rectTransform
-            // horizontal alignment and positioning
-            var width = View.OverrideWidth.IsSet ? View.OverrideWidth.Value : Width;
-            var height = View.OverrideHeight.IsSet ? View.OverrideHeight.Value : Height;
-
-            float xMin;
-            float xMax;
-            float offsetMinX;
-            float offsetMaxX;
-
-            if (Alignment.HasFlag(ElementAlignment.Left))
-            {
-                xMin = 0f;
-                xMax = width.Percent;
-                offsetMinX = 0f;
-                offsetMaxX = width.Pixels;
-            }
-            else if (Alignment.HasFlag(ElementAlignment.Right))
-            {
-                xMin = 1f - width.Percent;
-                xMax = 1f;
-                offsetMinX = -width.Pixels;
-                offsetMaxX = 0f;
-            }
-            else
-            {
-                xMin = 0.5f - width.Percent / 2f;
-                xMax = 0.5f + width.Percent / 2f;
-                offsetMinX = -width.Pixels / 2f;
-                offsetMaxX = width.Pixels / 2f;
-            }
-
-            //  vertical alignment
-            float yMin;
-            float yMax;
-            float offsetMinY;
-            float offsetMaxY;
-
-            if (Alignment.HasFlag(ElementAlignment.Top))
-            {
-                yMin = 1f - height.Percent;
-                yMax = 1f;
-                offsetMinY = -height.Pixels;
-                offsetMaxY = 0f;
-            }
-            else if (Alignment.HasFlag(ElementAlignment.Bottom))
-            {
-                yMin = 0f;
-                yMax = height.Percent;
-                offsetMinY = 0f;
-                offsetMaxY = height.Pixels;
-            }
-            else
-            {
-                yMin = 0.5f - height.Percent / 2f;
-                yMax = 0.5f + height.Percent / 2f;
-                offsetMinY = -height.Pixels / 2f;
-                offsetMaxY = height.Pixels / 2f;
-            }
-
-            _anchorMin = new Vector2(xMin + Margin.Left.Percent, yMin + Margin.Bottom.Percent);
-            _anchorMax = new Vector2(xMax - Margin.Right.Percent, yMax - Margin.Top.Percent);
-
-            // positioning and margins
-            _offsetMin = new Vector2(
-
-                offsetMinX + Margin.Left.Pixels + Offset.Left.Pixels
-                - Offset.Right.Pixels + OffsetFromParent.Left.Pixels
-                - OffsetFromParent.Right.Pixels,
-
-                offsetMinY + Margin.Bottom.Pixels - Offset.Top.Pixels
-                + Offset.Bottom.Pixels - OffsetFromParent.Top.Pixels
-                + OffsetFromParent.Bottom.Pixels);
-
-            _offsetMax = new Vector2(
-
-                offsetMaxX - Margin.Right.Pixels + Offset.Left.Pixels
-                - Offset.Right.Pixels + OffsetFromParent.Left.Pixels
-                - OffsetFromParent.Right.Pixels,
-
-                offsetMaxY - Margin.Top.Pixels - Offset.Top.Pixels
-                + Offset.Bottom.Pixels - OffsetFromParent.Top.Pixels
-                + OffsetFromParent.Bottom.Pixels);
-
-            _anchoredPosition = new Vector2(
-                _offsetMin.x / 2.0f + _offsetMax.x / 2.0f,
-                _offsetMin.y / 2.0f + _offsetMax.y / 2.0f);
+            _layoutRect.CalculateInto(this);
         }
 
         /// <summary>
@@ -257,7 +171,7 @@ namespace MarkLight {
 
                 var camera = Camera.main;
                 return camera != null
-                    ? camera.pixelWidth * Width.Percent
+                    ? (camera.pixelWidth + margins) * Width.Percent
                     : 0f;
             }
         }
@@ -416,6 +330,19 @@ namespace MarkLight {
         }
 
         /// <summary>
+        /// Get or set the layout rect calculator.
+        /// </summary>
+        public LayoutRectCalculator RectCalculator
+        {
+            get { return _layoutRect; }
+            set
+            {
+                _layoutRect = value;
+                IsDirty = true;
+            }
+        }
+
+        /// <summary>
         /// The normalized position in the parent RectTransform that the lower left corner is anchored to.
         /// </summary>
         public Vector2 AnchorMin
@@ -425,6 +352,7 @@ namespace MarkLight {
                 UpdateRectData();
                 return _anchorMin;
             }
+            set { _anchorMin = value; }
         }
 
         /// <summary>
@@ -437,6 +365,7 @@ namespace MarkLight {
                 UpdateRectData();
                 return _anchorMax;
             }
+            set { _anchorMax = value; }
         }
 
         /// <summary>
@@ -449,6 +378,7 @@ namespace MarkLight {
                 UpdateRectData();
                 return _offsetMin;
             }
+            set { _offsetMin = value; }
         }
 
         /// <summary>
@@ -461,6 +391,7 @@ namespace MarkLight {
                 UpdateRectData();
                 return _offsetMax;
             }
+            set { _offsetMax = value; }
         }
 
         /// <summary>
@@ -473,6 +404,7 @@ namespace MarkLight {
                 UpdateRectData();
                 return _anchoredPosition;
             }
+            set { _anchoredPosition = value; }
         }
 
         #endregion
