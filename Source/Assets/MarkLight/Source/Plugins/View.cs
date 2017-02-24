@@ -335,8 +335,9 @@ namespace MarkLight
         private HashSet<string> _changeHandlers;
         private Dictionary<string, MethodInfo> _changeHandlerMethods;
         private bool _isInitialized;
-        private LayoutChangeContext _currentChange;
+        private bool _isLayoutCalculating;
         private bool _isLayoutChanged;
+        private LayoutCalculator _layoutCalculator;
 
         [SerializeField]
         private string _viewXumlName;
@@ -658,7 +659,7 @@ namespace MarkLight
             }
 
             view.IsDynamic.DirectValue = true;
-            return view;           
+            return view;
         }
 
         /// <summary>
@@ -773,6 +774,7 @@ namespace MarkLight
             _eventSystemViewActions = new List<ViewAction>();
             _changeHandlers = new HashSet<string>();
             _changeHandlerMethods = new Dictionary<string, MethodInfo>();
+            _layoutCalculator = DefaultLayoutCalculator.Instance;
         }
 
         /// <summary>
@@ -894,7 +896,7 @@ namespace MarkLight
             }
 #else
             InitializeInternalDefaultValues();
-#endif 
+#endif
         }
 
         /// <summary>
@@ -914,7 +916,7 @@ namespace MarkLight
             }
 #else
             InitializeInternal();
-#endif 
+#endif
         }
 
         /// <summary>
@@ -934,7 +936,7 @@ namespace MarkLight
             }
 #else
             Initialize();
-#endif 
+#endif
         }
 
         /// <summary>
@@ -1086,19 +1088,20 @@ namespace MarkLight
                 }
             }
 
-            if (!_isLayoutChanged || _currentChange != null)
+            if (!_isLayoutChanged || _isLayoutCalculating)
                 return;
 
             _isLayoutChanged = false;
+            _isLayoutCalculating = true;
 
             // calculate new layout
-            _currentChange = new LayoutChangeContext(this);
-            while (_currentChange.Calculate(this))
+            var change = new LayoutChangeContext(this);
+            while (change.Calculate(this))
             {
             }
 
-            _currentChange.RenderLayout();
-            _currentChange = null;
+            _isLayoutCalculating = false;
+            change.RenderLayout();
         }
 
         #endregion
@@ -1177,11 +1180,20 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Gets child count. 
+        /// Gets child count.
         /// </summary>
         public int ChildCount
         {
             get { return transform.childCount; }
+        }
+
+        /// <summary>
+        /// Gets the child layout calculator.
+        /// </summary>
+        public LayoutCalculator LayoutCalculator
+        {
+            get { return _layoutCalculator; }
+            protected set { _layoutCalculator = value; }
         }
 
         /// <summary>

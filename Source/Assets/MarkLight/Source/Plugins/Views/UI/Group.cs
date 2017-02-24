@@ -1,16 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
+﻿using System.Collections.Generic;
 
 namespace MarkLight.Views.UI
 {
@@ -31,11 +19,31 @@ namespace MarkLight.Views.UI
         public _ElementOrientation Orientation;
 
         /// <summary>
+        /// Indicates how items overflow.
+        /// </summary>
+        /// <d>Enum indicating how items should overflow as they reach the boundaries of the group container.</d>
+        public _OverflowMode Overflow;
+
+        /// <summary>
         /// Spacing between views.
         /// </summary>
         /// <d>Determines the spacing to be added between views in the group.</d>
         [ChangeHandler("LayoutChanged")]
         public _ElementSize Spacing;
+
+        /// <summary>
+        /// Horizontal spacing between child views.
+        /// </summary>
+        /// <d>The horizontal spacing between child views.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementSize HorizontalSpacing;
+
+        /// <summary>
+        /// Vertical spacing between child views.
+        /// </summary>
+        /// <d>The vertical spacing between child views.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementSize VerticalSpacing;
 
         /// <summary>
         /// Content alignment.
@@ -55,17 +63,19 @@ namespace MarkLight.Views.UI
         /// Sets the visibility of children so they are made visible after they are arranged.
         /// </summary>
         /// <d>Boolean indicating that the group should set the visibility of children so they are only made visible after they are arranged.</d>
-        public _bool SetChildVisibility;                     
-
-        protected View _groupContentContainer;
+        public _bool SetChildVisibility;
 
         #endregion
 
         #region Methods
 
-        /// <summary>
-        /// Sets default values of the view.
-        /// </summary>
+        public override void InitializeInternalDefaultValues()
+        {
+            base.InitializeInternalDefaultValues();
+
+            LayoutCalculator = new GroupLayoutCalculator();
+        }
+
         public override void SetDefaultValues()
         {
             base.SetDefaultValues();
@@ -77,151 +87,28 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
-            var maxWidth = 0f;
-            var maxHeight = 0f;
-            var totalWidth = 0f;
-            var totalHeight = 0f;
-
-            var isHorizontal = Orientation == ElementOrientation.Horizontal;
-
-            var children = new List<UIView>();
-            var childrenToBeSorted = new List<UIView>();
-            _groupContentContainer.ForEachChild<UIView>(x =>
+            var layoutCalc = LayoutCalculator as GroupLayoutCalculator;
+            if (layoutCalc != null)
             {
-                // should this be sorted?
-                if (x.SortIndex != 0)
-                {
-                    // yes.
-                    childrenToBeSorted.Add(x);
-                    return;
-                }
 
-                children.Add(x);
-            }, false);
+                layoutCalc.HorizontalSpacing = HorizontalSpacing.IsSet
+                    ? HorizontalSpacing.Value
+                    : Spacing.Value;
 
-            children.AddRange(SortDirection == ElementSortDirection.Ascending
-                ? childrenToBeSorted.OrderBy(x => x.SortIndex.Value)
-                : childrenToBeSorted.OrderByDescending(x => x.SortIndex.Value));
+                layoutCalc.VerticalSpacing = VerticalSpacing.IsSet
+                    ? VerticalSpacing.Value
+                    : Spacing.Value;
 
-            // get size of content and set content offsets and alignment
-            var childCount = children.Count;
-            var childIndex = 0;
-            for (var i = 0; i < childCount; ++i)
-            {
-                var view = children[i];
-
-                // don't group disabled views
-                if (!view.IsLive)
-                {
-                    if (SetChildVisibility)
-                    {
-                        view.IsVisible.Value = false;
-                    }
-                    continue;
-                }
-
-                var pixelWidth = view.Layout.Width.Unit == ElementSizeUnit.Percents
-                    ? view.Layout.InnerPixelWidth
-                    : view.Layout.Width.Pixels;
-
-                var pixelHeight = view.Layout.Height.Unit == ElementSizeUnit.Percents
-                    ? view.Layout.InnerPixelHeight
-                    : view.Layout.Height.Pixels;
-
-                // set offsets and alignment
-                var offset = new ElementMargin(
-                    new ElementSize(isHorizontal
-                        ? totalWidth + Spacing.Value.Pixels * childIndex
-                        : 0f, ElementSizeUnit.Pixels),
-                    new ElementSize(!isHorizontal
-                        ? totalHeight + Spacing.Value.Pixels * childIndex
-                        : 0f, ElementSizeUnit.Pixels));
-
-                view.Layout.OffsetFromParent = offset;
-
-                // set desired alignment if it is valid for the orientation otherwise use defaults
-                var alignment = isHorizontal
-                    ? ElementAlignment.Left
-                    : ElementAlignment.Top;
-
-                var desiredAlignment = ContentAlignment.IsSet
-                    ? ContentAlignment
-                    : view.Alignment;
-
-                if (isHorizontal && (desiredAlignment == ElementAlignment.Top
-                                     || desiredAlignment == ElementAlignment.Bottom
-                                     || desiredAlignment == ElementAlignment.TopLeft
-                                     || desiredAlignment == ElementAlignment.BottomLeft))
-                {
-                    view.Layout.Alignment = alignment | desiredAlignment;
-                }
-                else if (!isHorizontal && (desiredAlignment == ElementAlignment.Left
-                                           || desiredAlignment == ElementAlignment.Right
-                                           || desiredAlignment == ElementAlignment.TopLeft
-                                           || desiredAlignment == ElementAlignment.TopRight))
-                {
-                    view.Layout.Alignment = alignment | desiredAlignment;
-                }
-                else
-                {
-                    view.Layout.Alignment = alignment;
-                }
-
-                // get size of content
-                totalWidth += pixelWidth;
-                maxWidth = pixelWidth > maxWidth ? pixelWidth : maxWidth;
-
-                totalHeight += pixelHeight;
-                maxHeight = pixelHeight > maxHeight ? pixelHeight : maxHeight;
-
-                // update child layout
-                context.NotifyLayoutUpdated(view);
-                ++childIndex;
-
-                // update child visibility
-                if (SetChildVisibility)
-                {
-                    view.IsVisible.Value = true;
-                }
+                layoutCalc.Alignment = ContentAlignment.IsSet ? ContentAlignment.Value : ElementAlignment.Top;
+                layoutCalc.Orientation = Orientation.Value;
+                layoutCalc.Overflow = Overflow.Value;
             }
 
-            // set width and height
-            var totalSpacing = childCount > 1
-                ? (childIndex - 1) * Spacing.Value.Pixels
-                : 0f;
-            var adjustsToContent = false;
+            return base.CalculateLayoutChanges(context);
+        }
 
-            if (!Width.IsSet)
-            {
-                // add margins
-                totalWidth += isHorizontal ? totalSpacing : 0f;
-                totalWidth += Layout.Margin.Left.Pixels + Layout.Margin.Right.Pixels;
-                maxWidth += Layout.Margin.Left.Pixels + Layout.Margin.Right.Pixels;
-
-                // adjust width to content
-                Layout.Width = new ElementSize(isHorizontal ? totalWidth : maxWidth, ElementSizeUnit.Pixels);
-                adjustsToContent = true;
-            }
-
-            if (!Height.IsSet)
-            {
-                // add margins
-                totalHeight += !isHorizontal ? totalSpacing : 0f;
-                totalHeight += Layout.Margin.Top.Pixels + Layout.Margin.Bottom.Pixels;
-                maxHeight += Layout.Margin.Top.Pixels + Layout.Margin.Bottom.Pixels;
-
-                // adjust height to content
-                Layout.Height = new ElementSize(!isHorizontal ? totalHeight : maxHeight, ElementSizeUnit.Pixels);
-                adjustsToContent = true;
-            }
-
-            if (!PropagateChildLayoutChanges.IsSet)
-            {
-                // don't propagate changes if width and height isn't adjusted to content
-                PropagateChildLayoutChanges.DirectValue = adjustsToContent;
-            }
-
-            return Layout.IsDirty;
+        protected override List<UIView> GetContentChildren() {
+            return GetContentChildren(SortDirection);
         }
 
         /// <summary>
@@ -229,11 +116,10 @@ namespace MarkLight.Views.UI
         /// </summary>
         public override void Initialize()
         {
-            _groupContentContainer = this;
             if (SetChildVisibility)
             {
                 // set inactive children as not visible
-                _groupContentContainer.ForEachChild<UIView>(x =>
+                Content.ForEachChild<UIView>(x =>
                 {
                     if (!x.IsActive)
                     {

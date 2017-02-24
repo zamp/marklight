@@ -300,6 +300,15 @@ namespace MarkLight.Views.UI
             RectTransform.anchoredPosition = Layout.AnchoredPosition;
         }
 
+        public override bool CalculateLayoutChanges(LayoutChangeContext context)
+        {
+            if (!LayoutCalculator.IsChildLayout)
+                return LayoutCalculator.CalculateLayoutChanges(this, context);
+
+            var children = GetContentChildren();
+            return LayoutCalculator.CalculateLayoutChanges(this, children, context);
+        }
+
         /// <summary>
         /// Called when the offset of the view has changed.
         /// </summary>
@@ -359,12 +368,12 @@ namespace MarkLight.Views.UI
 
                 _canvasGroup.interactable = IsVisible ?  Alpha > 0 : false;
             }
-                        
+
             if (ImageComponent != null)
             {
                 if (BackgroundImage.IsSet || BackgroundImageOverrideSprite.IsSet)
                 {
-                    var sprite = BackgroundImageOverrideSprite.IsSet ? BackgroundImageOverrideSprite.Value : BackgroundImage.Value; 
+                    var sprite = BackgroundImageOverrideSprite.IsSet ? BackgroundImageOverrideSprite.Value : BackgroundImage.Value;
                     if (sprite != null)
                     {
                         ImageComponent.sprite = sprite.Sprite;
@@ -408,7 +417,7 @@ namespace MarkLight.Views.UI
         }
 
         /// <summary>
-        /// Tests if mouse is over this view. 
+        /// Tests if mouse is over this view.
         /// </summary>
         public bool ContainsMouse(Vector3 mousePosition, bool testChildren = false, bool ignoreFullScreenViews = false)
         {
@@ -432,9 +441,9 @@ namespace MarkLight.Views.UI
                     UIView view = child as UIView;
                     if (view == null)
                         continue;
-                                            
+
                     if (view.ContainsMouse(mousePosition, testChildren, ignoreFullScreenViews))
-                        return true;                    
+                        return true;
                 }
             }
 
@@ -448,7 +457,7 @@ namespace MarkLight.Views.UI
         {
             base.OnAssetChanged(unityAsset);
 
-            // is the sprite changed currently used as the background sprite? 
+            // is the sprite changed currently used as the background sprite?
             if (BackgroundImage.Value != null && BackgroundImage.Value.UnityAsset == unityAsset)
             {
                 // yes. update background
@@ -487,6 +496,34 @@ namespace MarkLight.Views.UI
             LayoutData.Copy(Offset.Value, Layout.Offset);
             LayoutData.Copy(Margin.Value, Layout.Margin);
             Layout.IsDirty = false;
+        }
+
+        protected virtual List<UIView> GetContentChildren() {
+            return GetContentChildren(ElementSortDirection.Ascending);
+        }
+
+        protected virtual List<UIView> GetContentChildren(ElementSortDirection sortDirection) {
+            var children = new List<UIView>();
+            var childrenToBeSorted = new List<UIView>();
+
+            Content.ForEachChild<UIView>(x =>
+            {
+                // should this be sorted?
+                if (x.SortIndex != 0)
+                {
+                    // yes.
+                    childrenToBeSorted.Add(x);
+                    return;
+                }
+
+                children.Add(x);
+            }, false);
+
+            children.AddRange(sortDirection == ElementSortDirection.Ascending
+                ? childrenToBeSorted.OrderBy(x => x.SortIndex.Value)
+                : childrenToBeSorted.OrderByDescending(x => x.SortIndex.Value));
+
+            return children;
         }
 
         #endregion

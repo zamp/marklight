@@ -1,17 +1,10 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
+﻿using MarkLight.ValueConverters;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
-#endregion
 
 namespace MarkLight.Views.UI
 {
@@ -33,7 +26,7 @@ namespace MarkLight.Views.UI
         /// <d>The text of the label. The label can be set to adjust its size to the text through the AdjustToText field.</d>
         [MapTo("TextComponent.text", "TextChanged")]
         public _string Text;
-       
+
         /// <summary>
         /// Label text font.
         /// </summary>
@@ -68,7 +61,7 @@ namespace MarkLight.Views.UI
         /// <d>The font color of the label text.</d>
         [MapTo("TextComponent.color")]
         public _Color FontColor;
-       
+
         /// <summary>
         /// Label text font style.
         /// </summary>
@@ -195,7 +188,7 @@ namespace MarkLight.Views.UI
 
 #if !UNITY_4_6_0 && !UNITY_4_6_1 && !UNITY_4_6_2
                 TextComponent.horizontalOverflow = HorizontalWrapMode.Overflow;
-                TextComponent.verticalOverflow = VerticalWrapMode.Overflow;                
+                TextComponent.verticalOverflow = VerticalWrapMode.Overflow;
 #endif
             }
         }
@@ -214,14 +207,14 @@ namespace MarkLight.Views.UI
             }
             else
             {
-                // size of view changes with text so notify parents                
+                // size of view changes with text so notify parents
                 LayoutChanged();
             }
         }
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
             AdjustLabelToText();
-            return Layout.IsDirty;
+            return base.CalculateLayoutChanges(context);
         }
 
         /// <summary>

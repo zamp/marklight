@@ -1,16 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
+﻿using UnityEngine;
 
 namespace MarkLight.Views.UI
 {
@@ -65,8 +53,8 @@ namespace MarkLight.Views.UI
         /// </summary>
         /// <d>The current value of the scrollbar, between 0 and 1.</d>
         [MapTo("ScrollbarComponent.value")]
-        public _float Value;        
-        
+        public _float Value;
+
         /// <summary>
         /// Scrollbar component.
         /// </summary>
@@ -155,7 +143,7 @@ namespace MarkLight.Views.UI
                 ScrollbarComponent.direction = UnityEngine.UI.Scrollbar.Direction.BottomToTop;
             }
 
-            return Layout.IsDirty;
+            return base.CalculateLayoutChanges(context);
         }
 
         #endregion

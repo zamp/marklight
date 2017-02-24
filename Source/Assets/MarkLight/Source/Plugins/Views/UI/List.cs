@@ -1,17 +1,8 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
 
 namespace MarkLight.Views.UI
 {
@@ -467,7 +458,7 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Panel containing scrollable list content.
         /// </summary>
-        /// <d>Panel containing scrollable list content. Will be null if IsScrollable is set to False.
+        /// <d>Panel containing scrollable list content. Will be null if IsScrollable is set to False.</d>
         public Panel ListPanel;
 
         #endregion
@@ -657,14 +648,11 @@ namespace MarkLight.Views.UI
         private IObservableList _selectedItems;
         private List<ListItem> _presentedListItems;
         private List<ListItem> _listItemTemplates;
-        private bool _updateWidth;
-        private bool _updateHeight;
         private Dictionary<View, ViewPool> _viewPools;
         private VirtualizedItems _virtualizedItems;
         private float _previousViewportMin;
         private bool _updateVirtualization;
         private Resolution _prevResolution;
-        private DataScrollToEventArgs _scrollTo;
 
         #endregion
 
@@ -681,38 +669,41 @@ namespace MarkLight.Views.UI
                 UpdateVirtualizedItems();
             }
 
-            // adjust width if list is wrapped
-            if (Overflow.Value != OverflowMode.Wrap)
-                return;
+            int width;
+            int height;
 
-            var resolution = Screen.currentResolution;
-            if (_prevResolution.width == resolution.width &&
-                _prevResolution.height == resolution.height)
+            if (Application.isEditor)
             {
-                _updateWidth = true;
-                _updateHeight = true;
-                _prevResolution = resolution;
+                var cam = Camera.main;
+                width = cam == null ? 0 : cam.pixelWidth;
+                height = cam == null ? 0 : cam.pixelHeight;
+            }
+            else
+            {
+                var resolution = Screen.currentResolution;
+                width = resolution.width;
+                height = resolution.height;
             }
 
-            if (!_updateWidth && !_updateHeight)
-                return;
-
-            if (_updateWidth && ActualWidth > 0)
+            if (_prevResolution.width != width ||
+                _prevResolution.height != height)
             {
                 NotifyLayoutChanged();
-                _updateWidth = false;
-            }
-
-            if (_updateHeight && ActualHeight > 0)
-            {
-                NotifyLayoutChanged();
-                _updateHeight = false;
+                _prevResolution = new Resolution
+                {
+                    width = width,
+                    height = height
+                };
             }
         }
 
-        /// <summary>
-        /// Sets default values of the view.
-        /// </summary>
+        public override void InitializeInternalDefaultValues()
+        {
+            base.InitializeInternalDefaultValues();
+
+            LayoutCalculator = new ListGroupLayout(this);
+        }
+
         public override void SetDefaultValues()
         {
             base.SetDefaultValues();
@@ -730,20 +721,20 @@ namespace MarkLight.Views.UI
         /// </summary>
         private void UpdateVirtualizedItems()
         {
-            float vpMin = 0;
-            float vpMax = 0;
+            float vpMin;
+            float vpMax;
 
             if (Orientation.Value == ElementOrientation.Vertical)
             {
-                float viewportHeight = ListPanel.ScrollRect.ActualHeight;
-                float scrollHeight = ScrollContent.Layout.Height.Pixels - viewportHeight;
+                var viewportHeight = ListPanel.ScrollRect.ActualHeight;
+                var scrollHeight = ScrollContent.ActualHeight - viewportHeight;
                 vpMin = (1.0f - VerticalNormalizedPosition.Value) * scrollHeight - RealizationMargin.Value;
                 vpMax = vpMin + viewportHeight + RealizationMargin.Value;
             }
             else
             {
-                float viewportWidth = ListPanel.ScrollRect.ActualWidth;
-                float scrollWidth = ScrollContent.Layout.Width.Pixels - viewportWidth;
+                var viewportWidth = ListPanel.ScrollRect.ActualWidth;
+                var scrollWidth = ScrollContent.ActualWidth - viewportWidth;
                 vpMin = HorizontalNormalizedPosition.Value * scrollWidth - RealizationMargin.Value;
                 vpMax = vpMin + viewportWidth + RealizationMargin.Value;
             }
@@ -783,7 +774,6 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
-
             if (DisableItemArrangement)
             {
                 return false;
@@ -794,312 +784,24 @@ namespace MarkLight.Views.UI
                 AdjustScrollableLayout();
             }
 
-            // arrange items like a group
-            var horizontalSpacing = HorizontalSpacing.IsSet
-                ? HorizontalSpacing.Value.Pixels
-                : Spacing.Value.Pixels;
-
-            var verticalSpacing = VerticalSpacing.IsSet
-                ? VerticalSpacing.Value.Pixels
-                : Spacing.Value.Pixels;
-
-            var maxWidth = 0f;
-            var maxHeight = 0f;
-            var totalWidth = 0f;
-            var totalHeight = 0f;
-
-            var isHorizontal = Orientation == ElementOrientation.Horizontal;
-
-            var children = new List<ListItem>();
-            var childrenToBeSorted = new List<ListItem>();
-
-            _presentedListItems.ForEach(x =>
+            var layoutCalc = LayoutCalculator as ListGroupLayout;
+            if (layoutCalc != null)
             {
-                // should this be sorted?
-                if (x.SortIndex != 0)
-                {
-                    // yes.
-                    childrenToBeSorted.Add(x);
-                    return;
-                }
+                layoutCalc.HorizontalSpacing = HorizontalSpacing.IsSet
+                    ? HorizontalSpacing.Value
+                    : Spacing.Value;
 
-                children.Add(x);
-            });
+                layoutCalc.VerticalSpacing = VerticalSpacing.IsSet
+                    ? VerticalSpacing.Value
+                    : Spacing.Value;
 
-            children.AddRange(SortDirection == ElementSortDirection.Ascending
-                ? childrenToBeSorted.OrderBy(x => x.SortIndex.Value)
-                : childrenToBeSorted.OrderByDescending(x => x.SortIndex.Value));
-
-            // get size of content and set content offsets and alignment
-            int childCount = children.Count;
-            int childIndex = 0;
-            bool firstItem = true;
-            float xOffset = 0;
-            float yOffset = 0;
-            float maxColumnWidth = 0;
-            float maxRowHeight = 0;
-
-            for (var i = 0; i < childCount; ++i)
-            {
-                var view = children[i];
-
-                // don't group disabled or destroyed views
-                if (!view.IsActive || view.IsDestroyed)
-                    continue;
-
-                var pixelWidth = view.Layout.Width.Unit == ElementSizeUnit.Percents
-                    ? view.Layout.InnerPixelWidth
-                    : view.Layout.Width.Pixels;
-
-                var pixelHeight = view.Layout.Height.Unit == ElementSizeUnit.Percents
-                    ? view.Layout.InnerPixelHeight
-                    : view.Layout.Height.Pixels;
-
-                // set offsets and alignment
-                var offset = new ElementMargin(
-                    new ElementSize(isHorizontal ? totalWidth + horizontalSpacing * childIndex : 0f,
-                        ElementSizeUnit.Pixels),
-                    new ElementSize(!isHorizontal ? totalHeight + verticalSpacing * childIndex : 0f,
-                        ElementSizeUnit.Pixels));
-
-                view.Layout.OffsetFromParent = offset;
-
-                if (Overflow == OverflowMode.Overflow)
-                {
-
-                    // set desired alignment if it is valid for the orientation otherwise use defaults
-                    var alignment = isHorizontal
-                        ? ElementAlignment.Left
-                        : ElementAlignment.Top;
-
-                    var desiredAlignment = ContentAlignment.IsSet
-                        ? ContentAlignment
-                        : view.Layout.Alignment;
-
-                    if (isHorizontal && (desiredAlignment == ElementAlignment.Top ||
-                                         desiredAlignment == ElementAlignment.Bottom
-                                         || desiredAlignment == ElementAlignment.TopLeft ||
-                                         desiredAlignment == ElementAlignment.BottomLeft))
-                    {
-                        view.Layout.Alignment = alignment | desiredAlignment;
-                    }
-                    else if (!isHorizontal && (desiredAlignment == ElementAlignment.Left ||
-                                               desiredAlignment == ElementAlignment.Right
-                                               || desiredAlignment == ElementAlignment.TopLeft || desiredAlignment ==
-                                               ElementAlignment.TopRight))
-                    {
-                        view.Layout.Alignment = alignment | desiredAlignment;
-                    }
-                    else
-                    {
-                        view.Layout.Alignment = alignment;
-                    }
-
-                    // get size of content
-                    //if (!isPercentageWidth)
-                    //{
-                        totalWidth += pixelWidth;
-                        maxWidth = Mathf.Max(maxWidth, pixelWidth);
-                    //}
-
-                    //if (!isPercentageHeight)
-                    //{
-                        totalHeight += pixelHeight;
-                        maxHeight = Mathf.Max(maxHeight, pixelHeight);
-                    //}
-                }
-                else
-                {
-
-                    // overflow mode is set to wrap
-                    // set alignment
-                    view.Layout.Alignment = ElementAlignment.TopLeft;
-
-                    // set offsets of item
-                    if (isHorizontal)
-                    {
-                        if (firstItem)
-                        {
-                            // first item, don't check for overflow
-                            xOffset = 0;
-                            firstItem = false;
-                        }
-                        else if (xOffset + pixelWidth + horizontalSpacing > Layout.InnerPixelWidth)
-                        {
-                            // item overflows to the next row
-                            xOffset = 0;
-                            yOffset += maxRowHeight + verticalSpacing;
-                            maxRowHeight = 0;
-                        }
-                        else
-                        {
-                            // item continues on the same row
-                            xOffset += horizontalSpacing;
-                        }
-
-                        // set offset
-                        view.Layout.OffsetFromParent = new ElementMargin(ElementSize.FromPixels(xOffset),
-                            ElementSize.FromPixels(yOffset));
-
-                        xOffset += pixelWidth;
-                        maxRowHeight = Mathf.Max(maxRowHeight, pixelHeight);
-                        maxWidth = Mathf.Max(maxWidth, xOffset);
-                        maxHeight = Mathf.Max(maxHeight, yOffset + pixelHeight);
-                    }
-                    else
-                    {
-                        if (firstItem)
-                        {
-                            yOffset = 0;
-                            firstItem = false;
-                        }
-                        else if (yOffset + pixelHeight + verticalSpacing > Layout.InnerPixelHeight)
-                        {
-                            // overflow to next column
-                            yOffset = 0;
-                            xOffset += maxColumnWidth + horizontalSpacing;
-                            maxColumnWidth = 0;
-                        }
-                        else
-                        {
-                            // add spacing
-                            yOffset += verticalSpacing;
-                        }
-
-                        // set offset
-                        view.Layout.OffsetFromParent = new ElementMargin(ElementSize.FromPixels(xOffset),
-                            ElementSize.FromPixels(yOffset));
-
-                        yOffset += pixelHeight;
-                        maxColumnWidth = Mathf.Max(maxColumnWidth, pixelWidth);
-                        maxWidth = Mathf.Max(maxWidth, xOffset + pixelWidth);
-                        maxHeight = Mathf.Max(maxHeight, yOffset);
-                    }
-                }
-
-                // update child layout
-                context.NotifyLayoutUpdated(view);
-                ++childIndex;
+                layoutCalc.Alignment = ContentAlignment.IsSet ? ContentAlignment.Value : ElementAlignment.TopLeft;
+                layoutCalc.Orientation = Orientation.Value;
+                layoutCalc.Overflow = Overflow.Value;
+                layoutCalc.ScrollContent = ScrollContent;
             }
 
-            var updateScrollContent = false;
-            var ListMaskMargin = ListMask != null
-                ? ListMask.Margin.Value
-                : new ElementMargin();
-
-            if (Overflow == OverflowMode.Overflow)
-            {
-                // add margins
-                totalWidth += isHorizontal
-                    ? (childCount > 1 ? (childIndex - 1) * horizontalSpacing : 0f)
-                    : 0f;
-
-                var widthMargins = Layout.Margin.Left.Pixels + Layout.Margin.Right.Pixels
-                              + ListMaskMargin.Left.Pixels + ListMaskMargin.Right.Pixels
-                              + Layout.Padding.Left.Pixels + Layout.Padding.Right.Pixels;
-
-                totalWidth += widthMargins;
-                maxWidth += widthMargins;
-
-                // set width and height of list
-                if (!Width.IsSet)
-                {
-                    // if width is not explicitly set then adjust to content
-                    //if (!isPercentageWidth)
-                    //{
-                        // adjust width to content
-                        Layout.Width = new ElementSize(isHorizontal
-                            ? totalWidth
-                            : maxWidth, ElementSizeUnit.Pixels);
-                    //}
-                    //else
-                    // {
-                    //    Layout.Width = new ElementSize(1, ElementSizeUnit.Percents);
-                    //}
-                }
-                else if (ScrollContent != null)
-                {
-                    // adjust width of scrollable area to size
-                    //ScrollContent.Layout.Width = isPercentageWidth
-                    //    ? new ElementSize(1, ElementSizeUnit.Percents)
-                    //    : new ElementSize(isHorizontal ? totalWidth : maxWidth, ElementSizeUnit.Pixels);
-                    ScrollContent.Layout.Width = new ElementSize(isHorizontal
-                        ? totalWidth
-                        : maxWidth, ElementSizeUnit.Pixels);
-
-                    updateScrollContent = true;
-                }
-
-                // add margins
-                totalHeight += !isHorizontal
-                    ? (childCount > 1 ? (childIndex - 1) * verticalSpacing : 0f)
-                    : 0f;
-
-                var heightMargins = Layout.Margin.Top.Pixels + Layout.Margin.Bottom.Pixels
-                              + ListMaskMargin.Top.Pixels + ListMaskMargin.Bottom.Pixels
-                              + Layout.Padding.Top.Pixels + Layout.Padding.Bottom.Pixels;
-
-                totalHeight += heightMargins;
-                maxHeight += heightMargins;
-
-                if (!Height.IsSet)
-                {
-                    // if height is not explicitly set then adjust to content
-                    Layout.Height = new ElementSize(isHorizontal
-                        ? maxHeight
-                        : totalHeight, ElementSizeUnit.Pixels);
-                }
-                else if (ScrollContent != null)
-                {
-                    // adjust width of scrollable area to size
-                    ScrollContent.Layout.Height = new ElementSize(isHorizontal
-                        ? maxHeight
-                        : totalHeight, ElementSizeUnit.Pixels);
-
-                    updateScrollContent = true;
-                }
-            }
-            else // Wrap
-            {
-                // adjust size to content
-                if (isHorizontal)
-                {
-                    maxHeight += Layout.Margin.Top.Pixels + Layout.Margin.Bottom.Pixels
-                                 + ListMaskMargin.Top.Pixels + ListMaskMargin.Bottom.Pixels
-                                 + Layout.Padding.Top.Pixels + Layout.Padding.Bottom.Pixels;
-
-                    if (ScrollContent != null)
-                    {
-                        ScrollContent.Layout.Height = ElementSize.FromPixels(maxHeight);
-                        updateScrollContent = true;
-                    }
-                    else if (!Height.IsSet)
-                    {
-                        Layout.Height = ElementSize.FromPixels(maxHeight);
-                    }
-                }
-                else // Wrap
-                {
-                    maxWidth += Layout.Margin.Left.Pixels + Layout.Margin.Right.Pixels
-                                + ListMaskMargin.Left.Pixels + ListMaskMargin.Right.Pixels
-                                + Layout.Padding.Left.Pixels + Layout.Padding.Right.Pixels;
-
-                    if (ScrollContent != null)
-                    {
-                        ScrollContent.Layout.Width = ElementSize.FromPixels(maxWidth);
-                        updateScrollContent = true;
-                    }
-                    else if (!Width.IsSet)
-                    {
-                        Layout.Width = ElementSize.FromPixels(maxWidth);
-                    }
-                }
-            }
-
-            if (updateScrollContent)
-            {
-                context.NotifyLayoutUpdated(ScrollContent);
-            }
+            base.CalculateLayoutChanges(context);
 
             if (UseVirtualization)
             {
@@ -1112,10 +814,10 @@ namespace MarkLight.Views.UI
         public override void RenderLayout() {
             base.RenderLayout();
 
-            if (_scrollTo != null)
+            var lastScroll = Items.Value != null ? Items.Value.LastScroll : null;
+            if (lastScroll != null)
             {
-                ScrollTo(_scrollTo.Index, _scrollTo.Alignment, _scrollTo.Offset);
-                _scrollTo = null;
+               ScrollTo(lastScroll.Index, lastScroll.Alignment, lastScroll.Offset);
             }
         }
 
@@ -1124,10 +826,11 @@ namespace MarkLight.Views.UI
         /// </summary>
         public List<ListItem> GetActiveListItems()
         {
-            List<ListItem> listItems = new List<ListItem>();
+            var listItems = new List<ListItem>();
             if (UseVirtualization)
             {
-                listItems.AddRange(_virtualizedItems.VirtualizedItemsContainer.GetChildren<ListItem>(x => x.IsLive, false));
+                listItems.AddRange(
+                    _virtualizedItems.VirtualizedItemsContainer.GetChildren<ListItem>(x => x.IsLive, false));
             }
 
             listItems.AddRange(Content.GetChildren<ListItem>(x => x.IsLive && !x.IsTemplate, false));
@@ -1144,11 +847,15 @@ namespace MarkLight.Views.UI
             {
                 if (Overflow.Value == OverflowMode.Overflow)
                 {
-                    ScrollableContentAlignment.Value = Orientation.Value == ElementOrientation.Vertical ? ElementAlignment.Top : ElementAlignment.Left;
+                    ScrollableContentAlignment.Value = Orientation.Value == ElementOrientation.Vertical
+                        ? ElementAlignment.Top
+                        : ElementAlignment.Left;
                 }
                 else
                 {
-                    ScrollableContentAlignment.Value = Orientation.Value == ElementOrientation.Vertical ? ElementAlignment.Left : ElementAlignment.Top;
+                    ScrollableContentAlignment.Value = Orientation.Value == ElementOrientation.Vertical
+                        ? ElementAlignment.Left
+                        : ElementAlignment.Top;
                 }
             }
 
@@ -1157,11 +864,15 @@ namespace MarkLight.Views.UI
             {
                 if (Overflow.Value == OverflowMode.Overflow)
                 {
-                    HorizontalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Horizontal ? PanelScrollbarVisibility.AutoHideAndExpandViewport : PanelScrollbarVisibility.Hidden;
+                    HorizontalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Horizontal
+                        ? PanelScrollbarVisibility.AutoHideAndExpandViewport
+                        : PanelScrollbarVisibility.Hidden;
                 }
                 else
                 {
-                    HorizontalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Vertical ? PanelScrollbarVisibility.AutoHideAndExpandViewport : PanelScrollbarVisibility.Hidden;
+                    HorizontalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Vertical
+                        ? PanelScrollbarVisibility.AutoHideAndExpandViewport
+                        : PanelScrollbarVisibility.Hidden;
                 }
 
             }
@@ -1170,38 +881,36 @@ namespace MarkLight.Views.UI
             {
                 if (Overflow.Value == OverflowMode.Overflow)
                 {
-                    VerticalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Vertical ? PanelScrollbarVisibility.AutoHideAndExpandViewport : PanelScrollbarVisibility.Hidden;
+                    VerticalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Vertical
+                        ? PanelScrollbarVisibility.AutoHideAndExpandViewport
+                        : PanelScrollbarVisibility.Hidden;
                 }
                 else
                 {
-                    VerticalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Horizontal ? PanelScrollbarVisibility.AutoHideAndExpandViewport : PanelScrollbarVisibility.Hidden;
+                    VerticalScrollbarVisibility.Value = Orientation.Value == ElementOrientation.Horizontal
+                        ? PanelScrollbarVisibility.AutoHideAndExpandViewport
+                        : PanelScrollbarVisibility.Hidden;
                 }
             }
 
             // set default allowed scroll direction
             if (!CanScrollHorizontally.IsSet)
             {
-                if (Overflow.Value == OverflowMode.Overflow)
-                {
-                    CanScrollHorizontally.Value = Orientation.Value == ElementOrientation.Horizontal ? true : false;
-                }
-                else
-                {
-                    CanScrollHorizontally.Value = Orientation.Value == ElementOrientation.Vertical ? true : false;
-                }
+                CanScrollHorizontally.Value = Overflow.Value == OverflowMode.Overflow
+                    ? Orientation.Value == ElementOrientation.Horizontal
+                    : Orientation.Value == ElementOrientation.Vertical;
             }
 
             if (!CanScrollVertically.IsSet)
             {
-                if (Overflow.Value == OverflowMode.Overflow)
-                {
-                    CanScrollVertically.Value = Orientation.Value == ElementOrientation.Vertical ? true : false;
-                }
-                else
-                {
-                    CanScrollVertically.Value = Orientation.Value == ElementOrientation.Horizontal ? true : false;
-                }
+                CanScrollVertically.Value = Overflow.Value == OverflowMode.Overflow
+                    ? Orientation.Value == ElementOrientation.Vertical
+                    : Orientation.Value == ElementOrientation.Horizontal;
             }
+        }
+
+        protected override List<UIView> GetContentChildren() {
+            return GetContentChildren(SortDirection);
         }
 
         /// <summary>
@@ -1386,8 +1095,6 @@ namespace MarkLight.Views.UI
                     item.ForceSelected(true);
                 }
                 SelectedItem.Value = _items.SelectedItem;
-
-                _scrollTo = _items.LastScroll;
             }
         }
 
@@ -1520,7 +1227,6 @@ namespace MarkLight.Views.UI
             if (offset == null)
                 offset = new ElementMargin();
 
-
             var listItem = _presentedListItems[index];
             var itemLayout = listItem.Layout;
             var parentLayout = ((UIView)listItem.LayoutParent).Layout;
@@ -1614,8 +1320,7 @@ namespace MarkLight.Views.UI
                 }
             }
 
-            if (ListPanel != null)
-                ListPanel.ScrollRect.UpdateNormalizedPosition.Value = true;
+            ListPanel.ScrollRect.UpdateNormalizedPosition.Value = true;
 
             NotifyListChanged(false, new ListChangedActionData(ListChangeAction.ScrollTo, index, index));
         }
@@ -1856,7 +1561,7 @@ namespace MarkLight.Views.UI
             var virtualizedItemsContainer = LayoutRoot.Find<VirtualizedItemsContainer>(x => ReferenceEquals(x.Owner, this), false);
             if (virtualizedItemsContainer == null)
             {
-                // no. create a new one 
+                // no. create a new one
                 virtualizedItemsContainer = LayoutRoot.CreateView<VirtualizedItemsContainer>();
                 virtualizedItemsContainer.IsActive.DirectValue = false;
                 virtualizedItemsContainer.Id = GameObjectName;
@@ -1876,8 +1581,6 @@ namespace MarkLight.Views.UI
         {
             base.Initialize();
 
-            _updateWidth = Layout.Width.Unit == ElementSizeUnit.Percents;
-            _updateHeight = Layout.Height.Unit == ElementSizeUnit.Percents;
             SetSelectedItems(new ObservableList<object>());
 
             // remove panel if not used
@@ -2000,6 +1703,43 @@ namespace MarkLight.Views.UI
             get
             {
                 return _presentedListItems.AsReadOnly();
+            }
+        }
+
+        #endregion
+
+        #region Classes
+
+        /// <summary>
+        /// Custom GroupLayout for use with List
+        /// </summary>
+        private class ListGroupLayout : GroupLayoutCalculator
+        {
+            private static readonly ElementMargin EmptyMargin = new ElementMargin();
+            private readonly List _list;
+
+            public ListGroupLayout(List list) {
+                _list = list;
+            }
+
+            protected override float GetHorizontalMargins(LayoutData layout)
+            {
+                var listMaskMargin = _list.ListMask != null
+                    ? _list.ListMask.Margin.Value
+                    : EmptyMargin;
+
+                return base.GetHorizontalMargins(layout) +
+                       + listMaskMargin.Left.Pixels + listMaskMargin.Right.Pixels;
+            }
+
+            protected override float GetVerticalMargins(LayoutData layout)
+            {
+                var listMaskMargin = _list.ListMask != null
+                    ? _list.ListMask.Margin.Value
+                    : EmptyMargin;
+
+                return base.GetVerticalMargins(layout)
+                       + listMaskMargin.Top.Pixels + listMaskMargin.Bottom.Pixels;
             }
         }
 

@@ -1,16 +1,5 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
 
 namespace MarkLight.Views.UI
 {
@@ -301,7 +290,7 @@ namespace MarkLight.Views.UI
             // update slider position
             UpdateSliderPosition(Value);
 
-            return Layout.IsDirty;
+            return base.CalculateLayoutChanges(context);
         }
 
         /// <summary>

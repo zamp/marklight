@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using MarkLight.Views.UI;
 
-namespace MarkLight {
-
+namespace MarkLight
+{
     /// <summary>
     /// Context responsible for tracking and managing layout recalculation  propagation and rendering.
     /// </summary>
-    public class LayoutChangeContext {
-
+    public class LayoutChangeContext
+    {
         #region Fields
 
         private readonly View _source;
@@ -34,8 +34,8 @@ namespace MarkLight {
         /// <summary>
         /// Calculate layout for the specified view.
         /// </summary>
-        public bool Calculate(View view) {
-
+        public bool Calculate(View view)
+        {
             // increment tries if recalculating the view that initiated the layout change.
             if (Equals(view, _source))
             {
@@ -97,8 +97,8 @@ namespace MarkLight {
         /// a view modifies another views layout information and needs to ensure the context knows it
         /// has been modified.
         /// </summary>
-        public void NotifyLayoutUpdated(View view, bool force = false) {
-
+        public void NotifyLayoutUpdated(View view, bool force = false)
+        {
             var uiView = view as UIView;
             if (!force && uiView != null && !uiView.Layout.IsDirty)
                 return;

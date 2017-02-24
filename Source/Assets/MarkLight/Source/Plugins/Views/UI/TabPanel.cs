@@ -1,16 +1,7 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
 
 namespace MarkLight.Views.UI
 {
@@ -302,7 +293,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         /// <d>Boolean indicating if tab list content alignment should automatically be adjusted to the tab list orientation/alignment. E.g. if tab list is oriented horizontally to the top-left then the content alignment of the list is set to bottom so the tab headers hug the top border of the tab panel content region.</d>
         public _bool AutoAdjustTabListContentAlignment;
-        
+
         /// <summary>
         /// Selected data list item.
         /// </summary>
@@ -399,7 +390,7 @@ namespace MarkLight.Views.UI
                 TabHeaderList.ContentAlignment.Value = tabAlignment;
             }
 
-            return Layout.IsDirty;
+            return base.CalculateLayoutChanges(context);
         }
 
         /// <summary>

@@ -1,13 +1,14 @@
 using MarkLight.Views.UI;
 using UnityEngine;
 
-namespace MarkLight {
-
+namespace MarkLight
+{
     /// <summary>
     /// Stores layout working data. Views use and modify the layout information here so they
     /// don't need to overwrite user fields, losing data in the process.
     /// </summary>
-    public class LayoutData {
+    public class LayoutData
+    {
 
         #region Fields
 

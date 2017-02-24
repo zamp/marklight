@@ -1,17 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -38,7 +25,7 @@ namespace MarkLight.Views.UI
         public _bool IsDisabled;
 
         /// <summary>
-        /// Indicates if the check box can be interacted with.        
+        /// Indicates if the check box can be interacted with.
         /// </summary>
         /// <d>If true the check box can only be set programmatically rather than by the user.</d>
         public _bool IsInteractable;
@@ -114,7 +101,7 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Image displaying the check box.
         /// </summary>
-        /// <d>Image view that displays the check box. Different images are presented when the check box changes state between Default and Checked.</d>        
+        /// <d>Image view that displays the check box. Different images are presented when the check box changes state between Default and Checked.</d>
         public Image CheckBoxImageView;
 
         #endregion
@@ -256,7 +243,7 @@ namespace MarkLight.Views.UI
 
             // adjust width to CheckBoxGroup
             Layout.Width = new ElementSize(CheckBoxGroup.ActualWidth, ElementSizeUnit.Pixels);
-            return Layout.IsDirty;
+            return base.CalculateLayoutChanges(context);
         }
 
         /// <summary>

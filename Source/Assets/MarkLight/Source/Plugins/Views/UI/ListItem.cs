@@ -250,13 +250,6 @@ namespace MarkLight.Views.UI
             // adjust width and height to ParentList
             if (ParentList == null || ParentList.Layout.Orientation == ElementOrientation.Horizontal) {
 
-                if (!Width.IsSet) {
-                //    Layout.Width = new ElementSize(Length.Value);
-                }
-                else if (Layout.Width.Unit == ElementSizeUnit.Percents) {
-                  //  Layout.Width.Value = Layout.PixelWidth;
-                }
-
                 if (!Height.IsSet) {
                     Layout.Height = Breadth.IsSet
                         ? new ElementSize(Breadth.Value)
@@ -272,13 +265,9 @@ namespace MarkLight.Views.UI
                         ? new ElementSize(Length.Value)
                         : ElementSize.FromPercents(1);
                 }
-
-                //Layout.Height = Height.IsSet // && Height.Value.Unit != ElementSizeUnit.Percents
-                //    ? new ElementSize(Height.Value)
-                //    : new ElementSize(Breadth.Value);
             }
 
-            return Layout.IsDirty;
+            return base.CalculateLayoutChanges(context);
         }
 
         /// <summary>

@@ -1,17 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -108,7 +95,7 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Image displaying the radio button.
         /// </summary>
-        /// <d>Image view that displays the radio button. Different images are presented when the radio button changes state between Default and Checked.</d>        
+        /// <d>Image view that displays the radio button. Different images are presented when the radio button changes state between Default and Checked.</d>
         public Image RadioButtonImageView;
 
         #endregion
@@ -247,7 +234,7 @@ namespace MarkLight.Views.UI
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
             Layout.Width = new ElementSize(RadioButtonGroup.ActualWidth, ElementSizeUnit.Pixels);
-            return Layout.IsDirty;
+            return base.CalculateLayoutChanges(context);
         }
 
         /// <summary>
