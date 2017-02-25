@@ -194,10 +194,14 @@ namespace MarkLight.Views.UI
             ScrollRectComponent.horizontal = true;
             ScrollRectComponent.scrollSensitivity = 60f;
             ImageComponent.color = Color.clear;
+
+            NormalizedPosition.DirectValue = new Vector2(0f, 1f);
+            HorizontalNormalizedPosition.DirectValue = 0f;
+            VerticalNormalizedPosition.DirectValue = 1f;
         }
 
-        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
-
+        public override bool CalculateLayoutChanges(LayoutChangeContext context)
+        {
             var child = this.Find<UIView>(false);
             if (child == null)
                 return false;
@@ -221,9 +225,17 @@ namespace MarkLight.Views.UI
             return base.CalculateLayoutChanges(context);
         }
 
-        /// <summary>
-        /// Called each frame and updates the scroll rect.
-        /// </summary>
+        public override void OffsetChanged()
+        {
+            base.OffsetChanged();
+            UpdateNormalizedPosition.Value = true;
+        }
+
+        public virtual void OnEnable() {
+            UpdateNormalizedPosition.DirectValue = true;
+            QueueChangeHandler("NormalizedPositionChanged");
+        }
+
         public virtual void Update()
         {
             // keep track of current normalized position
@@ -236,11 +248,10 @@ namespace MarkLight.Views.UI
                 return;
             }
 
-            // we get here if we want to change the normalized position from outside           
-            if (ScrollRectComponent.normalizedPosition != NormalizedPosition.Value)
-            {
-                ScrollRectComponent.normalizedPosition = NormalizedPosition.Value;
-            }
+            // We get here if we want to change the normalized position from outside.
+
+            // Setting this value even if it's already set forces a scrollbar refresh.
+            ScrollRectComponent.normalizedPosition = NormalizedPosition.Value;
 
             // workaround for issue where scroll rect resets its normalized position when the content
             // updates its rect transform, keep updating for a few frames to restore reset position
@@ -281,7 +292,10 @@ namespace MarkLight.Views.UI
 
             if (UpdateNormalizedPosition)
             {
-                ScrollRectComponent.normalizedPosition = NormalizedPosition.Value;
+                if (ScrollRectComponent.content != null)
+                {
+                    ScrollRectComponent.normalizedPosition = NormalizedPosition.Value;
+                }
                 _updateNormalizedPositionCount = 0;
             }
         }
@@ -291,10 +305,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void UnblockDragEvents()
         {
-            this.ForEachChild<View>(x =>
-            {
-                UnblockDragEvents(x);
-            });
+            this.ForEachChild<View>(UnblockDragEvents);
         }
 
         /// <summary>
@@ -317,8 +328,8 @@ namespace MarkLight.Views.UI
                 return;
 
             // check if view has drag event entries
-            bool hasDragEntries = false;
-            bool hasScrollEntries = false;
+            var hasDragEntries = false;
+            var hasScrollEntries = false;
             foreach (var entry in triggers)
             {
                 if (entry.eventID == EventTriggerType.BeginDrag ||
@@ -352,9 +363,12 @@ namespace MarkLight.Views.UI
             if (!hasDragEntries)
             {
                 // unblock initialize potential drag 
-                var initializePotentialDragEntry = new EventTrigger.Entry();
-                initializePotentialDragEntry.eventID = EventTriggerType.InitializePotentialDrag;
-                initializePotentialDragEntry.callback = new EventTrigger.TriggerEvent();
+                var initializePotentialDragEntry =
+                    new EventTrigger.Entry
+                    {
+                        eventID = EventTriggerType.InitializePotentialDrag,
+                        callback = new EventTrigger.TriggerEvent()
+                    };
                 initializePotentialDragEntry.callback.AddListener(eventData =>
                 {
                     SendMessage("OnInitializePotentialDrag", eventData);
@@ -362,9 +376,11 @@ namespace MarkLight.Views.UI
                 triggers.Add(initializePotentialDragEntry);
 
                 // unblock begin drag
-                var beginDragEntry = new EventTrigger.Entry();
-                beginDragEntry.eventID = EventTriggerType.BeginDrag;
-                beginDragEntry.callback = new EventTrigger.TriggerEvent();
+                var beginDragEntry = new EventTrigger.Entry
+                {
+                    eventID = EventTriggerType.BeginDrag,
+                    callback = new EventTrigger.TriggerEvent()
+                };
                 beginDragEntry.callback.AddListener(eventData =>
                 {
                     SendMessage("OnBeginDrag", eventData);
@@ -372,9 +388,11 @@ namespace MarkLight.Views.UI
                 triggers.Add(beginDragEntry);
 
                 // drag
-                var dragEntry = new EventTrigger.Entry();
-                dragEntry.eventID = EventTriggerType.Drag;
-                dragEntry.callback = new EventTrigger.TriggerEvent();
+                var dragEntry = new EventTrigger.Entry
+                {
+                    eventID = EventTriggerType.Drag,
+                    callback = new EventTrigger.TriggerEvent()
+                };
                 dragEntry.callback.AddListener(eventData =>
                 {
                     SendMessage("OnDrag", eventData);
@@ -382,9 +400,11 @@ namespace MarkLight.Views.UI
                 triggers.Add(dragEntry);
 
                 // end drag
-                var endDragEntry = new EventTrigger.Entry();
-                endDragEntry.eventID = EventTriggerType.EndDrag;
-                endDragEntry.callback = new EventTrigger.TriggerEvent();
+                var endDragEntry = new EventTrigger.Entry
+                {
+                    eventID = EventTriggerType.EndDrag,
+                    callback = new EventTrigger.TriggerEvent()
+                };
                 endDragEntry.callback.AddListener(eventData =>
                 {
                     SendMessage("OnEndDrag", eventData);
