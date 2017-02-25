@@ -37,15 +37,9 @@ namespace MarkLight.Views.UI
             base.SetDefaultValues();
             ContentMargin.DirectValue = new ElementMargin();
             ResizeToContent.DirectValue = true;
-            PropagateChildLayoutChanges.DirectValue = true;
         }
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
-
-            if (!PropagateChildLayoutChanges.IsSet)
-            {
-                PropagateChildLayoutChanges.DirectValue = ResizeToContent;
-            }
 
             if (!ResizeToContent)
                 return Layout.IsDirty;

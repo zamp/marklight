@@ -4,7 +4,7 @@ using MarkLight.Views.UI;
 namespace MarkLight
 {
     /// <summary>
-    /// Context responsible for tracking and managing layout recalculation  propagation and rendering.
+    /// Context responsible for tracking and managing layout recalculation, propagation and rendering.
     /// </summary>
     public class LayoutChangeContext
     {
@@ -68,9 +68,6 @@ namespace MarkLight
             if (parent != null) {
                 parent.NotifyChildLayoutCalculated(view, this);
             }
-
-            if (!view.PropagateChildLayoutChanges)
-                return true;
 
             // notify children about recalculation.
             view.ForEachChild<View>(x =>

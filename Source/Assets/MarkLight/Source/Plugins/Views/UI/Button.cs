@@ -1,23 +1,12 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
     /// Button view.
     /// </summary>
-    /// <d>The button view is a clickable region with text. Has the states: Default, Highlighted, Pressed and Disabled. The button can be set to toggle through IsToggleButton and to adjust its size to its text through the AdjustToText field.</d>
+    /// <d>The button view is a clickable region with text. Has the states: Default, Highlighted, Pressed and
+    /// Disabled. The button can be set to toggle through IsToggleButton and to adjust its size to its text through
+    /// the AdjustToText field.</d>
     [HideInPresenter]
     public class Button : UIView
     {
@@ -34,7 +23,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Button text.
         /// </summary>
-        /// <d>The text of the button label. The button can be set to adjust its size to the text through the AdjustToText field.</d>
+        /// <d>The text of the button label. The button can be set to adjust its size to the text through the
+        /// AdjustToText field.</d>
         [MapTo("ButtonLabel.Text", "TextChanged")]
         public _string Text;
 
@@ -83,21 +73,24 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Button text margin.
         /// </summary>
-        /// <d>The margin of the button label text. Can be used to adjust the text positioning. If AdjustToText is used the TextPadding field is used to add padding.</d>
+        /// <d>The margin of the button label text. Can be used to adjust the text positioning. If AdjustToText is
+        /// used the TextPadding field is used to add padding.</d>
         [MapTo("ButtonLabel.Margin")]
         public _ElementMargin TextMargin;
 
         /// <summary>
         /// Button text alignment.
         /// </summary>
-        /// <d>The alignment of the text inside the button label. Can be used with TextMargin and TextOffset to get desired positioning of the text.</d>
+        /// <d>The alignment of the text inside the button label. Can be used with TextMargin and TextOffset to get
+        /// desired positioning of the text.</d>
         [MapTo("ButtonLabel.TextAlignment")]
         public _ElementAlignment TextAlignment;
 
         /// <summary>
         /// Button text offset.
         /// </summary>
-        /// <d>The offset of the button label. Can be used with TextMargin and TextAlignment to get desired positioning of the text.</d>
+        /// <d>The offset of the button label. Can be used with TextMargin and TextAlignment to get desired positioning
+        /// of the text.</d>
         [MapTo("ButtonLabel.Offset")]
         public _ElementMargin TextOffset;
 
@@ -132,7 +125,9 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Adjust button to text.
         /// </summary>
-        /// <d>An enum indiciating how the button should adjust its size to the label text. By default the button does not adjust its size to the text. Is used in conjunction with the TextPadding field to get the desired size of the button in relation to its text.</d>
+        /// <d>An enum indiciating how the button should adjust its size to the label text. By default the button does
+        /// not adjust its size to the text. Is used in conjunction with the TextPadding field to get the desired size
+        /// of the button in relation to its text.</d>
         [MapTo("ButtonLabel.AdjustToText")]
         public _AdjustToText AdjustToText;
 
@@ -141,7 +136,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if this button is set to toggle.
         /// </summary>
-        /// <d>If IsToggleButton is set to true the button will toggle between pressed and unpressed (default) state when clicked.</d>
+        /// <d>If IsToggleButton is set to true the button will toggle between pressed and unpressed (default) state
+        /// when clicked.</d>
         public _bool IsToggleButton;
 
         /// <summary>
@@ -154,27 +150,31 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Button toggle value.
         /// </summary>
-        /// <d>If the button is a toggle button (IsToggleButton is set to true) the toggle value indicates the toggle state of the button. If pressed the ToggleValue is true.</d>
+        /// <d>If the button is a toggle button (IsToggleButton is set to true) the toggle value indicates the toggle
+        /// state of the button. If pressed the ToggleValue is true.</d>
         [ChangeHandler("ToggleValueChanged")]
         public _bool ToggleValue;        
 
         /// <summary>
         /// Button text padding.
         /// </summary>
-        /// <d>The button TextPadding is used when AdjustToText is set. It determines the additional padding to be added to the size of the button when it adjusts to the text.</d>
+        /// <d>The button TextPadding is used when AdjustToText is set. It determines the additional padding to be
+        /// added to the size of the button when it adjusts to the text.</d>
         [ChangeHandler("TextChanged")]
         public _ElementMargin TextPadding;
 
         /// <summary>
         /// Indicates if user can toggle on the button.
         /// </summary>
-        /// <d>Boolean indicating if the button can be toggled on by user interaction. If set to false the button can only be toggled on programmatically.</d>
+        /// <d>Boolean indicating if the button can be toggled on by user interaction. If set to false the button can
+        /// only be toggled on programmatically.</d>
         public _bool CanToggleOn;
 
         /// <summary>
         /// Indicates if user can toggle off the button.
         /// </summary>
-        /// <d>Boolean indicating if the button can be toggled off by user interaction. If set to false the button can only be toggled on programmatically.</d>
+        /// <d>Boolean indicating if the button can be toggled off by user interaction. If set to false the button can
+        ///  only be toggled on programmatically.</d>
         public _bool CanToggleOff;
 
         /// <summary>
@@ -192,7 +192,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Toggle click view action.
         /// </summary>
-        /// <d>Similar to Click view action but is only triggered if IsToggleButton is True and if the button toggles its state. It also supplies a bool indicating the button toggle state.</d>
+        /// <d>Similar to Click view action but is only triggered if IsToggleButton is True and if the button toggles
+        /// its state. It also supplies a bool indicating the button toggle state.</d>
         public ViewAction ToggleClick;
 
         #endregion
@@ -204,30 +205,27 @@ namespace MarkLight.Views.UI
         /// </summary>
         public virtual void TextChanged()
         {
-            bool adjustsToText = AdjustToText != MarkLight.AdjustToText.None;
-            if (!PropagateChildLayoutChanges.IsSet)
-            {
-                PropagateChildLayoutChanges.DirectValue = adjustsToText;
-            }
-
+            var adjustsToText = AdjustToText != MarkLight.AdjustToText.None;
             if (!adjustsToText)
-            {
                 return;
-            }
 
             // adjust button size to text
             if (AdjustToText == MarkLight.AdjustToText.Width)
             {
-                Width.DirectValue = new ElementSize(ButtonLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels);
+                Width.DirectValue = new ElementSize(ButtonLabel.PreferredWidth + TextPadding.Value.Left.Pixels +
+                                                    TextPadding.Value.Right.Pixels);
             }
             else if (AdjustToText == MarkLight.AdjustToText.Height)
             {
-                Height.DirectValue = new ElementSize(ButtonLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels);
+                Height.DirectValue = new ElementSize(ButtonLabel.PreferredHeight + TextPadding.Value.Top.Pixels +
+                                                     TextPadding.Value.Bottom.Pixels);
             }
             else if (AdjustToText == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Width.DirectValue = new ElementSize(ButtonLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels);
-                Height.DirectValue = new ElementSize(ButtonLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels);
+                Width.DirectValue = new ElementSize(ButtonLabel.PreferredWidth + TextPadding.Value.Left.Pixels +
+                                                    TextPadding.Value.Right.Pixels);
+                Height.DirectValue = new ElementSize(ButtonLabel.PreferredHeight + TextPadding.Value.Top.Pixels +
+                                                     TextPadding.Value.Bottom.Pixels);
             }
 
             LayoutChanged();
@@ -289,15 +287,15 @@ namespace MarkLight.Views.UI
         public void ButtonMouseClick()
         {
             // if toggle-button change state
-            if (IsToggleButton)
-            {
-                if (ToggleValue == true && !CanToggleOff)
-                    return;
-                if (ToggleValue == false && !CanToggleOn)
-                    return;
+            if (!IsToggleButton)
+                return;
 
-                ToggleValue.Value = !ToggleValue;
-            }
+            if (ToggleValue == true && !CanToggleOff)
+                return;
+            if (ToggleValue == false && !CanToggleOn)
+                return;
+
+            ToggleValue.Value = !ToggleValue;
         }
 
         /// <summary>
@@ -309,14 +307,7 @@ namespace MarkLight.Views.UI
             if (TogglePressed)
                 return;
 
-            if (IsPressed)
-            {
-                SetState("Pressed");
-            }
-            else
-            {
-                SetState("Highlighted");
-            }            
+            SetState(IsPressed ? "Pressed" : "Highlighted");
         }
 
         /// <summary>

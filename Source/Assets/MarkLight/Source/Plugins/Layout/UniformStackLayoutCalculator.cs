@@ -79,9 +79,6 @@ namespace MarkLight
             if (!parent.Height.IsSet)
                 parent.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
 
-            if (!parent.PropagateChildLayoutChanges.IsSet)
-                parent.PropagateChildLayoutChanges.DirectValue = false;
-
             return parent.Layout.IsDirty;
         }
 

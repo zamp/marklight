@@ -322,13 +322,6 @@ namespace MarkLight
         [NotSetFromXuml]
         public _bool IsDynamic;
 
-        /// <summary>
-        /// Indicates if the view propagates child layout changes.
-        /// </summary>
-        /// <d>Boolean indicating if view propagates child layout changes. Generally set to true whenever a view
-        /// adjusts its size to child layout changes.</d>
-        public _bool PropagateChildLayoutChanges;
-
         private readonly string _viewTypeName;
         private ViewTypeData _viewTypeData;
         private List<ViewAction> _eventSystemViewActions;
@@ -525,7 +518,8 @@ namespace MarkLight
             if (!_changeHandlerMethods.ContainsKey(handlerName))
             {
                 _changeHandlerMethods.Add(handlerName,
-                    GetType().GetMethod(handlerName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+                    GetType()
+                        .GetMethod(handlerName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
             }
         }
 
@@ -538,7 +532,6 @@ namespace MarkLight
             GameObject = gameObject;
             State.DirectValue = DefaultStateName;
             IsActive.DirectValue = true;
-            PropagateChildLayoutChanges.DirectValue = false;
         }
 
         /// <summary>

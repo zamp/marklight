@@ -4,7 +4,8 @@ namespace MarkLight.Views.UI
     /// <summary>
     /// CheckBox view.
     /// </summary>
-    /// <d>A check box consisting of a box that can be ticked and a text label. Has the states: Default, Checked and Disabled.</d>
+    /// <d>A check box consisting of a box that can be ticked and a text label. Has the states: Default, Checked
+    /// and Disabled.</d>
     [HideInPresenter]
     public class CheckBox : UIView
     {
@@ -20,7 +21,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if the check box is disabled.
         /// </summary>
-        /// <d>If true the check box changes state from Default to Disabled and no longer responds to user interaction.</d>
+        /// <d>If true the check box changes state from Default to Disabled and no longer responds to user
+        /// interaction.</d>
         [ChangeHandler("IsDisabledChanged")]
         public _bool IsDisabled;
 
@@ -101,7 +103,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Image displaying the check box.
         /// </summary>
-        /// <d>Image view that displays the check box. Different images are presented when the check box changes state between Default and Checked.</d>
+        /// <d>Image view that displays the check box. Different images are presented when the check box changes state
+        /// between Default and Checked.</d>
         public Image CheckBoxImageView;
 
         #endregion
@@ -167,14 +170,16 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Check box text alignment.
         /// </summary>
-        /// <d>The alignment of the text inside the check box label. Can be used with TextMargin and TextOffset to get desired positioning of the text.</d>
+        /// <d>The alignment of the text inside the check box label. Can be used with TextMargin and TextOffset to get
+        /// desired positioning of the text.</d>
         [MapTo("CheckBoxLabel.TextAlignment")]
         public _ElementAlignment TextAlignment;
 
         /// <summary>
         /// Check box text offset.
         /// </summary>
-        /// <d>The offset of the check box label. Can be used with TextMargin and TextAlignment to get desired positioning of the text.</d>
+        /// <d>The offset of the check box label. Can be used with TextMargin and TextAlignment to get desired
+        /// positioning of the text.</d>
         [MapTo("CheckBoxLabel.Offset")]
         public _ElementMargin TextOffset;
 
@@ -209,7 +214,9 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Adjusts the check box to the text.
         /// </summary>
-        /// <d>An enum indiciating how the check box should adjust its size to the label text. By default the check box does not adjust its size to the text. Is used in conjunction with the TextPadding field to get the desired size of the check box in relation to its text.</d>
+        /// <d>An enum indiciating how the check box should adjust its size to the label text. By default the check
+        /// box does not adjust its size to the text. Is used in conjunction with the TextPadding field to get the
+        /// desired size of the check box in relation to its text.</d>
         [MapTo("CheckBoxLabel.AdjustToText")]
         public _AdjustToText AdjustToText;
 
@@ -236,7 +243,6 @@ namespace MarkLight.Views.UI
             CheckBoxImageView.Width.DirectValue = new ElementSize(40);
             CheckBoxImageView.Height.DirectValue = new ElementSize(40);
             IsInteractable.DirectValue = true;
-            PropagateChildLayoutChanges.DirectValue = true;
         }
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
