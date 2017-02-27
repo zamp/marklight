@@ -1,13 +1,8 @@
-﻿#region Using Statements
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Xml.Linq;
 using UnityEngine;
-using UnityEngine.UI;
-#endregion
 
 namespace MarkLight
 {
@@ -31,7 +26,6 @@ namespace MarkLight
         public List<string> FieldsNotSetFromXuml;
         public List<string> ExcludedComponentFields;
         public List<string> ViewFields;
-        public List<string> GenericViewFields;
         public List<MapViewFieldData> MapViewFields;
         public List<ViewFieldConverterData> ViewFieldConverters;
         public List<ViewFieldChangeHandler> ViewFieldChangeHandlers;
@@ -44,9 +38,6 @@ namespace MarkLight
 
         [NonSerialized]
         private List<ViewTypeData> _dependencies;
-
-        [NonSerialized]
-        private HashSet<string> _genericViewFields;
 
         [NonSerialized]
         private Dictionary<string, MapViewFieldData> _mappedViewFields;
@@ -78,7 +69,6 @@ namespace MarkLight
             DependencyFields = new List<string>();
             ComponentFields = new List<string>();
             ReferenceFields = new List<string>();
-            GenericViewFields = new List<string>();
             FieldsNotSetFromXuml = new List<string>();
             ExcludedComponentFields = new List<string>();
             ViewFields = new List<string>();
@@ -107,7 +97,9 @@ namespace MarkLight
                     }
                     catch
                     {
-                        Debug.LogError(String.Format("[MarkLight] View type \"{0}\" contains duplicate mapped view field \"{1} -> {2}\".", ViewTypeName, mapField.From, mapField.To));
+                        Debug.LogError(String.Format(
+                            "[MarkLight] View type \"{0}\" contains duplicate mapped view field \"{1} -> {2}\".",
+                            ViewTypeName, mapField.From, mapField.To));
                     }
                 }
             }
@@ -202,23 +194,6 @@ namespace MarkLight
             }
 
             _viewFieldPathInfo.Add(viewFieldPath, viewFieldPathInfo);
-        }
-
-        /// <summary>
-        /// Gets boolean indicating if the view field is generic.
-        /// </summary>
-        public bool IsGenericViewField(string viewField)
-        {
-            if (_genericViewFields == null)
-            {
-                _genericViewFields = new HashSet<string>();
-                foreach (var genericViewField in GenericViewFields)
-                {
-                    _genericViewFields.Add(genericViewField);
-                }
-            }
-
-            return _genericViewFields.Contains(viewField);
         }
 
         #endregion

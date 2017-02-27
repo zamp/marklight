@@ -1449,16 +1449,8 @@ namespace MarkLight.Views.UI
         {
             var observableItem = _items.Observables[index];
             var listItem = _presentedListItems[index];
-
-            listItem.ForThisAndEachChild<UIView>(x =>
-            {
-                // TODO can be made faster if a HasItemBinding flag is implemented, also we can stop traversing the tree if another item is set
-                if (x.SortIndex.Value == observableItem.Index + 1)
-                {
-                    x.Item.Value = observableItem;
-                    x.Fields.NotifyDependentValueObservers("Item", true);
-                }
-            });
+            listItem.Item.Value = observableItem;
+            listItem.Fields.NotifyDependentValueObservers("Item", true);
         }
 
         /// <summary>
@@ -1478,15 +1470,8 @@ namespace MarkLight.Views.UI
 
             _presentedListItems.Insert(index, newItemView);
 
-            // set item data
-            newItemView.ForThisAndEachChild<UIView>(x =>
-            {
-                if (ReferenceEquals(x.FindParent<List>(), this))
-                {
-                    x.SortIndex.DirectValue = index + 1;
-                    x.Item.Value = observableItem;
-                }
-            });
+            newItemView.SortIndex.Value = index + 1;
+            newItemView.Item.Value = observableItem;
             newItemView.Activate();
 
             // initialize view

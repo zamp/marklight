@@ -350,7 +350,7 @@ namespace MarkLight.Views.UI
 
             // set content margins based on tab list size and its orientation
             var contentMargin = new ElementMargin();
-            var tabAlignment = ElementAlignment.Center;
+            ElementAlignment tabAlignment;
 
             if (TabHeaderList.Layout.Orientation == ElementOrientation.Horizontal)
             {
@@ -407,24 +407,24 @@ namespace MarkLight.Views.UI
             }
 
             _presentedTabs.AddRange(TabSwitcher.GetChildren<Tab>(x => !x.IsTemplate && !x.IsDestroyed, false));
-            if (TabItemTemplate == null)
-            {               
-                // initialize (static) tabs
-                if (_presentedTabs.Count > 0 && !StaticTabsGenerated)
-                {
-                    StaticTabsGenerated = true;
-                    TabHeaderList.Content.DestroyChildren();
+            if (TabItemTemplate != null)
+                return;
 
-                    // go through static items and initialize tab headers
-                    foreach (var tab in _presentedTabs)
-                    {
-                        CreateTabHeader(tab);
-                    }
+            // initialize (static) tabs
+            if (_presentedTabs.Count <= 0 || StaticTabsGenerated)
+                return;
 
-                    // select first tab by default
-                    SelectTab(0, false);
-                }
+            StaticTabsGenerated = true;
+            TabHeaderList.Content.DestroyChildren();
+
+            // go through static items and initialize tab headers
+            foreach (var tab in _presentedTabs)
+            {
+                CreateTabHeader(tab);
             }
+
+            // select first tab by default
+            SelectTab(0, false);
         }
 
         /// <summary>
@@ -433,12 +433,12 @@ namespace MarkLight.Views.UI
         public void NextTab(bool animate = true, bool cycle = true)
         {
             var tabs = TabSwitcher.GetChildren<Tab>(false);
-            int tabCount = tabs.Count;
+            var tabCount = tabs.Count;
 
             if (tabCount <= 0)
                 return;
 
-            int index = tabs.IndexOf(SelectedTab);
+            var index = tabs.IndexOf(SelectedTab);
             ++index;
 
             if (index >= tabCount)
@@ -460,12 +460,12 @@ namespace MarkLight.Views.UI
         public void PreviousTab(bool animate = true, bool cycle = true)
         {
             var tabs = this.GetChildren<Tab>(false);
-            int tabCount = tabs.Count;
+            var tabCount = tabs.Count;
 
             if (tabCount <= 0)
                 return;
 
-            int index = tabs.IndexOf(SelectedTab);
+            var index = tabs.IndexOf(SelectedTab);
             --index;
 
             if (index < 0)
@@ -513,11 +513,12 @@ namespace MarkLight.Views.UI
         {
             if (index >= _presentedTabs.Count)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to select tab. Index out of bounds.", GameObjectName));
+                Debug.LogError(String.Format("[MarkLight] {0}: Unable to select tab. Index out of bounds.",
+                    GameObjectName));
                 return;
             }
 
-            SelectTab(_presentedTabs[index], animate, false);
+            SelectTab(_presentedTabs[index], animate);
         }
 
         /// <summary>
@@ -525,19 +526,16 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void SelectTab(object itemData, bool animate = true)
         {
-            var tabItem = _presentedTabs.FirstOrDefault(x =>
-            {
-                var item = x as Tab;
-                return item != null ? item.Item.Value == itemData : false;
-            });
+            var tabItem = _presentedTabs.FirstOrDefault(x => x != null && x.Item.Value == itemData);
 
             if (tabItem == null)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to select tab. Item not found.", GameObjectName));
+                Debug.LogError(String.Format("[MarkLight] {0}: Unable to select tab. Item not found.",
+                    GameObjectName));
                 return;
             }
 
-            SelectTab(tabItem, animate, false);
+            SelectTab(tabItem, animate);
         }
 
         /// <summary>
@@ -585,7 +583,8 @@ namespace MarkLight.Views.UI
                 // trigger item selected action
                 if (TabSelected.HasEntries)
                 {
-                    TabSelected.Trigger(new TabSelectionActionData { IsSelected = true, TabView = tab, Item = tab.Item.Value });
+                    TabSelected.Trigger(
+                        new TabSelectionActionData {IsSelected = true, TabView = tab, Item = tab.Item.Value});
                 }
             }
         }
@@ -711,9 +710,9 @@ namespace MarkLight.Views.UI
             }
 
             // validate input
-            int lastIndex = Items.Count - 1;
-            int insertCount = (endIndex - startIndex) + 1;
-            bool listMatch = _presentedTabs.Count == (Items.Count - insertCount);
+            var lastIndex = Items.Count - 1;
+            var insertCount = (endIndex - startIndex) + 1;
+            var listMatch = _presentedTabs.Count == (Items.Count - insertCount);
             if (startIndex < 0 || startIndex > lastIndex ||
                 endIndex < startIndex || endIndex > lastIndex || !listMatch)
             {
@@ -723,7 +722,7 @@ namespace MarkLight.Views.UI
             }
 
             // insert tabs
-            for (int i = startIndex; i <= endIndex; ++i)
+            for (var i = startIndex; i <= endIndex; ++i)
             {
                 CreateTab(i);
             }
@@ -735,19 +734,20 @@ namespace MarkLight.Views.UI
         private void RemoveRange(int startIndex, int endIndex)
         {
             // validate input
-            int lastIndex = _presentedTabs.Count - 1;
-            int removeCount = (endIndex - startIndex) + 1;
-            bool listMatch = _presentedTabs.Count == (Items.Count + removeCount);
+            var lastIndex = _presentedTabs.Count - 1;
+            var removeCount = (endIndex - startIndex) + 1;
+            var listMatch = _presentedTabs.Count == (Items.Count + removeCount);
             if (startIndex < 0 || startIndex > lastIndex ||
                 endIndex < startIndex || endIndex > lastIndex || !listMatch)
             {
-                Debug.LogWarning(String.Format("[MarkLight] {0}: Tab list mismatch. Rebuilding tabs.", GameObjectName));
+                Debug.LogWarning(String.Format("[MarkLight] {0}: Tab list mismatch. Rebuilding tabs.",
+                    GameObjectName));
                 Rebuild();
                 return;
             }
 
             // remove tabs
-            for (int i = endIndex; i >= startIndex; --i)
+            for (var i = endIndex; i >= startIndex; --i)
             {
                 DestroyTab(i);
             }
@@ -758,36 +758,22 @@ namespace MarkLight.Views.UI
         /// </summary>
         private Tab CreateTab(int index)
         {
-            object itemData = Items[index];
+            var itemData = Items.Observables[index];
             var newTabView = TabSwitcher.CreateView(TabItemTemplate, index + 1);            
 
             _presentedTabs.Insert(index, newTabView);
 
             // set item data
-            SetItemData(newTabView, itemData);
+            newTabView.Item.Value = itemData;
 
             // initialize view
             newTabView.InitializeViews();
             newTabView.Deactivate();
 
             // create tab header
-            CreateTabHeader(newTabView, index, itemData);                       
+            CreateTabHeader(newTabView, index);
 
             return newTabView;
-        }
-
-        /// <summary>
-        /// Sets item data.
-        /// </summary>
-        private void SetItemData(View view, object itemData)
-        {
-            view.ForThisAndEachChild<UIView>(x =>
-            {
-                if (x.FindParent<TabPanel>() == this)
-                {
-                    x.Item.Value = itemData;
-                }
-            });
         }
 
         /// <summary>
@@ -838,24 +824,20 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Creates tab header from tab.
         /// </summary>
-        private void CreateTabHeader(Tab tab, int index = -1, object itemData = null)
+        private void CreateTabHeader(Tab tab, int index = -1)
         {
             // check if the tab has a custom tab header
             var tabHeader = tab.Find<TabHeader>(false);
             if (tabHeader == null)
             {
                 // create default TabHeader                
-                tabHeader = ViewData.CreateView<TabHeader>(TabHeaderList.Content, tab.Parent, null, Theme, String.Empty, Style);
+                tabHeader = ViewData.CreateView<TabHeader>(TabHeaderList.Content, tab.Parent, null, Theme, String.Empty,
+                    Style);
                 tabHeader.ParentList = TabHeaderList;
                 tabHeader.ParentTab = tab;
                 if (index >= 0)
                 {
                     tabHeader.transform.SetSiblingIndex(index + 1);
-                }
-
-                if (itemData != null)
-                {
-                    SetItemData(tabHeader, itemData);
                 }
 
                 // initialize tab header
@@ -890,7 +872,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public virtual void TabHeaderListOrientationChanged()
         {
-            string state = String.Format("{0}{1}", TabHeaderList.Orientation.Value.ToString(), TabHeaderList.Alignment.Value.ToString());            
+            var state = String.Format("{0}{1}", TabHeaderList.Orientation.Value, TabHeaderList.Alignment.Value);
             SetState(state);
             TabHeaderList.SetState(state);
 

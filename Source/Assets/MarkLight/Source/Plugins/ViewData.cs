@@ -344,12 +344,6 @@ namespace MarkLight
                     viewTypeData.FieldsNotSetFromXuml.Add(field.Name);
                 }
 
-                var genericViewField = field.GetCustomAttributes(typeof(GenericViewField), true).FirstOrDefault();
-                if (genericViewField != null)
-                {
-                    viewTypeData.GenericViewFields.Add(field.Name);
-                }
-
                 // see if any component fields are replaced
                 var replacedComponentField = field.GetCustomAttributes(typeof(ReplacesComponentField), true).FirstOrDefault() as ReplacesComponentField;
                 if (replacedComponentField != null)

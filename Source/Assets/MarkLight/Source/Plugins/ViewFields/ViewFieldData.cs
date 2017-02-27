@@ -352,8 +352,7 @@ namespace MarkLight
 
             if (_pathInfo.ParsePath(SourceView))
             {
-
-                if (!_pathInfo.IsGeneric)
+                if (!_pathInfo.IsDataModelItem)
                     viewTypeData.AddViewFieldPathInfo(Path, _pathInfo);
 
                 return true;
@@ -443,14 +442,6 @@ namespace MarkLight
         public bool IsMappedToDescendants
         {
             get { return _pathInfo.IsMappedToDescendants; }
-        }
-
-        /// <summary>
-        /// Determine if the field is a generic field.
-        /// </summary>
-        public bool IsGeneric
-        {
-            get { return _pathInfo.IsGeneric; }
         }
 
         #endregion

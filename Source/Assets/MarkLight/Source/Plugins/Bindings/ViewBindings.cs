@@ -18,6 +18,9 @@ namespace MarkLight
         [NonSerialized]
         public readonly View OwnerView;
 
+        [NonSerialized]
+        private IObservableItem _item;
+
         [SerializeField]
         private List<ViewFieldBinding> _bindings;
 
@@ -233,9 +236,10 @@ namespace MarkLight
             if (transformMethod == null)
             {
                 Debug.LogError(String.Format(
-                    "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
+                    "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". " +
                     "Transform method \"{3}\" not found in view type \"{4}\".",
-                    OwnerView.GameObjectName, bindingString, targetFieldName, bindings[0], OwnerView.Parent.ViewTypeName));
+                    OwnerView.GameObjectName, bindingString, targetFieldName, bindings[0],
+                    OwnerView.Parent.ViewTypeName));
                 return;
             }
 
@@ -280,6 +284,40 @@ namespace MarkLight
 
             // so here we want to register a resource binding observer in the dictionary
             ResourceDictionary.RegisterResourceBindingObserver(dictionaryName, resourceKey, observer);
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Get data bound item.
+        /// </summary>
+        public IObservableItem Item
+        {
+            get
+            {
+                if (_item != null)
+                    return _item;
+
+                var parentView = OwnerView.LayoutParent;
+                return parentView != null ? parentView.Bindings.Item : _item;
+            }
+            set
+            {
+                var old = _item;
+                _item = value;
+                OwnerView.DataModelItemChanged(old, _item);
+                OwnerView.ForEachBranch<View>(x =>
+                {
+                    // skip child data model items and their descendants
+                    if (x.Bindings._item != null)
+                        return false;
+
+                    x.DataModelItemChanged(old, _item);
+                    return true;
+                });
+            }
         }
 
         #endregion

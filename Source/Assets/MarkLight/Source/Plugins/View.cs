@@ -287,16 +287,6 @@ namespace MarkLight
         #endregion
 
         /// <summary>
-        /// Item data.
-        /// </summary>
-        /// <d>Provides a mechanism to bind to dynamic list data. The item is set, e.g. by the List view on the
-        /// child views it generates for its dynamic list data. The Item points to the list item data the view is
-        /// associated with.</d>
-        [GenericViewField]
-        [ChangeHandler("ItemChanged")]
-        public ItemDataViewField Item;
-
-        /// <summary>
         /// Indicates if this view is to be used as a template.
         /// </summary>
         /// <d>A template view is used to create dynamic instances of the view. Used by certain views such as the
@@ -611,9 +601,9 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Called when the Item field is changed.
+        /// Called when the Binding.Item is changed.
         /// </summary>
-        public virtual void ItemChanged()
+        public virtual void DataModelItemChanged(IObservableItem old, IObservableItem current)
         {
         }
 

@@ -134,6 +134,12 @@ namespace MarkLight.Views.UI
         #endregion
 
         /// <summary>
+        /// Data model item.
+        /// </summary>
+        /// <d>The data model item that the button represents.</d>
+        public ItemViewField Item;
+
+        /// <summary>
         /// Indicates if this button is set to toggle.
         /// </summary>
         /// <d>If IsToggleButton is set to true the button will toggle between pressed and unpressed (default) state

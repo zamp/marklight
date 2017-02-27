@@ -1,17 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -139,6 +126,11 @@ namespace MarkLight.Views.UI
         #endregion
 
         /// <summary>
+        /// Data model item that the ListItem represents.
+        /// </summary>
+        public ItemViewField Item;
+
+        /// <summary>
         /// Indicates if the item is disabled.
         /// </summary>
         /// <d>If set to true the item enters the "Disabled" state and can't be interacted with.</d>
@@ -206,8 +198,6 @@ namespace MarkLight.Views.UI
         /// </summary>
         /// <d>The list that created this list item.</d>
         public List ParentList;
-
-        private IObservableItem _observableItem;
 
         #endregion
 
@@ -401,7 +391,7 @@ namespace MarkLight.Views.UI
             if (!ParentList.CanSelect)
                 return;
 
-            var observable = Item.ObservableItem;
+            var observable = Bindings.Item;
             if (observable == null)
                 return;
 
@@ -428,7 +418,7 @@ namespace MarkLight.Views.UI
             if (State == "Disabled")
                 return;
 
-            var observable = Item.ObservableItem;
+            var observable = Bindings.Item;
             var isSelected = observable != null ? observable.IsSelected : IsSelected;
 
             SetState(isSelected ? "Selected" : DefaultItemStyle);
@@ -474,27 +464,25 @@ namespace MarkLight.Views.UI
             SetState(DefaultItemStyle);
         }
 
-        public override void ItemChanged()
+        public override void DataModelItemChanged(IObservableItem old, IObservableItem current)
         {
-            base.ItemChanged();
+            base.DataModelItemChanged(old, current);
 
-            if (_observableItem != null)
+            if (old != null)
             {
-                _observableItem.ItemSelectChanged -= OnObservableItemSelectChanged;
-                _observableItem.ItemIndexChanged -= OnObservableItemIndexChanged;
-                _observableItem.ItemModified -= OnObservableItemModified;
+                old.ItemSelectChanged -= OnObservableItemSelectChanged;
+                old.ItemIndexChanged -= OnObservableItemIndexChanged;
+                old.ItemModified -= OnObservableItemModified;
             }
 
-            _observableItem = Item.ObservableItem;
-
-            if (_observableItem != null)
+            if (current != null)
             {
-                Fields.SetValue("IsSelected", _observableItem.IsSelected);
-                SetSortIndex(_observableItem.Index + 1);
+                Fields.SetValue("IsSelected", current.IsSelected);
+                SetSortIndex(current.Index + 1);
 
-                _observableItem.ItemSelectChanged += OnObservableItemSelectChanged;
-                _observableItem.ItemIndexChanged += OnObservableItemIndexChanged;
-                _observableItem.ItemModified += OnObservableItemModified;
+                current.ItemSelectChanged += OnObservableItemSelectChanged;
+                current.ItemIndexChanged += OnObservableItemIndexChanged;
+                current.ItemModified += OnObservableItemModified;
             }
         }
 

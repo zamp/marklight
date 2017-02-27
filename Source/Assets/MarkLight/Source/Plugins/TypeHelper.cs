@@ -1,15 +1,8 @@
-﻿#region Using Statements
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Collections;
 using System.Reflection;
-using System.Linq.Expressions;
-using UnityEngine;
-#endregion
 
 namespace MarkLight
 {
@@ -86,7 +79,7 @@ namespace MarkLight
                 { typeof(_object), () => new _object() },
                 { typeof(_IObservableList), () => new _IObservableList() },
                 { typeof(_GenericObservableList), () => new _GenericObservableList() },
-                { typeof(ItemDataViewField), () => new ItemDataViewField() },
+                { typeof(ItemViewField), () => new ItemViewField() },
                 { typeof(ViewFieldBase), () => new ViewFieldBase() }
             };
         }
@@ -114,7 +107,10 @@ namespace MarkLight
             }            
 
             // look in assembly csharp only
-            var scriptAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => x.GetName().Name.StartsWith("Assembly-")).ToList();
+            var scriptAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(x => x.GetName().Name.StartsWith("Assembly-"))
+                .ToList();
+
             if (scriptAssemblies.Count > 0)
             {
                 _scriptAssemblyTypes = new List<Type>();
@@ -147,6 +143,7 @@ namespace MarkLight
                         }
                         catch
                         {
+                            // ignored
                         }
                     }
                 }
@@ -188,7 +185,7 @@ namespace MarkLight
         /// </summary>
         public static void PrintDependencyFields()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (var derivedType in FindDerivedTypes(typeof(ViewFieldBase)))
             {
                 sb.AppendLine(String.Format("{{ typeof({0}), () => new {0}() }},", derivedType.Name));
@@ -207,10 +204,7 @@ namespace MarkLight
             {
                 return activator();
             }
-            else
-            {
-                return TypeHelper.CreateInstance(type) as ViewFieldBase;
-            }
+            return CreateInstance(type) as ViewFieldBase;
         }
 
         #endregion

@@ -118,7 +118,6 @@ namespace MarkLight
 
             object viewFieldObject = sourceView;
             var viewFieldBaseType = typeof(ViewFieldBase);
-            IsGeneric = Fields.Length > 0 && viewTypeData.IsGenericViewField(RootFieldName);
 
             // parse view field path
             var isParseSuccess = true;
@@ -143,12 +142,19 @@ namespace MarkLight
                 if (memberInfo == null)
                 {
                     IsSevereParseError = true;
-                    Utils.ErrorMessage = String.Format("Unable to parse view field path \"{0}\". Couldn't find member with the name \"{1}\".", Path, viewField);
+                    Utils.ErrorMessage = String.Format(
+                        "Unable to parse view field path \"{0}\". Couldn't find member with the name \"{1}\".", Path,
+                        viewField);
                     return false;
                 }
 
                 MemberInfo.Add(memberInfo);
                 Type = memberInfo.GetFieldType();
+
+                if (i == 0)
+                {
+                    IsDataModelItem = typeof(ItemViewField).IsAssignableFrom(Type);
+                }
 
                 // handle special ViewFieldBase types
                 if (viewFieldBaseType.IsAssignableFrom(Type))
@@ -156,7 +162,9 @@ namespace MarkLight
                     viewFieldObject = memberInfo.GetFieldValue(viewFieldObject);
                     if (viewFieldObject == null)
                     {
-                        Utils.ErrorMessage = String.Format("Unable to parse view field path \"{0}\". Field/property with the name \"{1}\" was null.", Path, viewField);
+                        Utils.ErrorMessage = String.Format(
+                            "Unable to parse view field path \"{0}\". Field/property with the name \"{1}\" was null.",
+                            Path, viewField);
                         isParseSuccess = false;
                         continue;
                     }
@@ -195,7 +203,9 @@ namespace MarkLight
                 if (viewFieldObject != null)
                     continue;
 
-                Utils.ErrorMessage = String.Format("Unable to parse view field path \"{0}\". Field/property with the name \"{1}\" was null.", Path, viewField);
+                Utils.ErrorMessage = String.Format(
+                    "Unable to parse view field path \"{0}\". Field/property with the name \"{1}\" was null.", Path,
+                    viewField);
                 isParseSuccess = false;
             }
 
@@ -327,9 +337,9 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Determine if the field is generic.
+        /// Determine if the field is for data model item.
         /// </summary>
-        public bool IsGeneric
+        public bool IsDataModelItem
         {
             get; private set;
         }

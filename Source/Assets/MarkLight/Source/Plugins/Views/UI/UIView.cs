@@ -1,23 +1,15 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
 
 namespace MarkLight.Views.UI
 {
     /// <summary>
     /// Base class for UI views.
     /// </summary>    
-    /// <d>Base class for UI views. Has fields for doing layout such as Width, Height, Margin, Alignment, Offset, etc. and fields for rendering a background image.</d>
+    /// <d>Base class for UI views. Has fields for doing layout such as Width, Height, Margin, Alignment, Offset, etc.
+    /// and fields for rendering a background image.</d>
     [HideInPresenter]
     public class UIView : View
     {
@@ -61,7 +53,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// View margin
         /// </summary>
-        /// <d>Determines the size of the content region relative the view's width and height. Adding margins to a view does not change its width or height.</d>
+        /// <d>Determines the size of the content region relative the view's width and height. Adding margins to a view
+        /// does not change its width or height.</d>
         [ChangeHandler("LayoutChanged")]
         public _ElementMargin Margin;
 
@@ -75,7 +68,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// View offset from parent.
         /// </summary>
-        /// <d>Used by parent views to adjust the positioning of its children without affecting the internal offset of the children.</d>
+        /// <d>Used by parent views to adjust the positioning of its children without affecting the internal offset of
+        /// the children.</d>
         [ChangeHandler("OffsetChanged")]
         public _ElementMargin OffsetFromParent;
 
@@ -89,7 +83,10 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Position, rotation and scale of the view.
         /// </summary>
-        /// <d>The view rect transform is used to manipulate the position, rotation and scale of the view in relation to the layout parent view's transform or in world space. For most UIViews the transform manipulated indirectly through other view fields such as Width, Height, Margin, Offset, Alignment and through the UIView's internal layout logic.</d>
+        /// <d>The view rect transform is used to manipulate the position, rotation and scale of the view in relation
+        /// to the layout parent view's transform or in world space. For most UIViews the transform manipulated
+        /// indirectly through other view fields such as Width, Height, Margin, Offset, Alignment and through the
+        /// UIView's internal layout logic.</d>
         public RectTransform RectTransform;
         
         /// <summary>
@@ -102,14 +99,17 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Alpha value.
         /// </summary>
-        /// <d>Can be used to adjust the alpha color of this view and all its children. E.g. used for fade in/out animations. Is separate from and different from the background color of the view as it affects the children as well.</d>
+        /// <d>Can be used to adjust the alpha color of this view and all its children. E.g. used for fade in/out
+        /// animations. Is separate from and different from the background color of the view as it affects the children
+        /// as well.</d>
         [ChangeHandler("BackgroundChanged")]
         public _float Alpha;
 
         /// <summary>
         /// Indicate if the view is visible.
         /// </summary>
-        /// <d>Can be used to adjust the visiblity of the view. If set to false the view is made invisible but unlike when deactivating the view, invisible views are still is active and takes up space.</d>
+        /// <d>Can be used to adjust the visiblity of the view. If set to false the view is made invisible but unlike
+        /// when deactivating the view, invisible views are still is active and takes up space.</d>
         [ChangeHandler("BackgroundChanged")]
         public _bool IsVisible;
        
@@ -122,13 +122,15 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if rect transform is updated.
         /// </summary>
-        /// <d>If set to false the rect transform is not updated by the layout logic. It is used when layouting is done elsewhere.</d>
+        /// <d>If set to false the rect transform is not updated by the layout logic. It is used when layouting is done
+        /// elsewhere.</d>
         public _bool UpdateRectTransform;
 
         /// <summary>
         /// Indicates if background is updated.
         /// </summary>
-        /// <d>If set to false the background image and color is not updated by the view. Is used when the background updates is done elsewhere.</d>
+        /// <d>If set to false the background image and color is not updated by the view. Is used when the background
+        /// updates is done elsewhere.</d>
         public _bool UpdateBackground;
 
         #region BackgroundImage
@@ -136,13 +138,15 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Displays the background image.
         /// </summary>
-        /// <d>The background image component is responsible for rendering the background image and sprite of the view.</d>
+        /// <d>The background image component is responsible for rendering the background image and sprite of the
+        /// view.</d>
         public UnityEngine.UI.Image ImageComponent;
 
         /// <summary>
         /// Alpha threshold for letting through events.
         /// </summary>
-        /// <d>The alpha threshold specifying the minimum alpha a pixel must have for the event to be passed through.</d>
+        /// <d>The alpha threshold specifying the minimum alpha a pixel must have for the event to be passed
+        /// through.</d>
         [MapTo("ImageComponent.eventAlphaThreshold")]
         public _float BackgroundImageEventAlphaThreshold;
 
@@ -184,7 +188,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Background image override sprite.
         /// </summary>
-        /// <d>Set an override sprite to be used for rendering. If set the override sprite is used instead of the regular image sprite.</d>
+        /// <d>Set an override sprite to be used for rendering. If set the override sprite is used instead of the
+        /// regular image sprite.</d>
         [ChangeHandler("BackgroundChanged")]
         public _SpriteAsset BackgroundImageOverrideSprite;
 
@@ -366,14 +371,17 @@ namespace MarkLight.Views.UI
                     _canvasGroup.blocksRaycasts = (IsVisible && Alpha > 0);
                 }
 
-                _canvasGroup.interactable = IsVisible ?  Alpha > 0 : false;
+                _canvasGroup.interactable = IsVisible && Alpha > 0;
             }
 
             if (ImageComponent != null)
             {
                 if (BackgroundImage.IsSet || BackgroundImageOverrideSprite.IsSet)
                 {
-                    var sprite = BackgroundImageOverrideSprite.IsSet ? BackgroundImageOverrideSprite.Value : BackgroundImage.Value;
+                    var sprite = BackgroundImageOverrideSprite.IsSet
+                        ? BackgroundImageOverrideSprite.Value
+                        : BackgroundImage.Value;
+
                     if (sprite != null)
                     {
                         ImageComponent.sprite = sprite.Sprite;
@@ -395,7 +403,8 @@ namespace MarkLight.Views.UI
                 }
 
                 // if image color is clear disable image component
-                ImageComponent.enabled = RaycastBlockMode == MarkLight.RaycastBlockMode.Always ? true : ImageComponent.color.a > 0;
+                ImageComponent.enabled = RaycastBlockMode == MarkLight.RaycastBlockMode.Always ||
+                                         ImageComponent.color.a > 0;
             }
         }
 
@@ -426,7 +435,7 @@ namespace MarkLight.Views.UI
 
             // for screen space overlay the camera should be null
             Camera worldCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
-            if (RectTransformUtility.RectangleContainsScreenPoint(this.RectTransform, mousePosition, worldCamera)
+            if (RectTransformUtility.RectangleContainsScreenPoint(RectTransform, mousePosition, worldCamera)
                 && (!ignoreFullScreenViews || !IsFullScreen)
                 && gameObject.activeInHierarchy
                 && Alpha.Value > 0.99f)
@@ -546,7 +555,8 @@ namespace MarkLight.Views.UI
         }
 
         /// <summary>
-        /// Gets actual width of view in pixels. Useful when Width may be specified as percentage and you want actual pixel width.
+        /// Gets actual width of view in pixels. Useful when Width may be specified as percentage and you want actual
+        /// pixel width.
         /// </summary>
         public float ActualWidth
         {
@@ -557,7 +567,8 @@ namespace MarkLight.Views.UI
         }
 
         /// <summary>
-        /// Gets actual height of view in pixels. Useful when Height may be specified as percentage and you want actual pixel height.
+        /// Gets actual height of view in pixels. Useful when Height may be specified as percentage and you want actual
+        /// pixel height.
         /// </summary>
         public float ActualHeight
         {
@@ -616,7 +627,10 @@ namespace MarkLight.Views.UI
                         _layoutRoot = this.FindParent<UserInterface>();
                         if (_layoutRoot == null)
                         {
-                            Debug.LogError(String.Format("[MarkLight] {0}: LayoutRoot missing. All UIViews needs to be placed under a UserInterface root canvas.", GameObjectName));
+                            Debug.LogError(String.Format(
+                                "[MarkLight] {0}: LayoutRoot missing. All UIViews needs to be placed under a "+
+                                "UserInterface root canvas.",
+                                GameObjectName));
                         }
                     }
                 }
