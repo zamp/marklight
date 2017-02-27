@@ -88,6 +88,13 @@ namespace MarkLight
         public View LayoutParent;
 
         /// <summary>
+        /// Layout child views.
+        /// </summary>
+        /// <d>The layout child views are direct descendants of the current view in the scene object hierarchy.</d>
+        [NotSetFromXuml]
+        public List<View> LayoutChildren;
+
+        /// <summary>
         /// Parent view.
         /// </summary>
         /// <d>The parent of the view is the logical parent to which this view belongs. In the XUML any view you
@@ -431,6 +438,11 @@ namespace MarkLight
         /// </summary>
         public void MoveTo(View target, int childIndex = -1, bool updateLayoutParent = true)
         {
+            if (LayoutParent != null)
+            {
+                LayoutParent.LayoutChildren.Remove(this);
+            }
+
             transform.SetParent(target.transform, false);
             if (childIndex >= 0)
             {
@@ -441,6 +453,9 @@ namespace MarkLight
             {
                 Fields.SetValue(() => LayoutParent, target);
             }
+
+            if (!target.LayoutChildren.Contains(this))
+                target.LayoutChildren.Add(this);
 
             NotifyLayoutChanged();
         }
@@ -681,6 +696,9 @@ namespace MarkLight
 
             // set view parent
             var view = go.GetComponent<T>();
+
+            layoutParent.LayoutChildren.Add(view);
+
             if (siblingIndex > 0)
             {
                 go.transform.SetSiblingIndex(siblingIndex);

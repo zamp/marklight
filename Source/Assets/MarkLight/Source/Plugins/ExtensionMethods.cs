@@ -1,11 +1,9 @@
-﻿#region Using Statements
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
-#endregion
+using Object = UnityEngine.Object;
 
 namespace MarkLight
 {
@@ -17,22 +15,59 @@ namespace MarkLight
         #region Methods
 
         /// <summary>
+        /// Traverses the view object tree using depth first traversal and skips paths when the action returns false.
+        /// </summary>
+        public static void ForEachBranch<T>(this View view, Func<T, bool> action, View parent = null)
+            where T : View {
+
+            foreach (var childView in view.LayoutChildren)
+            {
+                if (childView == null)
+                    continue;
+
+                var skipChild = false;
+
+                if (parent != null)
+                {
+                    if (childView.Parent != parent)
+                        skipChild = true;
+                }
+
+                if (!skipChild)
+                {
+                    var component = childView as T;
+                    if (component != null)
+                    {
+                        var result = action(component);
+                        if (!result)
+                        {
+                            // skip branch
+                            continue;
+                        }
+                    }
+                }
+
+                childView.ForEachBranch(action, parent);
+            }
+        }
+
+        /// <summary>
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
-        public static void DoUntil<T>(this View view, Func<T, bool> action, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static void DoUntil<T>(this View view, Func<T, bool> action, bool recursive = true, View parent = null,
+                                      TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                    where T : View
         {
             switch (traversalAlgorithm)
             {
                 default:
                 case TraversalAlgorithm.DepthFirst:
-                    foreach (Transform child in view.gameObject.transform)
+                    foreach (var childView in view.LayoutChildren)
                     {
-                        bool skipChild = false;
-                        var childView = child.GetComponent<View>();
                         if (childView == null)
-                        {
                             continue;
-                        }
+
+                        var skipChild = false;
 
                         if (parent != null)
                         {
@@ -42,7 +77,7 @@ namespace MarkLight
 
                         if (!skipChild)
                         {
-                            var component = child.GetComponent<T>();
+                            var component = childView as T;
                             if (component != null)
                             {
                                 var result = action(component);
@@ -56,21 +91,19 @@ namespace MarkLight
 
                         if (recursive)
                         {
-                            childView.DoUntil<T>(action, recursive, parent, traversalAlgorithm);
+                            childView.DoUntil(action, true, parent, traversalAlgorithm);
                         }
                     }
                     break;
 
                 case TraversalAlgorithm.BreadthFirst:
-                    Queue<View> queue = new Queue<View>();
-                    foreach (Transform child in view.gameObject.transform)
+                    var queue = new Queue<View>();
+                    foreach (var childView in view.LayoutChildren)
                     {
-                        bool skipChild = false;
-                        var childView = child.GetComponent<View>();
                         if (childView == null)
-                        {
                             continue;
-                        }
+
+                        var skipChild = false;
 
                         if (parent != null)
                         {
@@ -80,7 +113,7 @@ namespace MarkLight
 
                         if (!skipChild)
                         {
-                            var component = child.GetComponent<T>();
+                            var component = childView as T;
                             if (component != null)
                             {
                                 var result = action(component);
@@ -101,22 +134,19 @@ namespace MarkLight
 
                     foreach (var queuedView in queue)
                     {
-                        queuedView.DoUntil<T>(action, recursive, parent, traversalAlgorithm);
+                        queuedView.DoUntil(action, recursive, parent, traversalAlgorithm);
                     }
                     break;
 
                 case TraversalAlgorithm.ReverseDepthFirst:
-                    foreach (Transform child in view.gameObject.transform)
+                    foreach (var childView in view.LayoutChildren)
                     {
-                        var childView = child.GetComponent<View>();
                         if (childView == null)
-                        {
                             continue;
-                        }
 
                         if (recursive)
                         {
-                            childView.DoUntil<T>(action, recursive, parent, traversalAlgorithm);
+                            childView.DoUntil(action, true, parent, traversalAlgorithm);
                         }
 
                         if (parent != null)
@@ -125,7 +155,7 @@ namespace MarkLight
                                 continue;
                         }
 
-                        var component = child.GetComponent<T>();
+                        var component = childView as T;
                         if (component != null)
                         {
                             var result = action(component);
@@ -139,15 +169,12 @@ namespace MarkLight
                     break;
 
                 case TraversalAlgorithm.ReverseBreadthFirst:
-                    Stack<T> componentStack = new Stack<T>();
-                    Stack<View> childStack = new Stack<View>();
-                    foreach (Transform child in view.gameObject.transform)
+                    var componentStack = new Stack<T>();
+                    var childStack = new Stack<View>();
+                    foreach (var childView in view.LayoutChildren)
                     {
-                        var childView = child.GetComponent<View>();
                         if (childView == null)
-                        {
                             continue;
-                        }
 
                         if (recursive)
                         {
@@ -160,7 +187,7 @@ namespace MarkLight
                                 continue;
                         }
 
-                        var component = child.GetComponent<T>();
+                        var component = childView as T;
                         if (component != null)
                         {
                             componentStack.Push(component);
@@ -169,10 +196,10 @@ namespace MarkLight
 
                     foreach (var childStackView in childStack)
                     {
-                        childStackView.DoUntil<T>(action, recursive, parent, traversalAlgorithm);
+                        childStackView.DoUntil(action, recursive, parent, traversalAlgorithm);
                     }
 
-                    foreach (T component in componentStack)
+                    foreach (var component in componentStack)
                     {
                         var result = action(component);
                         if (!result)
@@ -189,7 +216,9 @@ namespace MarkLight
         /// <summary>
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
-        public static void ForEachChild<T>(this View view, Action<T> action, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static void ForEachChild<T>(this View view, Action<T> action, bool recursive = true, View parent = null,
+                                           TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                        where T : View
         {
             view.DoUntil<T>(x => { action(x); return true; }, recursive, parent, traversalAlgorithm);
         }
@@ -197,55 +226,64 @@ namespace MarkLight
         /// <summary>
         /// Traverses the view object tree and performs an action on this view and its children until the action returns false.
         /// </summary>
-        public static void ForThisAndEachChild<T>(this View view, Action<T> action, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static void ForThisAndEachChild<T>(this View view, Action<T> action, bool recursive = true,
+                                                  View parent = null,
+                                                  TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                                where T : View
         {
             var thisView = view.gameObject.GetComponent<T>();
             if (thisView != null)
             {
                 action(thisView);
             }
-            view.ForEachChild<T>(action, recursive, parent, traversalAlgorithm);
+            view.ForEachChild(action, recursive, parent, traversalAlgorithm);
         }
 
         /// <summary>
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
-        public static void ForEachChild<T>(this GameObject gameObject, Action<T> action, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static void ForEachChild<T>(this GameObject gameObject, Action<T> action, bool recursive = true,
+                                           View parent = null,
+                                           TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                        where T : View
         {
             var view = gameObject.GetComponent<View>();
             if (view != null)
             {
-                view.ForEachChild<T>(action, recursive, parent, traversalAlgorithm);
+                view.ForEachChild(action, recursive, parent, traversalAlgorithm);
             }
         }
 
         /// <summary>
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
-        public static void ForThisAndEachChild<T>(this GameObject gameObject, Action<T> action, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static void ForThisAndEachChild<T>(this GameObject gameObject, Action<T> action, bool recursive = true,
+                                                  View parent = null,
+                                                  TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                                where T : View
         {
             var view = gameObject.GetComponent<T>();
-            if (view != null)
-            {
-                action(view);
-                view.ForEachChild<T>(action, recursive, parent, traversalAlgorithm);
-            }
+            if (view == null)
+                return;
+
+            action(view);
+            view.ForEachChild(action, recursive, parent, traversalAlgorithm);
         }
 
         /// <summary>
         /// Traverses the view object tree and returns the first view that matches the predicate.
         /// </summary>
-        public static T Find<T>(this View view, Predicate<T> predicate, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static T Find<T>(this View view, Predicate<T> predicate, bool recursive = true, View parent = null,
+                                TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
         {
             T result = null;
             view.DoUntil<T>(x =>
             {
-                if (predicate(x))
-                {
-                    result = x;
-                    return false;
-                }
-                return true;
+                if (!predicate(x))
+                    return true;
+
+                result = x;
+                return false;
             }, recursive, parent, traversalAlgorithm);
             return result;
         }
@@ -253,7 +291,8 @@ namespace MarkLight
         /// <summary>
         /// Returns first view of type T found.
         /// </summary>
-        public static T Find<T>(this View view, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static T Find<T>(this View view, bool recursive = true, View parent = null,
+                                TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
         {
             return view.Find<T>(x => true, recursive, parent, traversalAlgorithm);
         }
@@ -261,56 +300,52 @@ namespace MarkLight
         /// <summary>
         /// Returns first view of type T found.
         /// </summary>
-        public static T Find<T>(this GameObject gameObject, Predicate<T> predicate, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static T Find<T>(this GameObject gameObject, Predicate<T> predicate, bool recursive = true,
+                                View parent = null,
+                                TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
         {
             var view = gameObject.GetComponent<View>();
-            if (view == null)
-            {
-                return null;
-            }
-
-            return view.Find<T>(predicate, recursive, parent, traversalAlgorithm);
+            return view == null ? null : view.Find(predicate, recursive, parent, traversalAlgorithm);
         }
 
         /// <summary>
         /// Returns first view of type T found.
         /// </summary>
-        public static T Find<T>(this GameObject gameObject, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static T Find<T>(this GameObject gameObject, bool recursive = true, View parent = null,
+                                TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
         {
             var view = gameObject.GetComponent<View>();
-            if (view == null)
-            {
-                return null;
-            }
-
-            return view.Find<T>(x => true, recursive, parent, traversalAlgorithm);
+            return view == null ? null : view.Find<T>(x => true, recursive, parent, traversalAlgorithm);
         }
 
         /// <summary>
         /// Returns first view of type T with the specified ID.
         /// </summary>
-        public static T Find<T>(this View view, string id, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static T Find<T>(this View view, string id, bool recursive = true, View parent = null,
+                                TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
         {
-            return view.Find<T>(x => String.Equals(x.Id, id, StringComparison.OrdinalIgnoreCase), recursive, parent, traversalAlgorithm);
+            return view.Find<T>(x => String.Equals(x.Id, id, StringComparison.OrdinalIgnoreCase), recursive, parent,
+                traversalAlgorithm);
         }
 
         /// <summary>
         /// Returns first ascendant of type T found that matches the predicate.
         /// </summary>
-        public static T FindParent<T>(this View view, Predicate<T> predicate) where T : View
-        {
-            var parent = view.LayoutParent;
-            if (parent == null)
+        public static T FindParent<T>(this View view, Predicate<T> predicate) where T : View {
+            while (true)
             {
-                return null;
-            }
-            else if (parent is T && predicate(parent as T))
-            {
-                return parent as T;
-            }
-            else
-            {
-                return parent.FindParent(predicate);
+                var parent = view.LayoutParent;
+                if (parent == null)
+                {
+                    return null;
+                }
+
+                if (parent is T && predicate(parent as T))
+                {
+                    return parent as T;
+                }
+
+                view = parent;
             }
         }
 
@@ -348,7 +383,7 @@ namespace MarkLight
             var view = gameObject.GetComponent<View>();
             if (view != null)
             {
-                view.ForEachParent<T>(action);
+                view.ForEachParent(action);
             }
         }
 
@@ -363,7 +398,7 @@ namespace MarkLight
                 action(view);
             }
 
-            gameObject.ForEachParent<T>(action);
+            gameObject.ForEachParent(action);
         }
 
         /// <summary>
@@ -376,13 +411,15 @@ namespace MarkLight
             {
                 action(thisView);
             }
-            view.ForEachParent<T>(action);
+            view.ForEachParent(action);
         }
 
         /// <summary>
         /// Gets a list of all descendants. 
         /// </summary>
-        public static List<T> GetChildren<T>(this View view, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static List<T> GetChildren<T>(this View view, bool recursive = true, View parent = null,
+                                             TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                         where T : View
         {
             return view.GetChildren<T>(x => true, recursive, parent, traversalAlgorithm);
         }
@@ -390,7 +427,10 @@ namespace MarkLight
         /// <summary>
         /// Gets a list of all descendants matching the predicate. 
         /// </summary>
-        public static List<T> GetChildren<T>(this View view, Func<T, bool> predicate = null, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static List<T> GetChildren<T>(this View view, Func<T, bool> predicate = null, bool recursive = true,
+                                             View parent = null,
+                                             TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                        where T : View
         {
             var children = new List<T>();
             if (predicate == null)
@@ -412,7 +452,10 @@ namespace MarkLight
         /// <summary>
         /// Gets a list of all descendants matching the predicate. 
         /// </summary>
-        public static List<T> GetChildren<T>(this GameObject gameObject, Func<T, bool> predicate = null, bool recursive = true, View parent = null, TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) where T : View
+        public static List<T> GetChildren<T>(this GameObject gameObject, Func<T, bool> predicate = null,
+                                             bool recursive = true, View parent = null,
+                                             TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst)
+                                        where T : View
         {
             var view = gameObject.GetComponent<View>();
             if (view == null)
@@ -420,7 +463,7 @@ namespace MarkLight
                 return new List<T>();
             }
 
-            return view.GetChildren<T>(predicate, recursive, parent, traversalAlgorithm);
+            return view.GetChildren(predicate, recursive, parent, traversalAlgorithm);
         }
 
         /// <summary>
@@ -434,7 +477,7 @@ namespace MarkLight
                 return child.GetComponent<View>();
             }
 
-            int i = 0;
+            var i = 0;
             foreach (Transform child in view.gameObject.transform)
             {
                 var childView = child.GetComponent<View>();
@@ -460,13 +503,17 @@ namespace MarkLight
         public static void Destroy(this View view, bool immediate = false)
         {
             view.IsDestroyed.DirectValue = true;
+            if (view.LayoutParent != null)
+            {
+                view.LayoutParent.LayoutChildren.Remove(view);
+            }
             if (Application.isPlaying && !immediate)
             {
-                GameObject.Destroy(view.gameObject);
+                Object.Destroy(view.gameObject);
             }
             else
             {
-                GameObject.DestroyImmediate(view.gameObject);
+                Object.DestroyImmediate(view.gameObject);
             }
         }
 
@@ -490,8 +537,8 @@ namespace MarkLight
         /// </summary>
         public static void DestroyChildren(this View view, bool immediate = false)
         {
-            int childCount = view.transform.childCount;
-            for (int i = childCount - 1; i >= 0; --i)
+            var childCount = view.transform.childCount;
+            for (var i = childCount - 1; i >= 0; --i)
             {
                 var go = view.transform.GetChild(i).gameObject;
                 var childView = go.GetComponent<View>();
@@ -502,11 +549,11 @@ namespace MarkLight
 
                 if (Application.isPlaying && !immediate)
                 {
-                    GameObject.Destroy(go);
+                    Object.Destroy(go);
                 }
                 else
                 {
-                    GameObject.DestroyImmediate(go);
+                    Object.DestroyImmediate(go);
                 }
             }
         }
@@ -523,36 +570,25 @@ namespace MarkLight
                 return false;
             }
 
-            Convert.ToUInt64(value);
-            ulong num = Convert.ToUInt64(value);
-            ulong num2 = Convert.ToUInt64(variable);
+            var num = Convert.ToUInt64(value);
+            var num2 = Convert.ToUInt64(variable);
             return (num2 & num) == num;
         }
 
         /// <summary>
         /// Clamps a value to specified range [min, max].
         /// </summary>
-        public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T>
-        {
+        public static T Clamp<T>(this T val, T min, T max) where T : IComparable<T> {
             if (val.CompareTo(min) < 0) return min;
-            else if (val.CompareTo(max) > 0) return max;
-            else return val;
+            return val.CompareTo(max) > 0 ? max : val;
         }
 
         /// <summary>
         /// Gets value from dictionary and returns null if it doesn't exist.
         /// </summary>
-        public static TValue Get<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key)
-        {
+        public static TValue Get<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key) {
             TValue value;
-            if (!dict.TryGetValue(key, out value))
-            {
-                return default(TValue);
-            }
-            else
-            {
-                return value;
-            }
+            return !dict.TryGetValue(key, out value) ? default(TValue) : value;
         }
 
         /// <summary>
@@ -575,7 +611,8 @@ namespace MarkLight
         public static Vector2 GetMouseScreenPosition(this UnityEngine.Canvas canvas, Vector3 mousePosition)
         {
             Vector2 pos;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, mousePosition, canvas.worldCamera, out pos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, mousePosition,
+                canvas.worldCamera, out pos);
             Vector2 mouseScreenPosition = canvas.transform.TransformPoint(pos);
             return mouseScreenPosition;
         }
@@ -583,10 +620,11 @@ namespace MarkLight
         /// <summary>
         /// Calculates mouse screen position.
         /// </summary>
-        public static Vector2 GetMouseScreenPosition(this UnityEngine.Canvas canvas, Vector2 mousePosition)
+        public static Vector2 GetMouseScreenPosition(this Canvas canvas, Vector2 mousePosition)
         {
             Vector2 pos;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, mousePosition, canvas.worldCamera, out pos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, mousePosition,
+                canvas.worldCamera, out pos);
             Vector2 mouseScreenPosition = canvas.transform.TransformPoint(pos);
             return mouseScreenPosition;
         }
@@ -604,7 +642,8 @@ namespace MarkLight
         /// <summary>
         /// Gets view field info from a type.
         /// </summary>
-        public static MemberInfo GetFieldInfo(this Type type, string field, BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
+        public static MemberInfo GetFieldInfo(this Type type, string field,
+                                              BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance)
         {
             var fieldInfo = type.GetField(field, bindingFlags);
             if (fieldInfo != null)
@@ -681,7 +720,8 @@ namespace MarkLight
         /// <summary>
         /// Converts panel scrollbar visibility to unity scrollrect scrollbar visibility.
         /// </summary>
-        public static UnityEngine.UI.ScrollRect.ScrollbarVisibility ToScrollRectVisibility(this PanelScrollbarVisibility visibility)
+        public static UnityEngine.UI.ScrollRect.ScrollbarVisibility ToScrollRectVisibility(
+                                                                            this PanelScrollbarVisibility visibility)
         {
             switch (visibility)
             {
@@ -732,7 +772,7 @@ namespace MarkLight
         /// </summary>
         public static string ReplaceFirst(this string text, string search, string replace)
         {
-            int pos = text.IndexOf(search);
+            var pos = text.IndexOf(search, StringComparison.Ordinal);
             if (pos < 0)
             {
                 return text;

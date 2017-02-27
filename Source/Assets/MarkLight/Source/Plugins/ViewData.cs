@@ -604,6 +604,7 @@ namespace MarkLight
             // create view behavior and initialize it
             var view = go.AddComponent(viewType) as View;
             view.LayoutParent = layoutParent.View;
+            view.LayoutChildren = view.LayoutChildren ?? new List<View>();
             view.Parent = parent.View;
             view.Id = id;
             view.Style = className;
@@ -611,6 +612,8 @@ namespace MarkLight
             view.Content = view;
             view.ViewXumlName = viewTypeData.ViewTypeName;
             view.Fields.ValueConverterContext = context;
+
+            layoutParent.View.LayoutChildren.Add(view);
 
             // set component fields
             foreach (var componentField in viewTypeData.ComponentFields)
