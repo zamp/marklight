@@ -582,7 +582,8 @@ namespace MarkLight
         /// </summary>
         public virtual void NotifyChildLayoutCalculated(View child, LayoutChangeContext context)
         {
-            context.Calculate(this);
+            _isLayoutChanged = false;
+            context.CalculateAsParent(this);
         }
 
         /// <summary>
@@ -591,7 +592,8 @@ namespace MarkLight
         /// </summary>
         public virtual void NotifyParentLayoutCalculated(View parent, LayoutChangeContext context)
         {
-            context.Calculate(this);
+            _isLayoutChanged = false;
+            context.CalculateAsChild(this);
         }
 
         /// <summary>
@@ -1106,10 +1108,8 @@ namespace MarkLight
             _isLayoutCalculating = true;
 
             // calculate new layout
-            var change = new LayoutChangeContext(this);
-            while (change.Calculate(this))
-            {
-            }
+            var change = new LayoutChangeContext();
+            change.Calculate(this);
 
             _isLayoutCalculating = false;
             change.RenderLayout();
