@@ -1,17 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -24,9 +11,17 @@ namespace MarkLight.Views.UI
         #region Fields
 
         /// <summary>
+        /// Default Image sprite.
+        /// </summary>
+        /// <d>The sprite that will be rendered if Sprite is null.</d>
+        [MapTo("DefaultBackgroundImage")]
+        public _SpriteAsset DefaultSprite;
+
+        /// <summary>
         /// Alpha threshold for letting through events.
         /// </summary>
-        /// <d>The alpha threshold specifying the minimum alpha a pixel must have for the event to be passed through.</d>
+        /// <d>The alpha threshold specifying the minimum alpha a pixel must have for the event to be passed
+        /// through.</d>
         [MapTo("ImageComponent.eventAlphaThreshold")]
         public _float EventAlphaThreshold;
 
@@ -68,7 +63,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Image override sprite.
         /// </summary>
-        /// <d>Set an override sprite to be used for rendering. If set the override sprite is used instead of the regular image sprite.</d>
+        /// <d>Set an override sprite to be used for rendering. If set the override sprite is used instead of the
+        /// regular image sprite.</d>
         [MapTo("BackgroundImageOverrideSprite")]
         public _SpriteAsset OverrideSprite;
 

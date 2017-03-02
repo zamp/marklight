@@ -136,6 +136,13 @@ namespace MarkLight.Views.UI
         #region BackgroundImage
 
         /// <summary>
+        /// Default background image.
+        /// </summary>
+        /// <d>The sprite that will be rendered if BackgroundImage value is null.</d>
+        [ChangeHandler("BackgroundChanged")]
+        public _SpriteAsset DefaultBackgroundImage;
+
+        /// <summary>
         /// Displays the background image.
         /// </summary>
         /// <d>The background image component is responsible for rendering the background image and sprite of the
@@ -376,11 +383,11 @@ namespace MarkLight.Views.UI
 
             if (ImageComponent != null)
             {
-                if (BackgroundImage.IsSet || BackgroundImageOverrideSprite.IsSet)
+                if (BackgroundImage.IsSet || BackgroundImageOverrideSprite.IsSet || DefaultBackgroundImage.IsSet)
                 {
-                    var sprite = BackgroundImageOverrideSprite.IsSet
-                        ? BackgroundImageOverrideSprite.Value
-                        : BackgroundImage.Value;
+                    var sprite = (BackgroundImageOverrideSprite.IsSet
+                                     ? BackgroundImageOverrideSprite.Value
+                                     : BackgroundImage.Value) ?? DefaultBackgroundImage.Value;
 
                     if (sprite != null)
                     {
@@ -417,7 +424,9 @@ namespace MarkLight.Views.UI
             UnityEngine.Canvas canvas = LayoutRoot.Canvas;
 
             // for screen space overlay the camera should be null
-            Camera worldCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var worldCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay
+                ? null
+                : canvas.worldCamera;
 
             // get local position of screen point
             Vector2 pos;
@@ -434,7 +443,7 @@ namespace MarkLight.Views.UI
             UnityEngine.Canvas canvas = LayoutRoot.Canvas;
 
             // for screen space overlay the camera should be null
-            Camera worldCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            var worldCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             if (RectTransformUtility.RectangleContainsScreenPoint(RectTransform, mousePosition, worldCamera)
                 && (!ignoreFullScreenViews || !IsFullScreen)
                 && gameObject.activeInHierarchy
@@ -443,17 +452,17 @@ namespace MarkLight.Views.UI
                 return true;
             }
 
-            if (testChildren)
-            {
-                foreach (var child in this)
-                {
-                    UIView view = child as UIView;
-                    if (view == null)
-                        continue;
+            if (!testChildren)
+                return false;
 
-                    if (view.ContainsMouse(mousePosition, testChildren, ignoreFullScreenViews))
-                        return true;
-                }
+            foreach (var child in this)
+            {
+                var view = child as UIView;
+                if (view == null)
+                    continue;
+
+                if (view.ContainsMouse(mousePosition, testChildren, ignoreFullScreenViews))
+                    return true;
             }
 
             return false;
@@ -466,8 +475,12 @@ namespace MarkLight.Views.UI
         {
             base.OnAssetChanged(unityAsset);
 
+            var background = BackgroundImage.Value;
+            var defaultBackground = DefaultBackgroundImage.Value;
+
             // is the sprite changed currently used as the background sprite?
-            if (BackgroundImage.Value != null && BackgroundImage.Value.UnityAsset == unityAsset)
+            if (background != null && background.UnityAsset == unityAsset ||
+                defaultBackground != null && defaultBackground.UnityAsset == unityAsset)
             {
                 // yes. update background
                 BackgroundChanged();
@@ -482,14 +495,17 @@ namespace MarkLight.Views.UI
             base.Initialize();
 
             // get background sprite from global cache
-            if (BackgroundImage.IsSet && BackgroundImage.Value != null)
+            if (BackgroundImage.IsSet && BackgroundImage.Value != null ||
+                DefaultBackgroundImage.IsSet && DefaultBackgroundImage.Value != null)
             {
-                var spriteAsset = ViewPresenter.Instance.GetAsset(BackgroundImage.Value.Path);
-                if (spriteAsset != null)
-                {
-                    spriteAsset.AddObserver(this);
-                    BackgroundImage.DirectValue = new SpriteAsset(spriteAsset);
-                }
+                var sprite = BackgroundImage.Value ?? DefaultBackgroundImage.Value;
+
+                var spriteAsset = ViewPresenter.Instance.GetAsset(sprite.Path);
+                if (spriteAsset == null)
+                    return;
+
+                spriteAsset.AddObserver(this);
+                BackgroundImage.DirectValue = new SpriteAsset(spriteAsset);
             }
         }
 
@@ -585,16 +601,8 @@ namespace MarkLight.Views.UI
         {
             get
             {
-                if (_canvasGroup == null)
-                {
-                    _canvasGroup = gameObject.GetComponent<CanvasGroup>();
-                    if (_canvasGroup == null)
-                    {
-                        _canvasGroup = gameObject.AddComponent<CanvasGroup>();
-                    }
-                }
-
-                return _canvasGroup;
+                return _canvasGroup ?? (_canvasGroup = gameObject.GetComponent<CanvasGroup>()
+                                                       ?? gameObject.AddComponent<CanvasGroup>());
             }
         }
 
