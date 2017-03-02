@@ -292,10 +292,10 @@ namespace MarkLight
     public class _object : ViewField<object> { }
 
     [Serializable]
-    public class _IObservableList : ViewField<IObservableList> { }
+    public class _IObservableList : ObservableListViewField<IObservableList> { }
 
     [Serializable]
-    public class _GenericObservableList : ViewField<GenericObservableList> { }
+    public class _GenericObservableList : ObservableListViewField<GenericObservableList> { }
 
     [Serializable]
     public class _Color32 : ViewField<Color32>

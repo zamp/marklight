@@ -1202,6 +1202,9 @@ namespace MarkLight.Views.UI
                         ItemDeselected.Trigger(new ItemSelectionActionData(observable));
                 }
             }
+
+            if (Parent != null)
+                Parent.Fields.NotifyDependentValueObservers(Id, true);
         }
 
         /// <summary>
@@ -1333,6 +1336,9 @@ namespace MarkLight.Views.UI
             // inform parents of update
             if (layoutUpdated)
                 NotifyLayoutChanged();
+
+            if (Parent != null)
+                Parent.Fields.NotifyDependentValueObservers(Id, true);
         }
 
         /// <summary>

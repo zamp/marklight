@@ -16,7 +16,7 @@ namespace MarkLight
         protected bool _isSet;
 
         [SerializeField]
-        private View _parentView;
+        private View _ownerView;
 
         [SerializeField]
         private string _path;
@@ -50,15 +50,15 @@ namespace MarkLight
         /// Get the fields parent View.
         /// </summary>
         /// <exception cref="InvalidOperationException">When trying to set more than once.</exception>
-        public View ParentView
+        public View OwnerView
         {
-            get { return _parentView; }
+            get { return _ownerView; }
             set
             {
-                if (_parentView != null)
+                if (_ownerView != null)
                     throw new InvalidOperationException("ParentView can only be set once.");
 
-                _parentView = value;
+                _ownerView = value;
             }
         }
 

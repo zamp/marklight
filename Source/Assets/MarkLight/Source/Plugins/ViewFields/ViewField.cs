@@ -21,8 +21,8 @@ namespace MarkLight
         /// </summary>
         public virtual void NotifyModified() {
             TriggerValueSet();
-            if (ParentView != null)
-                ParentView.Fields.NotifyDependentValueObservers(Path, true);
+            if (OwnerView != null)
+                OwnerView.Fields.NotifyDependentValueObservers(Path, true);
         }
 
         #endregion
@@ -36,18 +36,18 @@ namespace MarkLight
         {
             get
             {
-                if (ParentView != null && IsMapped)
+                if (OwnerView != null && IsMapped)
                 {
-                    return (T)ParentView.Fields.GetValue(Path);
+                    return (T)OwnerView.Fields.GetValue(Path);
                 }
 
                 return _internalValue;
             }
             set
             {
-                if (ParentView != null)
+                if (OwnerView != null)
                 {
-                    ParentView.Fields.SetValue(Path, value);
+                    OwnerView.Fields.SetValue(Path, value);
                 }
                 else
                 {
@@ -64,18 +64,18 @@ namespace MarkLight
         {
             get
             {
-                if (ParentView != null && IsMapped)
+                if (OwnerView != null && IsMapped)
                 {
-                    return ParentView.Fields.GetValue(Path);
+                    return OwnerView.Fields.GetValue(Path);
                 }
 
                 return _internalValue;
             }
             set
             {
-                if (ParentView != null)
+                if (OwnerView != null)
                 {
-                    ParentView.Fields.SetValue(Path, value);
+                    OwnerView.Fields.SetValue(Path, value);
                 }
                 else
                 {
@@ -92,9 +92,9 @@ namespace MarkLight
         {
             set
             {
-                if (ParentView != null && IsMapped)
+                if (OwnerView != null && IsMapped)
                 {
-                    ParentView.Fields.SetValue(Path, value, true, null, null, false);
+                    OwnerView.Fields.SetValue(Path, value, true, null, null, false);
                 }
                 else
                 {
@@ -111,9 +111,9 @@ namespace MarkLight
         {
             set
             {
-                if (ParentView != null && IsMapped)
+                if (OwnerView != null && IsMapped)
                 {
-                    ParentView.Fields.SetValue(Path, value, true, null, null, false);
+                    OwnerView.Fields.SetValue(Path, value, true, null, null, false);
                 }
                 else
                 {
@@ -130,7 +130,7 @@ namespace MarkLight
         {
             get
             {
-                return ParentView != null ? ParentView.Fields.IsSet(Path) : _isSet;
+                return OwnerView != null ? OwnerView.Fields.IsSet(Path) : _isSet;
             }
         }
 

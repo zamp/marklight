@@ -645,7 +645,7 @@ namespace MarkLight
                 var dependencyFieldInfo = viewTypeData.GetViewField(dependencyField);
                 var dependencyFieldInstance = TypeHelper.CreateViewField(dependencyFieldInfo.FieldType);
                 dependencyFieldInfo.SetValue(view, dependencyFieldInstance);
-                dependencyFieldInstance.ParentView = view;
+                dependencyFieldInstance.OwnerView = view;
                 dependencyFieldInstance.Path = dependencyField;
                 dependencyFieldInstance.IsMapped = !String.Equals(viewTypeData.GetMappedFieldPath(dependencyField), dependencyField);
             }

@@ -13,7 +13,7 @@ namespace MarkLight
 
         public override void NotifyModified() {
             base.NotifyModified();
-            var model = ParentView.Bindings.Item;
+            var model = OwnerView.Bindings.Item;
             if (model != null)
                 model.NotifyModified();
         }
@@ -28,7 +28,7 @@ namespace MarkLight
             set
             {
                 var observableItem = value as IObservableItem;
-                ParentView.Bindings.Item = observableItem;
+                OwnerView.Bindings.Item = observableItem;
                 base.Value = observableItem != null
                     ? observableItem.Value
                     : value;
@@ -40,7 +40,7 @@ namespace MarkLight
             set
             {
                 var observableItem = value as IObservableItem;
-                ParentView.Bindings.Item = observableItem;
+                OwnerView.Bindings.Item = observableItem;
                 base.DirectValue = observableItem != null
                     ? observableItem.Value
                     : value;
@@ -53,7 +53,7 @@ namespace MarkLight
             set
             {
                 var observableItem = value as IObservableItem;
-                ParentView.Bindings.Item = observableItem;
+                OwnerView.Bindings.Item = observableItem;
                 base.ObjectValue = observableItem != null
                     ? observableItem.Value
                     : value;
@@ -65,7 +65,7 @@ namespace MarkLight
             set
             {
                 var observableItem = value as IObservableItem;
-                ParentView.Bindings.Item = observableItem;
+                OwnerView.Bindings.Item = observableItem;
                 base.DirectObjectValue = observableItem != null
                     ? observableItem.Value
                     : value;

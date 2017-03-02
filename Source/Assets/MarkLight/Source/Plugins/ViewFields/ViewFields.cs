@@ -33,7 +33,8 @@ namespace MarkLight
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ViewFields(View ownerView) {
+        public ViewFields(View ownerView)
+        {
             OwnerView = ownerView;
 
             _setFieldNames = new List<string>();
@@ -268,15 +269,18 @@ namespace MarkLight
         {
             foreach (var viewFieldData in _fieldData.Values)
             {
-                if (viewFieldData.IsMapped)
+                var isMatch = includeViewField && viewFieldData.Path == fieldPath ||
+                              viewFieldData.HasDependency(fieldPath);
+
+                if (!isMatch)
                     continue;
 
-                if (includeViewField && viewFieldData.Path == fieldPath)
+                if (viewFieldData.IsMapped)
                 {
-                    viewFieldData.NotifyValueObservers(new HashSet<ViewFieldData>());
+                    viewFieldData.TargetView.Fields.NotifyDependentValueObservers(
+                        viewFieldData.TargetPath,includeViewField);
                 }
-
-                if (viewFieldData.HasDependency(fieldPath))
+                else
                 {
                     viewFieldData.NotifyValueObservers(new HashSet<ViewFieldData>());
                 }

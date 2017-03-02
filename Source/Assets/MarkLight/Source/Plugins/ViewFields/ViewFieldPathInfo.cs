@@ -14,10 +14,14 @@ namespace MarkLight
     {
         #region Fields
 
-        public readonly Type ViewType;
+        public readonly Type SourceViewType;
         public readonly string Path;
         public readonly string[] Fields;
         public readonly string RootFieldName;
+
+        private static readonly Type ViewFieldBaseType = typeof(ViewFieldBase);
+        private static readonly Type ItemViewFieldType = typeof(ItemViewField);
+        private static readonly Type ViewType = typeof(View);
 
         #endregion
 
@@ -28,10 +32,10 @@ namespace MarkLight
         /// </summary>
         public ViewFieldPathInfo(View sourceView, string path)
         {
-            ViewType = sourceView.GetType();
+            SourceViewType = sourceView.GetType();
             Path = path;
             TargetPath = path;
-            TypeName = ViewType.Name;
+            TypeName = SourceViewType.Name;
             Fields = path.Split('.');
             RootFieldName = Fields[0];
             MemberInfo = new List<MemberInfo>();
@@ -44,7 +48,18 @@ namespace MarkLight
 
         #region Methods
 
-        public View GetTargetView(View sourceView) {
+        /// <summary>
+        /// Get the view that is targeted by the path.
+        /// </summary>
+        public View GetTargetView(View sourceView)
+        {
+            if (IsMapped)
+            {
+                var view = GetRootFieldView(sourceView);
+                if (view != null)
+                    return view;
+            }
+
             return !IsMappedToDescendants
                 ? sourceView
                 : sourceView.Find<View>(x => x.Id == RootFieldName, true, sourceView);
@@ -57,10 +72,13 @@ namespace MarkLight
         {
             hasValue = true;
             object viewFieldObject = sourceView;
-            foreach (var memberInfo in MemberInfo)
+            for (var i=0; i < MemberInfo.Count; i++)
             {
+                var memberInfo = MemberInfo[i];
+                var isLast = i == MemberInfo.Count - 1;
+
                 viewFieldObject = memberInfo.GetFieldValue(viewFieldObject);
-                if (viewFieldObject != null)
+                if (viewFieldObject != null || isLast)
                     continue;
 
                 hasValue = false;
@@ -117,7 +135,6 @@ namespace MarkLight
             ValueConverter = viewTypeData.GetViewFieldValueConverter(Path);
 
             object viewFieldObject = sourceView;
-            var viewFieldBaseType = typeof(ViewFieldBase);
 
             // parse view field path
             var isParseSuccess = true;
@@ -153,11 +170,11 @@ namespace MarkLight
 
                 if (i == 0)
                 {
-                    IsDataModelItem = typeof(ItemViewField).IsAssignableFrom(Type);
+                    IsDataModelItem = ItemViewFieldType.IsAssignableFrom(Type);
                 }
 
                 // handle special ViewFieldBase types
-                if (viewFieldBaseType.IsAssignableFrom(Type))
+                if (ViewFieldBaseType.IsAssignableFrom(Type))
                 {
                     viewFieldObject = memberInfo.GetFieldValue(viewFieldObject);
                     if (viewFieldObject == null)
@@ -214,9 +231,18 @@ namespace MarkLight
             return isParseSuccess;
         }
 
-        private void Init(View sourceView) {
+        /// <summary>
+        /// Get the root field path as a View.
+        /// </summary>
+        public View GetRootFieldView(View sourceView)
+        {
+            return MemberInfo.Count == 0
+                ? null
+                : MemberInfo[0].GetFieldValue(sourceView) as View;
+        }
 
-            var viewType = typeof(View);
+        private void Init(View sourceView)
+        {
 
             // do we have a view field path consisting of multiple view fields?
             if (Fields.Length == 1)
@@ -228,26 +254,28 @@ namespace MarkLight
             }
 
             // is this a field that refers to another view?
-            var fieldInfo = ViewType.GetField(RootFieldName);
-            if (fieldInfo != null && viewType.IsAssignableFrom(fieldInfo.FieldType))
+            var fieldInfo = SourceViewType.GetField(RootFieldName);
+            if (fieldInfo != null && ViewType.IsAssignableFrom(fieldInfo.FieldType))
             {
                 // yes. set target view and return
                 TargetPath = String.Join(".", Fields.Skip(1).ToArray());
                 MemberInfo.Add(fieldInfo);
                 IsMapped = true;
                 IsParsed = true;
+                InitDependencies();
                 return;
             }
 
             // is this a property that refers to a view?
-            var propertyInfo = ViewType.GetProperty(RootFieldName);
-            if (propertyInfo != null && viewType.IsAssignableFrom(propertyInfo.PropertyType))
+            var propertyInfo = SourceViewType.GetProperty(RootFieldName);
+            if (propertyInfo != null && ViewType.IsAssignableFrom(propertyInfo.PropertyType))
             {
                 // yes. set target view and return
                 TargetPath = String.Join(".", Fields.Skip(1).ToArray());
                 MemberInfo.Add(propertyInfo);
                 IsMapped = true;
                 IsParsed = true;
+                InitDependencies();
                 return;
             }
 
@@ -257,6 +285,26 @@ namespace MarkLight
                 TargetPath = String.Join(".", Fields.Skip(1).ToArray());
                 IsMapped = true;
                 IsMappedToDescendants = true;
+                InitDependencies();
+            }
+        }
+
+        private void InitDependencies() {
+
+            Dependencies.Clear();
+
+            var dependencyPath = string.Empty;
+            for (var i = 0; i < Fields.Length; ++i)
+            {
+                var isLastField = i == Fields.Length - 1;
+                var viewField = Fields[i];
+
+                // add dependency
+                if (isLastField)
+                    continue;
+
+                dependencyPath += (i > 0 ? "." : "") + viewField;
+                Dependencies.Add(dependencyPath);
             }
         }
 
