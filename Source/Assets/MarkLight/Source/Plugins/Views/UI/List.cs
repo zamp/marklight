@@ -9,7 +9,9 @@ namespace MarkLight.Views.UI
     /// <summary>
     /// List view.
     /// </summary>
-    /// <d>The list view presents a selectable list of items. It can either contain a static list of ListItem views or one ListItem with IsTemplate="True". If bound to list data through the Items field the list uses the template to generate a dynamic list of ListItems.</d>
+    /// <d>The list view presents a selectable list of items. It can either contain a static list of ListItem views or
+    /// one ListItem with IsTemplate="True". If bound to list data through the Items field the list uses the template
+    /// to generate a dynamic list of ListItems.</d>
     [HideInPresenter]
     public class List : UIView
     {
@@ -403,7 +405,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Scroll delta distance for disabling interaction.
         /// </summary>
-        /// <d>If set any interaction with child views (clicks, etc) is disabled when the specified distance has been scrolled. This is used e.g. to disable clicks while scrolling a selectable list of items.</d>
+        /// <d>If set any interaction with child views (clicks, etc) is disabled when the specified distance has been
+        /// scrolled. This is used e.g. to disable clicks while scrolling a selectable list of items.</d>
         [MapTo("ListPanel.DisableInteractionScrollDelta")]
         public _float DisableInteractionScrollDelta;
 
@@ -480,7 +483,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Boolean indicating if list item arrangement should be disabled.
         /// </summary>
-        /// <d>If set to true the list doesn't automatically arrange one item after another. Used when item arrangement is done elsewhere.</d>
+        /// <d>If set to true the list doesn't automatically arrange one item after another. Used when item arrangement
+        /// is done elsewhere.</d>
         public _bool DisableItemArrangement;
 
         /// <summary>
@@ -492,7 +496,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if items can be deselected by clicking.
         /// </summary>
-        /// <d>A boolean indicating if items in the list can be deselected by clicking. Items can always be deselected programmatically.</d>
+        /// <d>A boolean indicating if items in the list can be deselected by clicking. Items can always be deselected
+        /// programmatically.</d>
         public _bool CanDeselect;
 
         /// <summary>
@@ -504,19 +509,22 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if items can be selected by clicking.
         /// </summary>
-        /// <d>A boolean indicating if items can be selected by clicking. Items can always be selected programmatically.</d>
+        /// <d>A boolean indicating if items can be selected by clicking. Items can always be selected
+        /// programmatically.</d>
         public _bool CanSelect;
 
         /// <summary>
         /// Indicates if item can be selected again if it's already selected.
         /// </summary>
-        /// <d>Boolean indicating if the item can be selected again if it is already selected. This setting is ignored if CanDeselect is True.</d>
+        /// <d>Boolean indicating if the item can be selected again if it is already selected. This setting is ignored
+        /// if CanDeselect is True.</d>
         public _bool CanReselect;
 
         /// <summary>
         /// Indicates if items are deselected immediately after being selected.
         /// </summary>
-        /// <d>A boolean indicating if items are deselected immediately after being selected. Useful if you want to trigger selection action but don't want the item to remain selected.</d>
+        /// <d>A boolean indicating if items are deselected immediately after being selected. Useful if you want to
+        /// trigger selection action but don't want the item to remain selected.</d>
         public _bool DeselectAfterSelect;
 
         /// <summary>
@@ -549,7 +557,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// The alignment of list items.
         /// </summary>
-        /// <d>If the list items varies in size the content alignment specifies how the list items should be arranged in relation to each other.</d>
+        /// <d>If the list items varies in size the content alignment specifies how the list items should be arranged
+        /// in relation to each other.</d>
         [ChangeHandler("LayoutChanged")]
         public _ElementAlignment ContentAlignment;
 
@@ -575,25 +584,32 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// List item pool size.
         /// </summary>
-        /// <d>Indicates how many list items should be pooled. Pooled items are already created and ready to be used rather than being created and destroyed on demand. Can be used to increase the performance of dynamic lists.</d>
+        /// <d>Indicates how many list items should be pooled. Pooled items are already created and ready to be used
+        /// rather than being created and destroyed on demand. Can be used to increase the performance of dynamic
+        /// lists.</d>
         public _int PoolSize;
 
         /// <summary>
         /// Max list item pool size.
         /// </summary>
-        /// <d>Indicates maximum number of list items that should be pooled. If not set it uses initial PoolSize is used as max. Pooled items are already created and ready to be used rather than being created and destroyed on demand. Can be used to increase the performance of dynamic lists.</d>
+        /// <d>Indicates maximum number of list items that should be pooled. If not set it uses initial PoolSize is
+        /// used as max. Pooled items are already created and ready to be used rather than being created and
+        /// destroyed on demand. Can be used to increase the performance of dynamic lists.</d>
         public _int MaxPoolSize;
 
         /// <summary>
         /// Indicates if list should use virtualization.
         /// </summary>
-        /// <d>Boolean indicating if list should use virtualization where only visible list items are presented in the visual hierarchy.</d>
+        /// <d>Boolean indicating if list should use virtualization where only visible list items are presented in
+        /// the visual hierarchy.</d>
         public _bool UseVirtualization;
 
         /// <summary>
         /// Indicates how much margin should be added to the realization viewport.
         /// </summary>
-        /// <d>Boolean indicating how much margin should be added to the realization viewport. If zero the realization viewport will be the same size as the scrollable viewport. Used when UseVirtualization is True.</d>
+        /// <d>Boolean indicating how much margin should be added to the realization viewport. If zero the
+        /// realization viewport will be the same size as the scrollable viewport. Used when UseVirtualization
+        /// is True.</d>
         public _float RealizationMargin;
 
         /// <summary>
@@ -619,7 +635,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Selected items in the data list.
         /// </summary>
-        /// <d>Contains selected items in the user-defined list data. Can contain more than one item if IsMultiSelect is true.</d>
+        /// <d>Contains selected items in the user-defined list data. Can contain more than one item if IsMultiSelect
+        /// is true.</d>
         [ChangeHandler("SelectedItemsChanged")]
         public _IObservableList SelectedItems;
 
@@ -633,7 +650,9 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Item deselected view action.
         /// </summary>
-        /// <d>Triggered when a list item is deselected either by user interaction or programmatically. An item is deselected if another item is selected and CanMultiSelect is false. If CanMultiSelect is true an item is deselected when the user clicks on an selected item.</d>
+        /// <d>Triggered when a list item is deselected either by user interaction or programmatically. An item is
+        /// deselected if another item is selected and CanMultiSelect is false. If CanMultiSelect is true an item is
+        /// deselected when the user clicks on an selected item.</d>
         /// <actionData>ItemSelectionActionData</actionData>
         public ViewAction ItemDeselected;
 
@@ -1341,6 +1360,50 @@ namespace MarkLight.Views.UI
                 Parent.Fields.NotifyDependentValueObservers(Id, true);
         }
 
+        public override void ValueObserversNotified(ViewFieldData viewFieldData, HashSet<ViewFieldData> callstack)
+        {
+            base.ValueObserversNotified(viewFieldData, callstack);
+
+            if (_items == null)
+                return;
+
+            var path = viewFieldData.Path;
+
+            if (path != "SelectedItem" && path != "SelectedItems" &&
+                !viewFieldData.Path.StartsWith("SelectedItem.") &&
+                !viewFieldData.Path.StartsWith("SelectedItems."))
+            {
+                return;
+            }
+
+            var selectionCount = _items.SelectedItems.Count;
+
+            // ensure changes to selected item are propogated to equivalent list item.
+            foreach (var listItem in _presentedListItems)
+            {
+                if (listItem == null)
+                    continue;
+
+                if (selectionCount == 1)
+                {
+                    if (!_items.SelectedItem.Equals(listItem.Item.Value))
+                        continue;
+
+                    listItem.Fields.NotifyDependentValueObservers("Item", true);
+                    break;
+                }
+
+                foreach (var item in _items.SelectedItems)
+                {
+                    if (!item.Equals(listItem.Item.Value))
+                        continue;
+
+                    listItem.Fields.NotifyDependentValueObservers("Item", true);
+                    break;
+                }
+            }
+        }
+
         /// <summary>
         /// Clears the list items if there is no data source.
         /// </summary>
@@ -1377,14 +1440,17 @@ namespace MarkLight.Views.UI
             // make sure we have a template
             if (ListItemTemplates.Count <= 0)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to generate list from items. Template missing. Add a template by adding a view with IsTemplate=\"True\" to the list.", GameObjectName));
+                Debug.LogError(String.Format(
+                    "[MarkLight] {0}: Unable to generate list from items. Template missing. Add a template by adding "+
+                    "a view with IsTemplate=\"True\" to the list.",
+                    GameObjectName));
                 return;
             }
 
             // validate input
-            int lastIndex = _items.Count - 1;
-            int insertCount = (endIndex - startIndex) + 1;
-            bool listMatch = _presentedListItems.Count == (_items.Count - insertCount);
+            var lastIndex = _items.Count - 1;
+            var insertCount = endIndex - startIndex + 1;
+            var listMatch = _presentedListItems.Count == _items.Count - insertCount;
             if (startIndex < 0 || startIndex > lastIndex ||
                 endIndex < startIndex || endIndex > lastIndex || !listMatch)
             {
@@ -1395,7 +1461,7 @@ namespace MarkLight.Views.UI
 
             // insert items
             //Utils.StartTimer();
-            for (int i = startIndex; i <= endIndex; ++i)
+            for (var i = startIndex; i <= endIndex; ++i)
             {
                 CreateListItem(i);
             }
@@ -1408,9 +1474,9 @@ namespace MarkLight.Views.UI
         private void RemoveRange(int startIndex, int endIndex)
         {
             // validate input
-            int lastIndex = _presentedListItems.Count - 1;
-            int removeCount = (endIndex - startIndex) + 1;
-            bool listMatch = _presentedListItems.Count == (Items.Value.Count + removeCount);
+            var lastIndex = _presentedListItems.Count - 1;
+            var removeCount = endIndex - startIndex + 1;
+            var listMatch = _presentedListItems.Count == Items.Value.Count + removeCount;
             if (startIndex < 0 || startIndex > lastIndex ||
                 endIndex < startIndex || endIndex > lastIndex || !listMatch)
             {
@@ -1420,7 +1486,7 @@ namespace MarkLight.Views.UI
             }
 
             // remove items
-            for (int i = endIndex; i >= startIndex; --i)
+            for (var i = endIndex; i >= startIndex; --i)
             {
                 DestroyListItem(i);
             }
@@ -1432,8 +1498,8 @@ namespace MarkLight.Views.UI
         private void ItemsReplaced(int startIndex, int endIndex)
         {
             // validate input
-            int lastIndex = _presentedListItems.Count - 1;
-            bool listMatch = _presentedListItems.Count ==_items.Count;
+            var lastIndex = _presentedListItems.Count - 1;
+            var listMatch = _presentedListItems.Count ==_items.Count;
             if (startIndex < 0 || startIndex > lastIndex || endIndex < startIndex || endIndex > lastIndex || !listMatch)
             {
                 Debug.LogWarning(String.Format("[MarkLight] {0}: List mismatch. Rebuilding list.", GameObjectName));
@@ -1442,7 +1508,7 @@ namespace MarkLight.Views.UI
             }
 
             // replace items
-            for (int i = startIndex; i <= endIndex; ++i)
+            for (var i = startIndex; i <= endIndex; ++i)
             {
                 ItemReplaced(i);
             }
@@ -1494,7 +1560,10 @@ namespace MarkLight.Views.UI
         {
             if (ListItemTemplates.Count <= 0)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to generate list from items. Template missing. Add a template by adding a view with IsTemplate=\"True\" to the list.", GameObjectName));
+                Debug.LogError(String.Format(
+                    "[MarkLight] {0}: Unable to generate list from items. Template missing. Add a template by adding "+
+                    "a view with IsTemplate=\"True\" to the list.",
+                    GameObjectName));
                 return null;
             }
 
@@ -1505,14 +1574,21 @@ namespace MarkLight.Views.UI
 
             // get method GetTemplateId from list item
             Type type = itemData.GetType();
-            var method = type.GetMethod("GetTemplateId", BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            var method = type.GetMethod("GetTemplateId",
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.Static);
             if (method == null)
             {
                 return ListItemTemplates[0];
             }
 
-            string templateId = method.IsStatic ? method.Invoke(null, null) as string : method.Invoke(itemData, null) as string;
-            return ListItemTemplates.FirstOrDefault(x => String.Equals(x.Id, templateId, StringComparison.OrdinalIgnoreCase)) ?? ListItemTemplates[0];
+            string templateId = method.IsStatic
+                ? method.Invoke(null, null) as string
+                : method.Invoke(itemData, null) as string;
+
+            return ListItemTemplates.FirstOrDefault(
+                       x => String.Equals(x.Id, templateId, StringComparison.OrdinalIgnoreCase)) ??
+                   ListItemTemplates[0];
         }
 
         /// <summary>
@@ -1549,7 +1625,9 @@ namespace MarkLight.Views.UI
                 return null;
 
             // does a virtualized items container exist for this view?
-            var virtualizedItemsContainer = LayoutRoot.Find<VirtualizedItemsContainer>(x => ReferenceEquals(x.Owner, this), false);
+            var virtualizedItemsContainer =
+                LayoutRoot.Find<VirtualizedItemsContainer>(x => ReferenceEquals(x.Owner, this), false);
+
             if (virtualizedItemsContainer == null)
             {
                 // no. create a new one
@@ -1632,20 +1710,27 @@ namespace MarkLight.Views.UI
             // verify things are correctly set up for virtualization
             if (Overflow.Value == OverflowMode.Wrap || IsScrollable == false)
             {
-                Debug.LogWarning(String.Format("[MarkLight] {0}: Can't virtualize list because IsScrollable is false or Overflow is set to Wrap.", GameObjectName));
+                Debug.LogWarning(String.Format(
+                    "[MarkLight] {0}: Can't virtualize list because IsScrollable is false or Overflow is set to Wrap.",
+                    GameObjectName));
                 return false;
             }
 
             if (DisableItemArrangement)
             {
-                Debug.LogWarning(String.Format("[MarkLight] {0}: Can't virtualize list because DisableItemArrangement is set to True.", GameObjectName));
+                Debug.LogWarning(String.Format(
+                    "[MarkLight] {0}: Can't virtualize list because DisableItemArrangement is set to True.",
+                    GameObjectName));
                 return false;
             }
 
             // check if templates are set and that they have the same height/width
             if (ListItemTemplates.Count <= 0)
             {
-                Debug.LogWarning(String.Format("[MarkLight] {0}: Can't virtualize list because no item template found. Only dynamic lists can be virtualized.", GameObjectName));
+                Debug.LogWarning(String.Format(
+                    "[MarkLight] {0}: Can't virtualize list because no item template found. Only dynamic lists "+
+                    "can be virtualized.",
+                    GameObjectName));
                 return false;
             }
 
