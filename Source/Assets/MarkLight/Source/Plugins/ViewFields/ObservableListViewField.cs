@@ -29,7 +29,7 @@ namespace MarkLight
 
         private void OnItemSelectChanged(object sender, DataItemSelectChangedEventArgs e)
         {
-            OwnerView.Fields.NotifyDependentValueObservers(Path, true);
+            OwnerView.Fields.NotifyDependentValueObservers(Path);
         }
 
         private void OnItemsModified(object sender, DataItemsModifiedEventArgs e)
