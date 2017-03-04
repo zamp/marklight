@@ -467,9 +467,11 @@ namespace MarkLight
         /// </summary>
         public void MoveContent(View newParent)
         {
-            var children = Content.GetChildren<View>(false);
-            foreach (var child in children)
+            foreach (var child in LayoutChildren)
             {
+                if (child == null)
+                    continue;
+
                 child.MoveTo(newParent);
             }
         }
@@ -1046,13 +1048,10 @@ namespace MarkLight
         /// </summary>
         public IEnumerator<View> GetEnumerator()
         {
-            foreach (Transform child in gameObject.transform)
+            foreach (var childView in LayoutChildren)
             {
-                var childView = child.GetComponent<View>();
                 if (childView == null)
-                {
                     continue;
-                }
 
                 yield return childView;
             }
