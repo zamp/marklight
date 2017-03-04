@@ -93,9 +93,9 @@ namespace MarkLight
         /// <summary>
         /// Sets value of field.
         /// </summary>
-        public object SetValue(object inValue, HashSet<ViewFieldData> callstack, bool updateDefaultState = true,
-            ValueConverterContext context = null, bool notifyObservers = true, bool suppressAssignErrors = false)
+        public object SetValue(ViewFieldValue inValue)
         {
+            var callstack = inValue.Callstack;
             if (callstack.Contains(this))
                 return null;
 
@@ -106,14 +106,14 @@ namespace MarkLight
                 var targetView = GetTargetView();
                 if (targetView != null)
                 {
-                    return targetView.Fields.SetValue(TargetPath, inValue, updateDefaultState, callstack, null,
-                        notifyObservers);
+                    return targetView.Fields.SetValue(TargetPath, inValue);
                 }
 
-                if (!suppressAssignErrors)
+                if (!inValue.SuppressAssignErrors)
                 {
                     Debug.LogError(String.Format(
-                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View along path is null.",
+                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View along path "+
+                        "is null.",
                         SourceView.GameObjectName, inValue, Path));
                 }
 
@@ -124,7 +124,7 @@ namespace MarkLight
             if (!ParsePath())
             {
                 // path can't be resolved at this point
-                if (_pathInfo.IsSevereParseError && !suppressAssignErrors)
+                if (_pathInfo.IsSevereParseError && !inValue.SuppressAssignErrors)
                 {
                     // severe parse error means the path is incorrect
                     Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\". {2}",
@@ -135,16 +135,16 @@ namespace MarkLight
                 return null;
             }
 
-            var value = inValue;
-            if (context == null)
+            var value = inValue.Value;
+            if (inValue.ConverterContext == null)
             {
-                context = SourceView.Fields.ValueConverterContext ?? ValueConverterContext.Default;
+                inValue.ConverterContext = SourceView.Fields.ValueConverterContext ?? ValueConverterContext.Default;
             }
 
             // get converted value            
             if (ValueConverter != null)
             {
-                var conversionResult = ValueConverter.Convert(value, context);
+                var conversionResult = ValueConverter.Convert(value, inValue.ConverterContext);
                 if (!conversionResult.Success)
                 {
                     Debug.LogError(String.Format(
@@ -160,7 +160,7 @@ namespace MarkLight
             var oldValue = _pathInfo.SetValue(SourceView, value);
 
             // notify observers if the value has changed
-            if (notifyObservers)
+            if (inValue.NotifyObservers)
             {
                 // set isSet-indicator
                 SetIsSet();
@@ -257,6 +257,8 @@ namespace MarkLight
 
             if (_removeValueObservers != null)
                 _removeValueObservers.Clear();
+
+            _sourceView.ValueObserversNotified(this, callstack);
         }
 
         /// <summary>

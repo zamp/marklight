@@ -217,8 +217,12 @@ namespace MarkLight
                 }
 
                 // set view value to state value
-                var value = OwnerView.Fields.SetValue(stateValue.Path, stateValue.Value,
-                                            false, null, stateValue.ConverterContext, true);
+                var value = OwnerView.Fields.SetValue(stateValue.Path,
+                    new ViewFieldValue(stateValue.Value)
+                    {
+                        UpdateDefaultState = false,
+                        ConverterContext = stateValue.ConverterContext
+                    });
 
                 stateValue.SetCachedValue(value); // store converted value to save conversion time
             }

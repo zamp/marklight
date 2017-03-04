@@ -48,7 +48,7 @@ namespace MarkLight
                     //    Target.TargetView.ViewTypeName, Target.TargetViewFieldPath, value.ToString()));
 
                     // set value
-                    Target.SetValue(value, callstack);
+                    Target.SetValue(new ViewFieldValue(value, callstack));
                 }
 
             }

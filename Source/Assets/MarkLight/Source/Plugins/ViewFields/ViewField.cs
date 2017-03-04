@@ -94,7 +94,7 @@ namespace MarkLight
             {
                 if (OwnerView != null && IsMapped)
                 {
-                    OwnerView.Fields.SetValue(Path, value, true, null, null, false);
+                    OwnerView.Fields.SetValue(Path, new ViewFieldValue(value) { NotifyObservers = false });
                 }
                 else
                 {
@@ -113,7 +113,7 @@ namespace MarkLight
             {
                 if (OwnerView != null && IsMapped)
                 {
-                    OwnerView.Fields.SetValue(Path, value, true, null, null, false);
+                    OwnerView.Fields.SetValue(Path, new ViewFieldValue(value) { NotifyObservers = false });
                 }
                 else
                 {

@@ -130,7 +130,8 @@ namespace MarkLight.Animation
                 var result = converter.Convert(FromStringValue, ValueConverterContext.Default);
                 if (!result.Success)
                 {
-                    Debug.LogError(String.Format("[MarkLight] Unable to parse animation From value \"{0}\". {1}", From, result.ErrorMessage));
+                    Debug.LogError(String.Format("[MarkLight] Unable to parse animation From value \"{0}\". {1}",
+                        From, result.ErrorMessage));
                     return;
                 }
 
@@ -142,7 +143,8 @@ namespace MarkLight.Animation
                 var result = converter.Convert(ToStringValue, ValueConverterContext.Default);
                 if (!result.Success)
                 {
-                    Debug.LogError(String.Format("[MarkLight] Unable to parse animation To value \"{0}\". {1}", To, result.ErrorMessage));
+                    Debug.LogError(String.Format("[MarkLight] Unable to parse animation To value \"{0}\". {1}",
+                        To, result.ErrorMessage));
                     return;
                 }
 
@@ -193,7 +195,10 @@ namespace MarkLight.Animation
             }
             catch (Exception e)
             {
-                Debug.LogError(String.Format("[MarkLight] Unable to animate field \"{0}\" on view \"{1}\". Stopping animation. Interpolator {2} threw exception: {3}", Field, TargetView.GameObjectName, _valueInterpolator.GetType().Name, Utils.GetError(e)));
+                Debug.LogError(String.Format(
+                    "[MarkLight] Unable to animate field \"{0}\" on view \"{1}\". Stopping animation. Interpolator "+
+                    "{2} threw exception: {3}",
+                    Field, TargetView.GameObjectName, _valueInterpolator.GetType().Name, Utils.GetError(e)));
                 _isRunning = false;
                 return;
             }
@@ -201,11 +206,14 @@ namespace MarkLight.Animation
             // set new value
             try
             {
-                TargetView.Fields.SetValue(Field, interpolatedValue, false, null, null, true);
+                TargetView.Fields.SetValue(Field, new ViewFieldValue(interpolatedValue) { UpdateDefaultState = false });
             }
             catch (Exception e)
             {
-                Debug.LogError(String.Format("[MarkLight] Unable to animate field \"{0}\" on view \"{1}\". Stopping animation. Exception thrown when trying to set view field value to \"{2}\": {3}", Field, TargetView.GameObjectName, interpolatedValue, Utils.GetError(e)));
+                Debug.LogError(String.Format(
+                    "[MarkLight] Unable to animate field \"{0}\" on view \"{1}\". Stopping animation. Exception "+
+                    "thrown when trying to set view field value to \"{2}\": {3}",
+                    Field, TargetView.GameObjectName, interpolatedValue, Utils.GetError(e)));
                 _isRunning = false;
                 return;
             }
@@ -327,7 +335,7 @@ namespace MarkLight.Animation
             _isReversing = false;
             _isPaused = false;
             _isCompleted = false;
-            TargetView.Fields.SetValue(Field, From, false, null, null, true);
+            TargetView.Fields.SetValue(Field, new ViewFieldValue(From) { UpdateDefaultState = false });
         }
 
         #endregion

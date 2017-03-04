@@ -62,10 +62,10 @@ namespace MarkLight
                 }
 
                 // set transformed value
-                Target.SetValue(
+                Target.SetValue(new ViewFieldValue(
                     _transformMethod.IsStatic
                         ? _transformMethod.Invoke(null, pars)
-                        : _transformMethod.Invoke(_parentView, pars), callstack);
+                        : _transformMethod.Invoke(_parentView, pars), callstack));
             }
             catch (Exception e)
             {

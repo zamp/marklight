@@ -97,7 +97,11 @@ namespace Marklight.Themes
             else
             {
                 // we are setting a normal view field
-                view.Fields.SetValue(_name, _value, true, null, context, true, true);
+                view.Fields.SetValue(_name, new ViewFieldValue(_value)
+                {
+                    ConverterContext = context,
+                    SuppressAssignErrors = true
+                });
             }
         }
 

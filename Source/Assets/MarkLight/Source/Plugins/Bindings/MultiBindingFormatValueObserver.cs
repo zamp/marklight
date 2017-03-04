@@ -59,7 +59,7 @@ namespace MarkLight
                 }
 
                 // set format string value
-                Target.SetValue(String.Format(_formatString, formatPars), callstack);
+                Target.SetValue(new ViewFieldValue(String.Format(_formatString, formatPars), callstack));
             }
             catch (Exception e)
             {

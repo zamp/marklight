@@ -144,26 +144,18 @@ namespace MarkLight
         /// </summary>
         public object SetValue(string fieldPath, object value)
         {
-            return SetValue(fieldPath, value, true);
+            return SetValue(fieldPath, new ViewFieldValue(value));
         }
 
         /// <summary>
         /// Sets view field value.
         /// </summary>
         /// <param name="fieldPath">View field path.</param>
-        /// <param name="value">Value to be set.</param>
-        /// <param name="updateDefaultState">Boolean indicating if the default state should be updated
-        /// (if the view is in the default state).</param>
-        /// <param name="callstack">Callstack used to prevent cyclical SetValue calls.</param>
-        /// <param name="context">Value converter context.</param>
-        /// <param name="suppressAssignErrors">True to suppress errors. Default is false.</param>
+        /// <param name="inValue">Value context.</param>
         /// <returns>Returns the converted value set.</returns>
-        public object SetValue(string fieldPath, object value, bool updateDefaultState,
-                               HashSet<ViewFieldData> callstack = null, ValueConverterContext context = null,
-                               bool notifyObservers = true, bool suppressAssignErrors = false)
+        public object SetValue(string fieldPath, ViewFieldValue inValue)
         {
-            callstack = callstack ?? new HashSet<ViewFieldData>();
-            context = context ?? ValueConverterContext;
+            inValue.ConverterContext = inValue.ConverterContext ?? ValueConverterContext;
 
             // Debug.Log(String.Format("{0}: {1} = {2}", OwnerView.GameObjectName, fieldPath, value));
 
@@ -171,36 +163,35 @@ namespace MarkLight
             var fieldData = GetData(fieldPath);
             if (fieldData == null)
             {
-                if (!suppressAssignErrors)
+                if (!inValue.SuppressAssignErrors)
                 {
                     Debug.LogError(String.Format(
                         "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View field not found.",
-                        OwnerView.GameObjectName, value, fieldPath));
+                        OwnerView.GameObjectName, inValue.Value, fieldPath));
                 }
                 return null;
             }
 
             // if default state set default state value
-            if (OwnerView.States.IsDefaultState && updateDefaultState)
+            if (OwnerView.States.IsDefaultState && inValue.UpdateDefaultState)
             {
                 var defaultValue = OwnerView.States.Get(View.DefaultStateName, fieldPath);
                 if (defaultValue != null)
-                    defaultValue.SetDefaultValue(value, fieldData.ValueConverter.ConvertToString(value));
+                    defaultValue.SetDefaultValue(inValue.Value, fieldData.ValueConverter.ConvertToString(inValue.Value));
             }
 
             // set view field value
             try
             {
-                return fieldData.SetValue(value, callstack, updateDefaultState,
-                    context, notifyObservers, suppressAssignErrors);
+                return fieldData.SetValue(inValue);
             }
             catch (Exception e)
             {
-                if (!suppressAssignErrors)
+                if (!inValue.SuppressAssignErrors)
                 {
                     Debug.LogError(String.Format(
                         "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". Exception thrown: {3}",
-                        OwnerView.GameObjectName, value, fieldPath, Utils.GetError(e)));
+                        OwnerView.GameObjectName, inValue.Value, fieldPath, Utils.GetError(e)));
                 }
                 return null;
             }
@@ -209,18 +200,9 @@ namespace MarkLight
         /// <summary>
         /// Sets the value of a field utilizing the binding and change tracking system.
         /// </summary>
-        public object SetValue<TField>(Expression<Func<TField>> expression, object value,
-                                          bool updateDefaultState, ValueConverterContext context, bool notifyObservers)
+        public object SetValue<TField>(Expression<Func<TField>> expression, ViewFieldValue inValue)
         {
-            return SetValue(GetMappedFieldPath(expression), value, updateDefaultState, null, context, notifyObservers);
-        }
-
-        /// <summary>
-        /// Sets the value of a field utilizing the binding and change tracking system.
-        /// </summary>
-        public object SetValue<TField>(Expression<Func<TField>> expression, object value)
-        {
-            return SetValue(GetMappedFieldPath(expression), value, true, null, null, true);
+            return SetValue(GetMappedFieldPath(expression), inValue);
         }
 
         /// <summary>

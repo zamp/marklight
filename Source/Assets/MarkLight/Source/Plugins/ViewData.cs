@@ -851,7 +851,9 @@ namespace MarkLight
                 var viewFieldData = view.Fields.GetData(viewFieldPath);
                 if (viewFieldData == null)
                 {
-                    Debug.LogError(String.Format("[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View field not found.", view.GameObjectName, viewFieldValue, viewFieldPath));
+                    Debug.LogError(String.Format(
+                        "[MarkLight] {0}: Unable to assign value \"{1}\" to view field \"{2}\". View field not found.",
+                        view.GameObjectName, viewFieldValue, viewFieldPath));
                     continue;
                 }
 
@@ -863,7 +865,8 @@ namespace MarkLight
                 }
 
                 // we are setting a normal view field
-                view.Fields.SetValue(attribute.Name.LocalName, attribute.Value, true, null, context, true);
+                view.Fields.SetValue(attribute.Name.LocalName,
+                    new ViewFieldValue(attribute.Value) { ConverterContext = context });
             }
         }
 

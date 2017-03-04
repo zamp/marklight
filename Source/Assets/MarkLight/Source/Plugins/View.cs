@@ -441,7 +441,7 @@ namespace MarkLight
 
             if (updateLayoutParent)
             {
-                Fields.SetValue(() => LayoutParent, target);
+                Fields.SetValue(() => LayoutParent, new ViewFieldValue(target));
             }
 
             if (!target.LayoutChildren.Contains(this))
@@ -604,6 +604,13 @@ namespace MarkLight
         /// Called when the Binding.Item is changed.
         /// </summary>
         public virtual void DataModelItemChanged(IObservableItem old, IObservableItem current)
+        {
+        }
+
+        /// <summary>
+        /// Called when value observers are notified of changes on a view field.
+        /// </summary>
+        public virtual void ValueObserversNotified(ViewFieldData viewFieldData, HashSet<ViewFieldData> callstack)
         {
         }
 
