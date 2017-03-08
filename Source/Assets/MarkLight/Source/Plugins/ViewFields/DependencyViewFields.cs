@@ -40,6 +40,9 @@ namespace MarkLight
     }
 
     [Serializable]
+    public class _ElementPositionType : ViewField<ElementPositionType> { }
+
+    [Serializable]
     public class _ElementSize : ViewField<ElementSize> { }
 
     [Serializable]

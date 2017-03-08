@@ -16,6 +16,13 @@ namespace MarkLight.Views.UI
         #region Fields
 
         /// <summary>
+        /// The layout positioning of the view.
+        /// </summary>
+        /// <d>Specifies if the view layout can be affected by a parent view layout.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementPositionType PositionType;
+
+        /// <summary>
         /// The width of the view.
         /// </summary>
         /// <d>Specifies the width of the view either in pixels or percents.</d>
@@ -514,6 +521,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public virtual void RefreshLayoutData()
         {
+            Layout.PositionType = PositionType.Value;
             Layout.Alignment = Alignment.Value;
             LayoutData.Copy(Width.Value, Layout.Width);
             LayoutData.Copy(Height.Value, Layout.Height);
@@ -527,7 +535,8 @@ namespace MarkLight.Views.UI
             return GetContentChildren(ElementSortDirection.Ascending);
         }
 
-        protected virtual List<UIView> GetContentChildren(ElementSortDirection sortDirection) {
+        protected virtual List<UIView> GetContentChildren(ElementSortDirection sortDirection)
+        {
             var children = new List<UIView>();
             var childrenToBeSorted = new List<UIView>();
 
@@ -558,7 +567,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Gets layout data which is used to calculate layout before rendering.
         /// </summary>
-        public LayoutData Layout {
+        public LayoutData Layout
+        {
             get
             {
                 if (_layout != null)

@@ -14,6 +14,8 @@ namespace MarkLight
         /// </summary>
         public static readonly LayoutRectCalculator Default = new LayoutRectCalculator();
 
+        private static readonly ElementMargin EmptyMargin = new ElementMargin();
+
         #endregion
 
         #region Methods
@@ -27,7 +29,7 @@ namespace MarkLight
             // horizontal alignment and positioning
             var width = data.View.OverrideWidth.IsSet ? data.View.OverrideWidth.Value : data.Width;
             var height = data.View.OverrideHeight.IsSet ? data.View.OverrideHeight.Value : data.Height;
-            var margin = data.Margin;
+            var margin = data.PositionType == ElementPositionType.Normal ? data.Margin : EmptyMargin;
             var offset = data.Offset;
             var offsetFromParent = data.OffsetFromParent;
 

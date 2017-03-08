@@ -18,6 +18,7 @@ namespace MarkLight
         public readonly UIView View;
 
         private bool _isDirty;
+        private ElementPositionType _positionType;
         private ElementAlignment _alignment;
         private ElementOrientation _orientation;
         private ElementSize _width = new ElementSize();
@@ -199,6 +200,22 @@ namespace MarkLight
                 return camera != null
                     ? (camera.pixelHeight + margins) * Height.Percent
                     : 0f;
+            }
+        }
+
+        /// <summary>
+        /// Get or set the layout positioning.
+        /// </summary>
+        public ElementPositionType PositionType
+        {
+            get { return _positionType; }
+            set
+            {
+                if (_positionType == value)
+                    return;
+
+                _positionType = value;
+                IsDirty = true;
             }
         }
 

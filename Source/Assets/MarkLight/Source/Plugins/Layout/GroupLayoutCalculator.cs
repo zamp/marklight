@@ -54,7 +54,7 @@ namespace MarkLight
                 var child = children[viewIndex];
 
                 // don't group disabled or destroyed views
-                if (!child.IsActive || child.IsDestroyed)
+                if (!child.IsActive || child.IsDestroyed || !CanEffectChild(child))
                     continue;
 
                 var pixelWidth = child.Layout.Width.Unit == ElementSizeUnit.Percents

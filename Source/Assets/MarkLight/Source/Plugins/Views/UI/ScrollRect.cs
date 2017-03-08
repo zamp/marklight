@@ -202,7 +202,7 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
-            var child = this.Find<UIView>(false);
+            var child = this.Find<UIView>(view => view.PositionType.Value != ElementPositionType.Absolute, false);
             if (child == null)
                 return false;
 

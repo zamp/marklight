@@ -20,23 +20,26 @@ namespace MarkLight
 
             for (var i = 0; i < childCount; ++i)
             {
-                var view = children[i];
+                var child = children[i];
+
+                if (child == null || child.IsDestroyed || !CanEffectChild(child))
+                    continue;
 
                 if (isHorizontal)
                 {
-                    HorizontalLayoutCalc.ApplyTo(view.Layout, childIndex, childCount);
+                    HorizontalLayoutCalc.ApplyTo(child.Layout, childIndex, childCount);
                 }
                 else
                 {
-                    VerticalLayoutCalc.ApplyTo(view.Layout, childIndex, childCount);
+                    VerticalLayoutCalc.ApplyTo(child.Layout, childIndex, childCount);
                 }
 
                 // don't group disabled views
-                if (!view.IsLive)
+                if (!child.IsLive)
                 {
                     if (SetChildVisibility)
                     {
-                        view.IsVisible.Value = false;
+                        child.IsVisible.Value = false;
                     }
                     continue;
                 }
@@ -46,30 +49,30 @@ namespace MarkLight
                     new ElementSize(0f),
                     new ElementSize(0f));
 
-                view.Layout.OffsetFromParent = offset;
+                child.Layout.OffsetFromParent = offset;
 
                 // set desired alignment if it is valid for the orientation otherwise use defaults
-                view.Layout.Alignment = isHorizontal
+                child.Layout.Alignment = isHorizontal
                     ? ElementAlignment.Left
                     : ElementAlignment.Top;
 
-                if (isHorizontal && !view.Height.IsSet)
+                if (isHorizontal && !child.Height.IsSet)
                 {
-                    view.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
+                    child.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
                 }
-                else if (!isHorizontal && !view.Width.IsSet)
+                else if (!isHorizontal && !child.Width.IsSet)
                 {
-                    view.Layout.Width = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
+                    child.Layout.Width = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
                 }
 
                 // update child layout
-                context.NotifyLayoutUpdated(view);
+                context.NotifyLayoutUpdated(child);
                 ++childIndex;
 
                 // update child visibility
                 if (SetChildVisibility)
                 {
-                    view.IsVisible.Value = true;
+                    child.IsVisible.Value = true;
                 }
             }
 

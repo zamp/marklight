@@ -27,7 +27,7 @@ namespace MarkLight.Views.UI
             }
 
             // arrange columns according to the settings in the parent datagrid
-            var columns = this.GetChildren<Column>(false);
+            var columns = this.GetChildren<Column>(view => PositionType.Value != ElementPositionType.Absolute, false);
             var columnHeaders = ParentDataGrid.RowHeader != null
                 ? ParentDataGrid.RowHeader.GetChildren<ColumnHeader>(false)
                 : new List<ColumnHeader>();
