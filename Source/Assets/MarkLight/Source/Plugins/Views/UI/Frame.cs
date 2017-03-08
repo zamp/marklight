@@ -29,9 +29,12 @@ namespace MarkLight.Views.UI
 
         #region Methods
 
-        /// <summary>
-        /// Sets default values of the view.
-        /// </summary>
+        public override void InitializeInternalDefaultValues() {
+            base.InitializeInternalDefaultValues();
+
+            LayoutCalculator = new FrameLayoutCalculator();
+        }
+
         public override void SetDefaultValues()
         {
             base.SetDefaultValues();
@@ -44,36 +47,10 @@ namespace MarkLight.Views.UI
             if (!ResizeToContent)
                 return Layout.IsDirty;
 
-            var maxWidth = 0f;
-            var maxHeight = 0f;
-            var childCount = ChildCount;
-
-            // get size of content and set content offsets and alignment
-            for (var i = 0; i < childCount; ++i)
+            var layout = LayoutCalculator as FrameLayoutCalculator;
+            if (layout != null)
             {
-                var go = transform.GetChild(i);
-                var view = go.GetComponent<UIView>();
-                if (view == null)
-                    continue;
-
-                // get size of content
-                maxWidth = Mathf.Max(maxWidth, view.Layout.PixelWidth, view.Layout.Width.Pixels);
-                maxHeight = Mathf.Max(maxHeight, view.Layout.PixelHeight, view.Layout.Height.Pixels);
-            }
-
-            // add margins
-            maxWidth += ContentMargin.Value.Left.Pixels + ContentMargin.Value.Right.Pixels;
-            maxHeight += ContentMargin.Value.Bottom.Pixels + ContentMargin.Value.Top.Pixels;
-
-            // adjust size to content unless it has been set
-            if (!Width.IsSet)
-            {
-                Layout.Width = new ElementSize(maxWidth);
-            }
-
-            if (!Height.IsSet)
-            {
-                Layout.Height = new ElementSize(maxHeight);
+                layout.ContentMargin = ContentMargin.Value;
             }
 
             return base.CalculateLayoutChanges(context);
