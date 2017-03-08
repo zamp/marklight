@@ -13,10 +13,10 @@ namespace MarkLight
         #region Fields
 
         public static readonly Regex BindingRegex = new Regex(
-            @"{(?<field>[A-Za-z0-9_#!=@^\.\[\]]+)(?<format>:[^}]+)?}");
+            @"{(?<field>[A-Za-z0-9_#!=@^:\.\[\]]+)(?<format>:[^}]+)?}");
 
         public static readonly Regex TransformBindingRegex = new Regex(
-            @"(?<function>\$[A-Za-z0-9_]+)\((?<params>[A-Za-z0-9_#!=@^\{\}\.\, ]+)\)");
+            @"(?<function>\$[A-Za-z0-9_]+)\((?<params>[A-Za-z0-9_#!=@^:\{\}\.\, ]+)\)");
 
         [SerializeField]
         private string _bindingString;

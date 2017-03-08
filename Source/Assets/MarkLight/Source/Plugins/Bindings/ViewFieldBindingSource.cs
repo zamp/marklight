@@ -61,18 +61,19 @@ namespace MarkLight
                 // re-initialize
                 if (!OnObserverChange(Observer, Observer))
                 {
-                    hasValue = false;
-                    return null;
+                    return GetDefaultValue(out hasValue);
                 }
             }
 
             if (_fieldData == null)
             {
-                hasValue = false;
-                return null;
+                return GetDefaultValue(out hasValue);
             }
 
             var value = _fieldData.GetValue(out hasValue);
+
+            if (!hasValue)
+                value = GetDefaultValue(out hasValue);
 
             // check if value is to be negated
             if (IsNegated && _fieldData.TypeName == BoolTypeName)
@@ -80,7 +81,39 @@ namespace MarkLight
                 value = !(bool)value;
             }
 
+            if (value == null)
+            {
+                bool hasDefaultValue;
+                var defaultValue = GetDefaultValue(out hasDefaultValue);
+                if (hasDefaultValue)
+                {
+                    hasValue = true;
+                    return defaultValue;
+                }
+            }
+
             return value;
+        }
+
+        /// <summary>
+        /// Get the default value. Converts value if the source field has a converter.
+        /// </summary>
+        protected virtual object GetDefaultValue(out bool hasValue) {
+
+            hasValue = false;
+
+            if (DefaultValue == null)
+                return null;
+
+            if (_fieldData != null && _fieldData.ValueConverter != null)
+            {
+                var convertResult = _fieldData.ValueConverter.Convert(DefaultValue);
+                hasValue = convertResult.Success;
+                return convertResult.ConvertedValue;
+            }
+
+            hasValue = DefaultValue != null;
+            return DefaultValue;
         }
 
         protected override bool OnObserverChange(BindingValueObserver oldObserver, BindingValueObserver observer)
@@ -217,7 +250,18 @@ namespace MarkLight
                     break;
             }
 
-            return binding.Substring(i);
+            var components = binding.Substring(i).Split(':');
+            if (components.Length > 2)
+            {
+                properties.DefaultValue = String.Join(":", components, 1, components.Length - 1);
+            }
+            else if (components.Length == 2)
+            {
+                properties.DefaultValue = components[1];
+                Debug.LogWarning(components[1]);
+            }
+
+            return components[0];
         }
 
         #endregion
@@ -291,6 +335,15 @@ namespace MarkLight
             get { return _properties.IsParentSearch; }
         }
 
+        /// <summary>
+        /// Get the bindings default value specified using a colon (:) after the binding path followed by the
+        /// default value.
+        /// </summary>
+        public string DefaultValue
+        {
+            get { return _properties.DefaultValue; }
+        }
+
         #endregion
 
         #region Structs
@@ -302,6 +355,7 @@ namespace MarkLight
             public bool IsOneWay;
             public bool IsResource;
             public bool IsParentSearch;
+            public string DefaultValue;
         }
 
         #endregion
