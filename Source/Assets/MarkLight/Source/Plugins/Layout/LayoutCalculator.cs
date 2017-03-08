@@ -42,10 +42,10 @@ namespace MarkLight
         /// <param name="layout">The layout data to get margins and padding from.</param>
         protected virtual float GetHorizontalMargins(LayoutData layout)
         {
-            return SizeToPixels(layout.Margin.Left, layout)
-                   + SizeToPixels(layout.Margin.Right, layout)
-                   + SizeToPixels(layout.Padding.Left, layout)
-                   + SizeToPixels(layout.Padding.Right, layout);
+            return WidthToPixels(layout.Margin.Left, layout)
+                   + WidthToPixels(layout.Margin.Right, layout)
+                   + WidthToPixels(layout.Padding.Left, layout)
+                   + WidthToPixels(layout.Padding.Right, layout);
         }
 
         /// <summary>
@@ -54,24 +54,10 @@ namespace MarkLight
         /// <param name="layout">The layout data to get margins and padding from.</param>
         protected virtual float GetVerticalMargins(LayoutData layout)
         {
-            return SizeToPixels(layout.Margin.Top, layout)
-                   + SizeToPixels(layout.Margin.Bottom, layout)
-                   + SizeToPixels(layout.Padding.Top, layout)
-                   + SizeToPixels(layout.Padding.Bottom, layout);
-        }
-
-        /// <summary>
-        /// Convert an ElementSize to pixel value.
-        /// </summary>
-        /// <param name="size">The size to convert.</param>
-        /// <param name="data">The data to use for conversion.</param>
-        protected float SizeToPixels(ElementSize size, LayoutData data)
-        {
-            return size != null
-                ? size.Unit == ElementSizeUnit.Percents
-                    ? data.PixelWidth * size.Percent
-                    : size.Pixels
-                : 0f;
+            return HeightToPixels(layout.Margin.Top, layout)
+                   + HeightToPixels(layout.Margin.Bottom, layout)
+                   + HeightToPixels(layout.Padding.Top, layout)
+                   + HeightToPixels(layout.Padding.Bottom, layout);
         }
 
         /// <summary>

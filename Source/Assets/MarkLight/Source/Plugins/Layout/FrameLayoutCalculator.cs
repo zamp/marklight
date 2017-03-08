@@ -33,20 +33,20 @@ namespace MarkLight
                 // get size of content
 
                 var width = Mathf.Max(child.Layout.PixelWidth, child.Layout.Width.Pixels)
-                            + SizeToPixels(child.Layout.Offset.Left, parent.Layout)
-                            + SizeToPixels(child.Layout.Offset.Right, parent.Layout);
+                            + WidthToPixels(child.Layout.Offset.Left, parent.Layout)
+                            + WidthToPixels(child.Layout.Offset.Right, parent.Layout);
 
                 var height = Mathf.Max(child.Layout.PixelHeight, child.Layout.Height.Pixels)
-                            + SizeToPixels(child.Layout.Offset.Top, parent.Layout)
-                            + SizeToPixels(child.Layout.Offset.Bottom, parent.Layout);
+                            + HeightToPixels(child.Layout.Offset.Top, parent.Layout)
+                            + HeightToPixels(child.Layout.Offset.Bottom, parent.Layout);
 
                 if (child.Layout.PositionType != ElementPositionType.Absolute)
                 {
-                    width += SizeToPixels(child.Layout.OffsetFromParent.Left, parent.Layout);
-                    width += SizeToPixels(child.Layout.OffsetFromParent.Right, parent.Layout);
+                    width += WidthToPixels(child.Layout.OffsetFromParent.Left, parent.Layout);
+                    width += WidthToPixels(child.Layout.OffsetFromParent.Right, parent.Layout);
 
-                    height += SizeToPixels(child.Layout.OffsetFromParent.Top, parent.Layout);
-                    height += SizeToPixels(child.Layout.OffsetFromParent.Bottom, parent.Layout);
+                    height += HeightToPixels(child.Layout.OffsetFromParent.Top, parent.Layout);
+                    height += HeightToPixels(child.Layout.OffsetFromParent.Bottom, parent.Layout);
                 }
 
                 maxWidth = Mathf.Max(maxWidth, width) ;
