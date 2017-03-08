@@ -43,23 +43,35 @@ namespace MarkLight
             // positioning and margins
             data.OffsetMin = new Vector2(
 
-                minMaxX.OffsetMin + margin.Left.Pixels + offset.Left.Pixels
-                - offset.Right.Pixels + offsetFromParent.Left.Pixels
-                - offsetFromParent.Right.Pixels,
+                minMaxX.OffsetMin
+                    + WidthToPixels(margin.Left, data)
+                    + WidthToPixels(offset.Left, data)
+                    - WidthToPixels(offset.Right, data)
+                    + WidthToPixels(offsetFromParent.Left, data)
+                    - WidthToPixels(offsetFromParent.Right, data),
 
-                minMaxY.OffsetMin + margin.Bottom.Pixels - offset.Top.Pixels
-                + offset.Bottom.Pixels - offsetFromParent.Top.Pixels
-                + offsetFromParent.Bottom.Pixels);
+                minMaxY.OffsetMin
+                    + HeightToPixels(margin.Bottom, data)
+                    - HeightToPixels(offset.Top, data)
+                    + HeightToPixels(offset.Bottom, data)
+                    - HeightToPixels(offsetFromParent.Top, data)
+                    + HeightToPixels(offsetFromParent.Bottom, data));
 
             data.OffsetMax = new Vector2(
 
-                minMaxX.OffsetMax - margin.Right.Pixels + offset.Left.Pixels
-                - offset.Right.Pixels + offsetFromParent.Left.Pixels
-                - offsetFromParent.Right.Pixels,
+                minMaxX.OffsetMax
+                    - WidthToPixels(margin.Right, data)
+                    + WidthToPixels(offset.Left, data)
+                    - WidthToPixels(offset.Right, data)
+                    + WidthToPixels(offsetFromParent.Left, data)
+                    - WidthToPixels(offsetFromParent.Right, data),
 
-                minMaxY.OffsetMax - margin.Top.Pixels - offset.Top.Pixels
-                + offset.Bottom.Pixels - offsetFromParent.Top.Pixels
-                + offsetFromParent.Bottom.Pixels);
+                minMaxY.OffsetMax
+                    - HeightToPixels(margin.Top, data)
+                    - HeightToPixels(offset.Top, data)
+                    + HeightToPixels(offset.Bottom, data)
+                    - HeightToPixels(offsetFromParent.Top, data)
+                    + HeightToPixels(offsetFromParent.Bottom, data));
 
             data.AnchoredPosition = new Vector2(
                 data.OffsetMin.x / 2.0f + data.OffsetMax.x / 2.0f,
@@ -128,6 +140,34 @@ namespace MarkLight
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Convert an ElementSize to pixel value.
+        /// </summary>
+        /// <param name="size">The size to convert.</param>
+        /// <param name="data">The data to use for conversion.</param>
+        protected float WidthToPixels(ElementSize size, LayoutData data)
+        {
+            return size != null
+                ? size.Unit == ElementSizeUnit.Percents
+                    ? data.PixelWidth * size.Percent
+                    : size.Pixels
+                : 0f;
+        }
+
+        /// <summary>
+        /// Convert an ElementSize to pixel value.
+        /// </summary>
+        /// <param name="size">The size to convert.</param>
+        /// <param name="data">The data to use for conversion.</param>
+        protected float HeightToPixels(ElementSize size, LayoutData data)
+        {
+            return size != null
+                ? size.Unit == ElementSizeUnit.Percents
+                    ? data.PixelHeight * size.Percent
+                    : size.Pixels
+                : 0f;
         }
 
         #endregion

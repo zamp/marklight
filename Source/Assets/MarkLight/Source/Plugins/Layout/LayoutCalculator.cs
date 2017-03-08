@@ -73,5 +73,42 @@ namespace MarkLight
                     : size.Pixels
                 : 0f;
         }
+
+        /// <summary>
+        /// Convert an ElementSize to pixel value.
+        /// </summary>
+        /// <param name="size">The size to convert.</param>
+        /// <param name="data">The data to use for conversion.</param>
+        protected float WidthToPixels(ElementSize size, LayoutData data)
+        {
+            return size != null
+                ? size.Unit == ElementSizeUnit.Percents
+                    ? data.PixelWidth * size.Percent
+                    : size.Pixels
+                : 0f;
+        }
+
+        /// <summary>
+        /// Convert an ElementSize to pixel value.
+        /// </summary>
+        /// <param name="size">The size to convert.</param>
+        /// <param name="data">The data to use for conversion.</param>
+        protected float HeightToPixels(ElementSize size, LayoutData data)
+        {
+            return size != null
+                ? size.Unit == ElementSizeUnit.Percents
+                    ? data.PixelHeight * size.Percent
+                    : size.Pixels
+                : 0f;
+        }
+
+        /// <summary>
+        /// Determine if a child view can be affected by layout.
+        /// </summary>
+        protected virtual bool CanEffectChild(View view)
+        {
+            var uiView = view as UIView;
+            return uiView != null && uiView.Layout.PositionType != ElementPositionType.Absolute;
+        }
     }
 }
