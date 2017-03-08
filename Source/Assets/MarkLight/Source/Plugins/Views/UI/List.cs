@@ -1680,6 +1680,8 @@ namespace MarkLight.Views.UI
             UseVirtualization.DirectValue = InitializeVirtualization();
             UpdatePresentedListItems();
 
+            LoadListItemTemplates();
+
             if (ListItemTemplates.Count > 0)
             {
                 //  get view pools for item templates
@@ -1741,6 +1743,20 @@ namespace MarkLight.Views.UI
         }
 
         /// <summary>
+        /// Load list item templates.
+        /// </summary>
+        private void LoadListItemTemplates()
+        {
+            if (_listItemTemplates != null)
+                return;
+
+            _listItemTemplates = Content.GetChildren<ListItem>(x => x.IsTemplate, false);
+
+            if (!ShowTemplateInEditor || !Application.isEditor || Application.isPlaying)
+                _listItemTemplates.ForEach(x => x.Deactivate());
+        }
+
+        /// <summary>
         /// Updates list of presented list items. Needs to be called after list items are added manually to the list.
         /// </summary>
         public void UpdatePresentedListItems()
@@ -1761,12 +1777,6 @@ namespace MarkLight.Views.UI
         {
             get
             {
-                if (_listItemTemplates == null)
-                {
-                    _listItemTemplates = Content.GetChildren<ListItem>(x => x.IsTemplate, false);
-                    _listItemTemplates.ForEach(x => x.Deactivate());
-                }
-
                 return _listItemTemplates.AsReadOnly();
             }
         }
