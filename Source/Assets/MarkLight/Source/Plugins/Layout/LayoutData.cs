@@ -49,6 +49,32 @@ namespace MarkLight
         #region Methods
 
         /// <summary>
+        /// Convert an ElementSize to pixel value.
+        /// </summary>
+        /// <param name="size">The size to convert.</param>
+        public float WidthToPixels(ElementSize size)
+        {
+            return size != null
+                ? size.Unit == ElementSizeUnit.Percents
+                    ? InnerPixelWidth * size.Percent
+                    : size.Pixels
+                : 0f;
+        }
+
+        /// <summary>
+        /// Convert an ElementSize to pixel value.
+        /// </summary>
+        /// <param name="size">The size to convert.</param>
+        public float HeightToPixels(ElementSize size)
+        {
+            return size != null
+                ? size.Unit == ElementSizeUnit.Percents
+                    ? InnerPixelHeight * size.Percent
+                    : size.Pixels
+                : 0f;
+        }
+
+        /// <summary>
         /// Update RectTransform information.
         /// </summary>
         private void UpdateRectData() {
@@ -300,6 +326,55 @@ namespace MarkLight
         }
 
         /// <summary>
+        /// Get the left and right offset in pixels.
+        /// </summary>
+        public float HorizontalOffsetFromParentPixels
+        {
+            get { return OffsetFromParentLeftPixels + OffsetFromParentRightPixels; }
+        }
+
+        /// <summary>
+        /// Get the top and bottom offset in pixels
+        /// </summary>
+        public float VerticalOffsetFromParentPixels
+        {
+            get { return OffsetFromParentTopPixels + OffsetFromParentBottomPixels; }
+        }
+
+        /// <summary>
+        /// Get the layout left offset in pixels.
+        /// </summary>
+        public float OffsetFromParentLeftPixels
+        {
+            get { return WidthToPixels(_offsetFromParent.Left); }
+        }
+
+        /// <summary>
+        /// Get the layout top offset in pixels.
+        /// </summary>
+        public float OffsetFromParentTopPixels
+        {
+            get { return HeightToPixels(_offsetFromParent.Top); }
+        }
+
+        /// <summary>
+        /// Get the layout right offset in pixels.
+        /// </summary>
+        public float OffsetFromParentRightPixels
+        {
+            get { return WidthToPixels(_offsetFromParent.Right); }
+        }
+
+        /// <summary>
+        /// Get the layout bottom offset in pixels.
+        /// </summary>
+        public float OffsetFromParentBottomPixels
+        {
+            get { return HeightToPixels(_offsetFromParent.Bottom); }
+        }
+
+
+        /// <summary>
         /// Get or set the layout offset. Setting value causes IsDirty field to be true.
         /// </summary>
         public ElementMargin Offset
@@ -313,6 +388,54 @@ namespace MarkLight
                 _offset = value;
                 IsDirty = true;
             }
+        }
+
+        /// <summary>
+        /// Get the left and right offset in pixels.
+        /// </summary>
+        public float HorizontalOffsetPixels
+        {
+            get { return OffsetLeftPixels + OffsetRightPixels; }
+        }
+
+        /// <summary>
+        /// Get the top and bottom offset in pixels
+        /// </summary>
+        public float VerticalOffsetPixels
+        {
+            get { return OffsetTopPixels + OffsetBottomPixels; }
+        }
+
+        /// <summary>
+        /// Get the layout left offset in pixels.
+        /// </summary>
+        public float OffsetLeftPixels
+        {
+            get { return WidthToPixels(_offset.Left); }
+        }
+
+        /// <summary>
+        /// Get the layout top offset in pixels.
+        /// </summary>
+        public float OffsetTopPixels
+        {
+            get { return HeightToPixels(_offset.Top); }
+        }
+
+        /// <summary>
+        /// Get the layout right offset in pixels.
+        /// </summary>
+        public float OffsetRightPixels
+        {
+            get { return WidthToPixels(_offset.Right); }
+        }
+
+        /// <summary>
+        /// Get the layout bottom offset in pixels.
+        /// </summary>
+        public float OffsetBottomPixels
+        {
+            get { return HeightToPixels(_offset.Bottom); }
         }
 
         /// <summary>
@@ -332,6 +455,54 @@ namespace MarkLight
         }
 
         /// <summary>
+        /// Get the left and right margin in pixels.
+        /// </summary>
+        public float HorizontalMarginPixels
+        {
+            get { return MarginLeftPixels + MarginRightPixels; }
+        }
+
+        /// <summary>
+        /// Get the top and bottom margin in pixels
+        /// </summary>
+        public float VerticalMarginPixels
+        {
+            get { return MarginTopPixels + MarginBottomPixels; }
+        }
+
+        /// <summary>
+        /// Get the layout left margin in pixels.
+        /// </summary>
+        public float MarginLeftPixels
+        {
+            get { return WidthToPixels(_margin.Left); }
+        }
+
+        /// <summary>
+        /// Get the layout top margin in pixels.
+        /// </summary>
+        public float MarginTopPixels
+        {
+            get { return HeightToPixels(_margin.Top); }
+        }
+
+        /// <summary>
+        /// Get the layout right margin in pixels.
+        /// </summary>
+        public float MarginRightPixels
+        {
+            get { return WidthToPixels(_margin.Right); }
+        }
+
+        /// <summary>
+        /// Get the layout bottom margin in pixels.
+        /// </summary>
+        public float MarginBottomPixels
+        {
+            get { return HeightToPixels(_margin.Bottom); }
+        }
+
+        /// <summary>
         /// Get or set the layout padding. Setting value causes IsDirty field to be true.
         /// </summary>
         public ElementMargin Padding
@@ -345,6 +516,54 @@ namespace MarkLight
                 _padding = value;
                 IsDirty = true;
             }
+        }
+
+        /// <summary>
+        /// Get the left and right padding in pixels.
+        /// </summary>
+        public float HorizontalPaddingPixels
+        {
+            get { return PaddingLeftPixels + PaddingRightPixels; }
+        }
+
+        /// <summary>
+        /// Get the top and bottom margin in pixels
+        /// </summary>
+        public float VerticalPaddingPixels
+        {
+            get { return PaddingTopPixels + PaddingBottomPixels; }
+        }
+
+        /// <summary>
+        /// Get the layout left padding in pixels.
+        /// </summary>
+        public float PaddingLeftPixels
+        {
+            get { return WidthToPixels(_padding.Left); }
+        }
+
+        /// <summary>
+        /// Get the layout top padding in pixels.
+        /// </summary>
+        public float PaddingTopPixels
+        {
+            get { return HeightToPixels(_padding.Top); }
+        }
+
+        /// <summary>
+        /// Get the layout right padding in pixels.
+        /// </summary>
+        public float PaddingRightPixels
+        {
+            get { return WidthToPixels(_padding.Right); }
+        }
+
+        /// <summary>
+        /// Get the layout bottom padding in pixels.
+        /// </summary>
+        public float PaddingBottomPixels
+        {
+            get { return HeightToPixels(_padding.Bottom); }
         }
 
         /// <summary>

@@ -23,8 +23,8 @@ namespace MarkLight
         /// <summary>
         /// Calculate rect using layout data and put results into layout data.
         /// </summary>
-        public virtual void CalculateInto(LayoutData data) {
-
+        public virtual void CalculateInto(LayoutData data)
+        {
             // update rectTransform
             // horizontal alignment and positioning
             var width = data.View.OverrideWidth.IsSet ? data.View.OverrideWidth.Value : data.Width;
@@ -46,34 +46,34 @@ namespace MarkLight
             data.OffsetMin = new Vector2(
 
                 minMaxX.OffsetMin
-                    + WidthToPixels(margin.Left, data)
-                    + WidthToPixels(offset.Left, data)
-                    - WidthToPixels(offset.Right, data)
-                    + WidthToPixels(offsetFromParent.Left, data)
-                    - WidthToPixels(offsetFromParent.Right, data),
+                    + data.MarginLeftPixels
+                    + data.OffsetLeftPixels
+                    - data.OffsetRightPixels
+                    + data.OffsetFromParentLeftPixels
+                    - data.OffsetFromParentRightPixels,
 
                 minMaxY.OffsetMin
-                    + HeightToPixels(margin.Bottom, data)
-                    - HeightToPixels(offset.Top, data)
-                    + HeightToPixels(offset.Bottom, data)
-                    - HeightToPixels(offsetFromParent.Top, data)
-                    + HeightToPixels(offsetFromParent.Bottom, data));
+                    + data.MarginBottomPixels
+                    - data.OffsetTopPixels
+                    + data.OffsetBottomPixels
+                    - data.OffsetFromParentTopPixels
+                    + data.OffsetFromParentBottomPixels);
 
             data.OffsetMax = new Vector2(
 
                 minMaxX.OffsetMax
-                    - WidthToPixels(margin.Right, data)
-                    + WidthToPixels(offset.Left, data)
-                    - WidthToPixels(offset.Right, data)
-                    + WidthToPixels(offsetFromParent.Left, data)
-                    - WidthToPixels(offsetFromParent.Right, data),
+                    - data.MarginRightPixels
+                    + data.OffsetLeftPixels
+                    - data.OffsetRightPixels
+                    + data.OffsetFromParentLeftPixels
+                    - data.OffsetFromParentRightPixels,
 
                 minMaxY.OffsetMax
-                    - HeightToPixels(margin.Top, data)
-                    - HeightToPixels(offset.Top, data)
-                    + HeightToPixels(offset.Bottom, data)
-                    - HeightToPixels(offsetFromParent.Top, data)
-                    + HeightToPixels(offsetFromParent.Bottom, data));
+                    - data.MarginTopPixels
+                    - data.OffsetTopPixels
+                    + data.OffsetBottomPixels
+                    - data.OffsetFromParentTopPixels
+                    + data.OffsetFromParentBottomPixels);
 
             data.AnchoredPosition = new Vector2(
                 data.OffsetMin.x / 2.0f + data.OffsetMax.x / 2.0f,
@@ -114,8 +114,8 @@ namespace MarkLight
         /// <summary>
         /// Get vertical rect min/max values.
         /// </summary>
-        protected virtual MinMax GetMinMaxY(LayoutData data, ElementSize height) {
-
+        protected virtual MinMax GetMinMaxY(LayoutData data, ElementSize height)
+        {
             //  vertical alignment
             var result = new MinMax();
 
@@ -142,34 +142,6 @@ namespace MarkLight
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Convert an ElementSize to pixel value.
-        /// </summary>
-        /// <param name="size">The size to convert.</param>
-        /// <param name="data">The data to use for conversion.</param>
-        protected float WidthToPixels(ElementSize size, LayoutData data)
-        {
-            return size != null
-                ? size.Unit == ElementSizeUnit.Percents
-                    ? data.PixelWidth * size.Percent
-                    : size.Pixels
-                : 0f;
-        }
-
-        /// <summary>
-        /// Convert an ElementSize to pixel value.
-        /// </summary>
-        /// <param name="size">The size to convert.</param>
-        /// <param name="data">The data to use for conversion.</param>
-        protected float HeightToPixels(ElementSize size, LayoutData data)
-        {
-            return size != null
-                ? size.Unit == ElementSizeUnit.Percents
-                    ? data.PixelHeight * size.Percent
-                    : size.Pixels
-                : 0f;
         }
 
         #endregion

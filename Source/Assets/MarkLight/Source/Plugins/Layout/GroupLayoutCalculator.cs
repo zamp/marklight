@@ -23,8 +23,8 @@ namespace MarkLight
         {
             var parentLayout = parent.Layout;
 
-            _horzSpacePixels = WidthToPixels(HorizontalSpacing, parentLayout);
-            _vertSpacePixels = HeightToPixels(VerticalSpacing, parentLayout);
+            _horzSpacePixels = parentLayout.WidthToPixels(HorizontalSpacing);
+            _vertSpacePixels = parentLayout.HeightToPixels(VerticalSpacing);
 
             var maxWidth = 0f;
             var maxHeight = 0f;
