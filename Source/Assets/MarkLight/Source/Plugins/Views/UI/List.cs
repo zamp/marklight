@@ -671,7 +671,6 @@ namespace MarkLight.Views.UI
         private VirtualizedItems _virtualizedItems;
         private float _previousViewportMin;
         private bool _updateVirtualization;
-        private Resolution _prevResolution;
 
         #endregion
 
@@ -686,33 +685,6 @@ namespace MarkLight.Views.UI
             if (UseVirtualization)
             {
                 UpdateVirtualizedItems();
-            }
-
-            int width;
-            int height;
-
-            if (Application.isEditor)
-            {
-                var cam = Camera.main;
-                width = cam == null ? 0 : cam.pixelWidth;
-                height = cam == null ? 0 : cam.pixelHeight;
-            }
-            else
-            {
-                var resolution = Screen.currentResolution;
-                width = resolution.width;
-                height = resolution.height;
-            }
-
-            if (_prevResolution.width != width ||
-                _prevResolution.height != height)
-            {
-                NotifyLayoutChanged();
-                _prevResolution = new Resolution
-                {
-                    width = width,
-                    height = height
-                };
             }
         }
 
@@ -930,6 +902,10 @@ namespace MarkLight.Views.UI
 
         protected override List<UIView> GetContentChildren() {
             return GetContentChildren(SortDirection);
+        }
+
+        protected override void ResolutionChanged() {
+            NotifyLayoutChanged();
         }
 
         /// <summary>
