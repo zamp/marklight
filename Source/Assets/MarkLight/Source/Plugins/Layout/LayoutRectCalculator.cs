@@ -27,11 +27,17 @@ namespace MarkLight
         {
             // update rectTransform
             // horizontal alignment and positioning
-            var width = data.View.OverrideWidth.IsSet ? data.View.OverrideWidth.Value : data.Width;
-            var height = data.View.OverrideHeight.IsSet ? data.View.OverrideHeight.Value : data.Height;
-            var margin = data.PositionType == ElementPositionType.Normal ? data.Margin : EmptyMargin;
-            var offset = data.Offset;
-            var offsetFromParent = data.OffsetFromParent;
+            var width = data.View.OverrideWidth.IsSet
+                ? data.View.OverrideWidth.Value
+                : data.AspectWidth;
+
+            var height = data.View.OverrideHeight.IsSet
+                ? data.View.OverrideHeight.Value
+                : data.AspectHeight;
+
+            var margin = data.PositionType == ElementPositionType.Normal
+                ? data.Margin
+                : EmptyMargin;
 
             // horizontal alignment
             var minMaxX = GetMinMaxX(data, width);

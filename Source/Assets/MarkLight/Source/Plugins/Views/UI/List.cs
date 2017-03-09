@@ -1246,8 +1246,8 @@ namespace MarkLight.Views.UI
                     return;
 
                 // calculate the scroll position based on alignment and offset
-                var parentHeight = parentLayout.PixelHeight;
-                var itemHeight = listItem.Layout.PixelHeight;
+                var parentHeight = parentLayout.AspectPixelHeight;
+                var itemHeight = listItem.Layout.AspectPixelHeight;
                 var itemPosition = -(parentHeight -
                                      itemLayout.AnchorMin.y * parentHeight + itemLayout.OffsetMax.y);
 
@@ -1287,8 +1287,8 @@ namespace MarkLight.Views.UI
                     return;
 
                 // calculate the scroll position based on alignment and offset
-                var parentWidth = parentLayout.PixelWidth;
-                var itemWidth = listItem.Layout.PixelWidth;
+                var parentWidth = parentLayout.AspectPixelWidth;
+                var itemWidth = listItem.Layout.AspectPixelWidth;
                 var itemPosition = -(parentWidth -
                                      itemLayout.AnchorMin.x * parentWidth + itemLayout.OffsetMax.x);
 

@@ -57,13 +57,8 @@ namespace MarkLight
                 if (!child.IsActive || child.IsDestroyed || !CanEffectChild(child))
                     continue;
 
-                var pixelWidth = child.Layout.Width.Unit == ElementSizeUnit.Percents
-                    ? child.Layout.InnerPixelWidth
-                    : child.Layout.Width.Pixels;
-
-                var pixelHeight = child.Layout.Height.Unit == ElementSizeUnit.Percents
-                    ? child.Layout.InnerPixelHeight
-                    : child.Layout.Height.Pixels;
+                var pixelWidth = child.Layout.AspectPixelWidth;
+                var pixelHeight = child.Layout.AspectPixelHeight;
 
                 // set offsets and alignment
                 var offset = new ElementMargin(
@@ -106,7 +101,7 @@ namespace MarkLight
                             xOffset = 0;
                             firstItem = false;
                         }
-                        else if (xOffset + pixelWidth + _horzSpacePixels > parentLayout.InnerPixelWidth)
+                        else if (xOffset + pixelWidth + _horzSpacePixels > parentLayout.AspectPixelWidth)
                         {
                             if (row.Children.Count > 0)
                                 rows.Add(row);
@@ -147,7 +142,7 @@ namespace MarkLight
                             yOffset = 0;
                             firstItem = false;
                         }
-                        else if (yOffset + pixelHeight + _vertSpacePixels > parentLayout.InnerPixelHeight)
+                        else if (yOffset + pixelHeight + _vertSpacePixels > parentLayout.AspectPixelHeight)
                         {
                             // overflow to next column
                             yOffset = 0;

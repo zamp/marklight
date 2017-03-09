@@ -32,10 +32,10 @@ namespace MarkLight
 
                 // get size of content
 
-                var width = Mathf.Max(child.Layout.InnerPixelWidth, child.Layout.Width.Pixels)
+                var width = child.Layout.AspectPixelWidth
                             + child.Layout.HorizontalOffsetPixels;
 
-                var height = Mathf.Max(child.Layout.InnerPixelHeight, child.Layout.Height.Pixels)
+                var height = child.Layout.AspectPixelHeight
                             + child.Layout.VerticalOffsetPixels;
 
                 if (child.Layout.PositionType != ElementPositionType.Absolute)

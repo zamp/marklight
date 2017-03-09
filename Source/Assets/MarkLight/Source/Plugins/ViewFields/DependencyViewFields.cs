@@ -76,6 +76,12 @@ namespace MarkLight
     public class _Vector4 : ViewField<Vector4> { }
 
     [Serializable]
+    public class _ElementAspectRatio : ViewField<ElementAspectRatio>
+    {
+        public static implicit operator ElementAspectRatio(_ElementAspectRatio value) { return value.Value; }
+    }
+
+    [Serializable]
     public class _ElementAlignment : ViewField<ElementAlignment>
     {
         public static implicit operator ElementAlignment(_ElementAlignment value) { return value.Value; }

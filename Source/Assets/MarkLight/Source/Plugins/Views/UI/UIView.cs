@@ -51,6 +51,13 @@ namespace MarkLight.Views.UI
         public _ElementSize OverrideHeight;
 
         /// <summary>
+        /// The aspect ratio.
+        /// </summary>
+        /// <d>Used to maintain an aspect ratio when using percent sizes.</d>
+        [ChangeHandler("AspectRatioChanged")]
+        public _ElementAspectRatio AspectRatio;
+
+        /// <summary>
         /// View alignment.
         /// </summary>
         /// <d>Used to align the view relative to the layout parent region it resides in.</d>
@@ -295,6 +302,16 @@ namespace MarkLight.Views.UI
             UpdateBackground.DirectValue = true;
         }
 
+        /// <summary>
+        /// Called when the AspectRatio is changed.
+        /// </summary>
+        public virtual void AspectRatioChanged()
+        {
+            Layout.IsDirty = true;
+            RefreshLayoutData();
+            NotifyLayoutChanged();
+        }
+
         public override void LayoutChanged() {
 
             RefreshLayoutData();
@@ -422,6 +439,15 @@ namespace MarkLight.Views.UI
             }
         }
 
+        protected override void ResolutionChanged()
+        {
+            if (AspectRatio.IsSet)
+            {
+                Layout.IsDirty = true;
+                NotifyLayoutChanged();
+            }
+        }
+
         /// <summary>
         /// Gets local point in view from screen point (e.g. mouse position).
         /// </summary>
@@ -521,14 +547,16 @@ namespace MarkLight.Views.UI
         /// </summary>
         public virtual void RefreshLayoutData()
         {
+            var isDirty = Layout.IsDirty;
             Layout.PositionType = PositionType.Value;
             Layout.Alignment = Alignment.Value;
+            Layout.AspectRatio = AspectRatio.Value;
             LayoutData.Copy(Width.Value, Layout.Width);
             LayoutData.Copy(Height.Value, Layout.Height);
             LayoutData.Copy(OffsetFromParent.Value, Layout.OffsetFromParent);
             LayoutData.Copy(Offset.Value, Layout.Offset);
             LayoutData.Copy(Margin.Value, Layout.Margin);
-            Layout.IsDirty = false;
+            Layout.IsDirty = isDirty;
         }
 
         protected virtual List<UIView> GetContentChildren() {

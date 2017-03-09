@@ -21,6 +21,7 @@ namespace MarkLight
         private ElementPositionType _positionType;
         private ElementAlignment _alignment;
         private ElementOrientation _orientation;
+        private ElementAspectRatio _aspectRatio;
         private ElementSize _width = new ElementSize();
         private ElementSize _height = new ElementSize();
         private ElementMargin _offsetFromParent = new ElementMargin();
@@ -35,6 +36,10 @@ namespace MarkLight
         private Vector2 _offsetMax;
         private Vector3 _anchoredPosition;
         private bool _isRectDirty = true;
+
+        private PixelSizes _horizontalSizes;
+        private PixelSizes _verticalSizes;
+        private bool _isSizeDirty = true;
 
         #endregion
 
@@ -54,11 +59,7 @@ namespace MarkLight
         /// <param name="size">The size to convert.</param>
         public float WidthToPixels(ElementSize size)
         {
-            return size != null
-                ? size.Unit == ElementSizeUnit.Percents
-                    ? InnerPixelWidth * size.Percent
-                    : size.Pixels
-                : 0f;
+            return SizeToPixels(size, PixelWidth);
         }
 
         /// <summary>
@@ -67,9 +68,18 @@ namespace MarkLight
         /// <param name="size">The size to convert.</param>
         public float HeightToPixels(ElementSize size)
         {
+            return SizeToPixels(size, PixelHeight);
+        }
+
+        /// <summary>
+        /// Convert and ElementSize to pixel value.
+        /// </summary>
+        /// <param name="size">The size to convert.</param>
+        /// <param name="containerSize">The size of the element container.</param>
+        public float SizeToPixels(ElementSize size, float containerSize) {
             return size != null
                 ? size.Unit == ElementSizeUnit.Percents
-                    ? InnerPixelHeight * size.Percent
+                    ? containerSize * size.Percent
                     : size.Pixels
                 : 0f;
         }
@@ -85,6 +95,84 @@ namespace MarkLight
             _isRectDirty = false;
 
             _layoutRect.CalculateInto(this);
+        }
+
+        /// <summary>
+        /// Update width, height, margin and padding data.
+        /// </summary>
+        private void UpdateSizeData() {
+
+            if (!_isSizeDirty)
+                return;
+
+            var width = View.OverrideWidth.IsSet
+                ? View.OverrideWidth.Value
+                : Width;
+
+            var height = View.OverrideHeight.IsSet
+                ? View.OverrideHeight.Value
+                : Height;
+
+            _horizontalSizes = GetHorizontalSizes(width);
+            _verticalSizes = GetVerticalSizes(height);
+
+            _isSizeDirty = false;
+        }
+
+        /// <summary>
+        /// Get Horizontal pixel sizes.
+        /// </summary>
+        private PixelSizes GetHorizontalSizes(ElementSize width)
+        {
+            var result = new PixelSizes();
+            var containerWidth = ContainerPixelWidth;
+
+            result.ContainerPadX = SizeToPixels(Padding.Left, containerWidth);
+            result.ContainerPadY = SizeToPixels(Padding.Right, containerWidth);
+            result.ContainerSize = containerWidth;
+
+            if (width.Unit == ElementSizeUnit.Pixels)
+            {
+                result.IsExplicit = true;
+                result.TargetSize = width.Pixels;
+            }
+            else
+            {
+                result.TargetSize = result.ContainerSize * width.Percent;
+            }
+
+            result.MarginX = SizeToPixels(Margin.Left, result.TargetSize);
+            result.MarginY = SizeToPixels(Margin.Right, result.TargetSize);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get Vertical pixel sizes.
+        /// </summary>
+        private PixelSizes GetVerticalSizes(ElementSize height)
+        {
+            var result = new PixelSizes();
+            var containerHeight = ContainerPixelHeight;
+
+            result.ContainerPadX = SizeToPixels(Padding.Top, containerHeight);
+            result.ContainerPadY = SizeToPixels(Padding.Bottom, containerHeight);
+            result.ContainerSize = containerHeight;
+
+            if (height.Unit == ElementSizeUnit.Pixels)
+            {
+                result.IsExplicit = true;
+                result.TargetSize = height.Pixels;
+            }
+            else
+            {
+                result.TargetSize = result.ContainerSize * height.Percent;
+            }
+
+            result.MarginX = SizeToPixels(Margin.Top, result.TargetSize);
+            result.MarginY = SizeToPixels(Margin.Bottom, result.TargetSize);
+
+            return result;
         }
 
         /// <summary>
@@ -121,8 +209,22 @@ namespace MarkLight
             set
             {
                 _isDirty = value;
-                if (value)
-                    _isRectDirty = true;
+                if (!value)
+                    return;
+
+                _isRectDirty = true;
+                _isSizeDirty = true;
+
+                // ensure parent sizes will be recalculated for views with an aspect ratio
+                if (View.AspectRatio.IsSet)
+                {
+                    var parent = Parent;
+                    while (parent != null)
+                    {
+                        parent._isSizeDirty = true;
+                        parent = parent.Parent;
+                    }
+                }
             }
         }
 
@@ -139,93 +241,201 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Calculate the pixel Width of the view based on the LayoutData width value.
+        /// Get the container width in pixels.
+        /// </summary>
+        public float ContainerPixelWidth
+        {
+            get
+            {
+                float result;
+
+                if (Parent != null)
+                {
+                    result = Parent.PixelWidth;
+                }
+                else
+                {
+                    var camera = Camera.main;
+                    result = camera != null
+                        ? camera.pixelWidth
+                        : 0f;
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Get the container width in pixels and adjusted for padding.
+        /// </summary>
+        public float PaddedContainerPixelWidth
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.PaddedContainerSize;
+            }
+        }
+
+        /// <summary>
+        /// Get the container height in pixels.
+        /// </summary>
+        public float ContainerPixelHeight
+        {
+            get
+            {
+                float result;
+
+                if (Parent != null)
+                {
+                    result = Parent.PixelHeight;
+                }
+                else
+                {
+                    var camera = Camera.main;
+                    result = camera != null
+                        ? camera.pixelHeight
+                        : 0f;
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Get the container height in pixels and adjusted for padding.
+        /// </summary>
+        public float PaddedContainerPixelHeight
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.PaddedContainerSize;
+            }
+        }
+
+        /// <summary>
+        /// Calculate the pixel Width of the view based on the LayoutData width, margin and padding. Does not adjust
+        /// for AspectRatio field.
         /// </summary>
         public float PixelWidth
         {
             get
             {
-                if (Width.Unit == ElementSizeUnit.Pixels)
-                    return Width.Pixels;
-
-                var parent = Parent;
-                if (parent != null)
-                    return parent.PixelWidth * Width.Percent;
-
-                var camera = Camera.main;
-                return camera != null
-                    ? camera.pixelWidth * Width.Percent
-                    : 0f;
+                UpdateSizeData();
+                return _horizontalSizes.Size;
             }
         }
+
         /// <summary>
-        /// Calculate the pixel Height of the view based on the LayoutData height value.
+        /// Calculate the pixel Height of the view based on the LayoutData height, margin and padding. Does not
+        /// adjust for AspectRatio field.
         /// </summary>
         public float PixelHeight
         {
             get
             {
-                if (Height.Unit == ElementSizeUnit.Pixels)
-                    return Height.Pixels;
-
-                var parent = Parent;
-                if (parent != null)
-                    return parent.PixelHeight * Height.Percent;
-
-                var camera = Camera.main;
-                return camera != null
-                    ? camera.pixelHeight * Height.Percent
-                    : 0f;
+                UpdateSizeData();
+                return _verticalSizes.Size;
             }
         }
 
         /// <summary>
-        /// Calculate the pixel Width of the inner part of the view based on the LayoutData width,
-        /// margin and padding.
+        /// Get the width adjusted for AspectRatio value.
         /// </summary>
-        public float InnerPixelWidth
+        public ElementSize AspectWidth
         {
             get
             {
-                var margins = -Margin.Left.Pixels - Margin.Right.Pixels
-                               - Padding.Left.Pixels - Padding.Right.Pixels;
+                UpdateSizeData();
+
+                if (Width.Unit == ElementSizeUnit.Pixels || !View.AspectRatio.IsSet)
+                    return Width;
+
+                var pixelHeight = _verticalSizes.Size;
+                var aspectWidth = pixelHeight * (AspectRatio.X / AspectRatio.Y);
+
+                if (Height.Unit == ElementSizeUnit.Pixels)
+                {
+                    return new ElementSize(aspectWidth + _horizontalSizes.Margins);
+                }
+
+                var pixelWidth = _horizontalSizes.Size;
+
+                if (AspectRatio.X >= AspectRatio.Y)
+                {
+                    var aspectHeight = pixelWidth * (AspectRatio.Y / AspectRatio.X);
+                    return aspectHeight > pixelHeight
+                        ? new ElementSize(aspectWidth + _horizontalSizes.Margins)
+                        : Width;
+                }
+
+                return aspectWidth <= pixelWidth
+                    ? new ElementSize(aspectWidth + _horizontalSizes.Margins)
+                    : Width;
+            }
+        }
+
+        /// <summary>
+        /// Get the width adjusted for AspectRatio value in pixels.
+        /// </summary>
+        public float AspectPixelWidth
+        {
+            get
+            {
+                var width = AspectWidth;
+                return ReferenceEquals(width, Width)
+                    ? PixelWidth
+                    : width.Pixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the height adjusted for AspectRatio value.
+        /// </summary>
+        public ElementSize AspectHeight
+        {
+            get
+            {
+                UpdateSizeData();
+
+                if (Height.Unit == ElementSizeUnit.Pixels || !View.AspectRatio.IsSet)
+                    return Height;
+
+                var pixelWidth = _horizontalSizes.Size;
+                var aspectHeight = pixelWidth * (AspectRatio.Y / AspectRatio.X);
 
                 if (Width.Unit == ElementSizeUnit.Pixels)
-                    return Width.Pixels + margins;
+                {
+                    return new ElementSize(aspectHeight + _verticalSizes.Margins);
+                }
 
-                var parent = Parent;
-                if (parent != null)
-                    return (parent.InnerPixelWidth + margins) * Width.Percent;
+                var pixelHeight = _verticalSizes.Size;
 
-                var camera = Camera.main;
-                return camera != null
-                    ? (camera.pixelWidth + margins) * Width.Percent
-                    : 0f;
+                if (AspectRatio.X >= AspectRatio.Y)
+                {
+                    return aspectHeight <= pixelHeight
+                        ? new ElementSize(aspectHeight + _verticalSizes.Margins)
+                        : Height;
+                }
+
+                var aspectWidth = pixelHeight * (AspectRatio.X / AspectRatio.Y);
+                return aspectWidth > pixelWidth
+                    ? new ElementSize(aspectHeight + _verticalSizes.Margins)
+                    : Height;
             }
         }
 
         /// <summary>
-        /// Calculate the pixel Height of the inner part of the view based on the LayoutData height,
-        /// margin and padding.
+        /// Get the height adjusted for AspectRatio value in pixels.
         /// </summary>
-        public float InnerPixelHeight
+        public float AspectPixelHeight
         {
-            get
-            {
-                var margins = -Margin.Top.Pixels - Margin.Bottom.Pixels
-                              - Padding.Top.Pixels - Padding.Bottom.Pixels;
-
-                if (Height.Unit == ElementSizeUnit.Pixels)
-                    return Height.Pixels + margins;
-
-                var parent = Parent;
-                if (parent != null)
-                    return (parent.InnerPixelHeight + margins) * Height.Percent;
-
-                var camera = Camera.main;
-                return camera != null
-                    ? (camera.pixelHeight + margins) * Height.Percent
-                    : 0f;
+            get {
+                var height = AspectHeight;
+                return ReferenceEquals(height, Height)
+                    ? PixelHeight
+                    : height.Pixels;
             }
         }
 
@@ -305,6 +515,22 @@ namespace MarkLight
                     return;
 
                 _height = value;
+                IsDirty = true;
+            }
+        }
+
+        /// <summary>
+        /// Get or set the aspect ratio used to adjust percent based width and height values.
+        /// </summary>
+        public ElementAspectRatio AspectRatio
+        {
+            get { return _aspectRatio; }
+            set
+            {
+                if (Equals(_aspectRatio, value))
+                    return;
+
+                _aspectRatio = value;
                 IsDirty = true;
             }
         }
@@ -475,7 +701,11 @@ namespace MarkLight
         /// </summary>
         public float MarginLeftPixels
         {
-            get { return WidthToPixels(_margin.Left); }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.MarginX;
+            }
         }
 
         /// <summary>
@@ -483,7 +713,11 @@ namespace MarkLight
         /// </summary>
         public float MarginTopPixels
         {
-            get { return HeightToPixels(_margin.Top); }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.MarginX;
+            }
         }
 
         /// <summary>
@@ -491,7 +725,11 @@ namespace MarkLight
         /// </summary>
         public float MarginRightPixels
         {
-            get { return WidthToPixels(_margin.Right); }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.MarginY;
+            }
         }
 
         /// <summary>
@@ -499,7 +737,11 @@ namespace MarkLight
         /// </summary>
         public float MarginBottomPixels
         {
-            get { return HeightToPixels(_margin.Bottom); }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.MarginY;
+            }
         }
 
         /// <summary>
@@ -642,6 +884,49 @@ namespace MarkLight
                 return _anchoredPosition;
             }
             set { _anchoredPosition = value; }
+        }
+
+        #endregion
+
+        #region Structs
+
+        private struct PixelSizes
+        {
+            public bool IsExplicit;
+            public float TargetSize;
+            public float ContainerSize;
+            public float ContainerPadX;
+            public float ContainerPadY;
+            public float MarginX;
+            public float MarginY;
+
+            public float ContainerPadding
+            {
+                get { return ContainerPadX + ContainerPadY; }
+            }
+
+            public float Margins
+            {
+                get { return MarginX + MarginY; }
+            }
+
+            public float PaddedContainerSize
+            {
+                get { return ContainerSize - ContainerPadding; }
+            }
+
+            public float Size
+            {
+                get
+                {
+                    if (IsExplicit)
+                        return TargetSize;
+
+                    return Mathf.Min(TargetSize,
+                        ContainerSize - Margins,
+                        PaddedContainerSize);
+                }
+            }
         }
 
         #endregion

@@ -357,28 +357,31 @@ namespace MarkLight
         {
             if (_valueConvertersForType == null)
             {
-                _valueConvertersForType = new Dictionary<string, ValueConverter>();
+                _valueConvertersForType = new Dictionary<string, ValueConverter>
+                {
+                    {"Object", new ValueConverter()},
+                    {"Single", new FloatValueConverter()},
+                    {"Int32", new IntValueConverter()},
+                    {"Boolean", new BoolValueConverter()},
+                    {"Color", new ColorValueConverter()},
+                    {"ElementSize", new ElementSizeValueConverter()},
+                    {"Enum", new EnumValueConverter()},
+                    {"Component", new ComponentValueConverter()},
+                    {"Font", new FontValueConverter()},
+                    {"ElementMargin", new MarginValueConverter()},
+                    {"Material", new MaterialValueConverter()},
+                    {"Quaternion", new QuaternionValueConverter()},
+                    {"Sprite", new SpriteValueConverter()},
+                    {"UnityAsset", new AssetValueConverter()},
+                    {"SpriteAsset", new SpriteAssetValueConverter()},
+                    {"String", new StringValueConverter()},
+                    {"Vector2", new Vector2ValueConverter()},
+                    {"Vector3", new Vector3ValueConverter()},
+                    {"Vector4", new Vector4ValueConverter()},
+                    {"ElementAspectRatio", new ElementAspectRatioConverter()}
+                };
 
                 // cache standard converters to improve load performance
-                _valueConvertersForType.Add("Object", new ValueConverter());
-                _valueConvertersForType.Add("Single", new FloatValueConverter());
-                _valueConvertersForType.Add("Int32", new IntValueConverter());
-                _valueConvertersForType.Add("Boolean", new BoolValueConverter());
-                _valueConvertersForType.Add("Color", new ColorValueConverter());
-                _valueConvertersForType.Add("ElementSize", new ElementSizeValueConverter());
-                _valueConvertersForType.Add("Enum", new EnumValueConverter());
-                _valueConvertersForType.Add("Component", new ComponentValueConverter());
-                _valueConvertersForType.Add("Font", new FontValueConverter());
-                _valueConvertersForType.Add("ElementMargin", new MarginValueConverter());
-                _valueConvertersForType.Add("Material", new MaterialValueConverter());
-                _valueConvertersForType.Add("Quaternion", new QuaternionValueConverter());
-                _valueConvertersForType.Add("Sprite", new SpriteValueConverter());
-                _valueConvertersForType.Add("UnityAsset", new AssetValueConverter());
-                _valueConvertersForType.Add("SpriteAsset", new SpriteAssetValueConverter());
-                _valueConvertersForType.Add("String", new StringValueConverter());
-                _valueConvertersForType.Add("Vector2", new Vector2ValueConverter());
-                _valueConvertersForType.Add("Vector3", new Vector3ValueConverter());
-                _valueConvertersForType.Add("Vector4", new Vector4ValueConverter());
 
                 foreach (var valueConverterType in TypeHelper.FindDerivedTypes(typeof(ValueConverter)))
                 {
