@@ -467,7 +467,7 @@ namespace MarkLight
         /// </summary>
         public void MoveContent(View newParent)
         {
-            foreach (var child in new List<View>(LayoutChildren))
+            foreach (var child in new List<View>(Content.LayoutChildren))
             {
                 if (child == null)
                     continue;
