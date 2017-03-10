@@ -148,8 +148,14 @@ namespace MarkLight
                 result.TargetSize = result.ContainerSize * width.Percent;
             }
 
-            result.MarginX = isAbsolute ? 0f : SizeToPixels(Margin.Left, result.TargetSize);
-            result.MarginY = isAbsolute ? 0f : SizeToPixels(Margin.Right, result.TargetSize);
+            result.MarginX = SizeToPixels(Margin.Left, result.TargetSize);
+            result.MarginY = SizeToPixels(Margin.Right, result.TargetSize);
+
+            result.OffsetX = SizeToPixels(Offset.Left, containerWidth);
+            result.OffsetY = SizeToPixels(Offset.Right, containerWidth);
+
+            result.OffsetFromParentX = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Left, containerWidth);
+            result.OffsetFromParentY = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Right, containerWidth);
 
             return result;
         }
@@ -183,8 +189,14 @@ namespace MarkLight
                 result.TargetSize = result.ContainerSize * height.Percent;
             }
 
-            result.MarginX = isAbsolute ? 0f : SizeToPixels(Margin.Top, result.TargetSize);
-            result.MarginY = isAbsolute ? 0f : SizeToPixels(Margin.Bottom, result.TargetSize);
+            result.MarginX = SizeToPixels(Margin.Top, result.TargetSize);
+            result.MarginY = SizeToPixels(Margin.Bottom, result.TargetSize);
+
+            result.OffsetX = SizeToPixels(Offset.Top, containerHeight);
+            result.OffsetY = SizeToPixels(Offset.Bottom, containerHeight);
+
+            result.OffsetFromParentX = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Top, containerHeight);
+            result.OffsetFromParentY = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Bottom, containerHeight);
 
             return result;
         }
@@ -570,7 +582,11 @@ namespace MarkLight
         /// </summary>
         public float HorizontalOffsetFromParentPixels
         {
-            get { return OffsetFromParentLeftPixels + OffsetFromParentRightPixels; }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetsFromParent;
+            }
         }
 
         /// <summary>
@@ -578,7 +594,11 @@ namespace MarkLight
         /// </summary>
         public float VerticalOffsetFromParentPixels
         {
-            get { return OffsetFromParentTopPixels + OffsetFromParentBottomPixels; }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetsFromParent;
+            }
         }
 
         /// <summary>
@@ -586,7 +606,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetFromParentLeftPixels
         {
-            get { return WidthToPixels(_offsetFromParent.Left); }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetFromParentX;
+            }
         }
 
         /// <summary>
@@ -594,7 +618,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetFromParentTopPixels
         {
-            get { return HeightToPixels(_offsetFromParent.Top); }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetFromParentX;
+            }
         }
 
         /// <summary>
@@ -602,7 +630,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetFromParentRightPixels
         {
-            get { return WidthToPixels(_offsetFromParent.Right); }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetFromParentY;
+            }
         }
 
         /// <summary>
@@ -610,7 +642,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetFromParentBottomPixels
         {
-            get { return HeightToPixels(_offsetFromParent.Bottom); }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetFromParentY;
+            }
         }
 
 
@@ -635,7 +671,11 @@ namespace MarkLight
         /// </summary>
         public float HorizontalOffsetPixels
         {
-            get { return OffsetLeftPixels + OffsetRightPixels; }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.Offsets;
+            }
         }
 
         /// <summary>
@@ -643,7 +683,11 @@ namespace MarkLight
         /// </summary>
         public float VerticalOffsetPixels
         {
-            get { return OffsetTopPixels + OffsetBottomPixels; }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.Offsets;
+            }
         }
 
         /// <summary>
@@ -651,7 +695,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetLeftPixels
         {
-            get { return WidthToPixels(_offset.Left); }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetX;
+            }
         }
 
         /// <summary>
@@ -659,7 +707,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetTopPixels
         {
-            get { return HeightToPixels(_offset.Top); }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetX;
+            }
         }
 
         /// <summary>
@@ -667,7 +719,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetRightPixels
         {
-            get { return WidthToPixels(_offset.Right); }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetY;
+            }
         }
 
         /// <summary>
@@ -675,7 +731,11 @@ namespace MarkLight
         /// </summary>
         public float OffsetBottomPixels
         {
-            get { return HeightToPixels(_offset.Bottom); }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetY;
+            }
         }
 
         /// <summary>
@@ -699,7 +759,11 @@ namespace MarkLight
         /// </summary>
         public float HorizontalMarginPixels
         {
-            get { return MarginLeftPixels + MarginRightPixels; }
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.Margins;
+            }
         }
 
         /// <summary>
@@ -707,7 +771,11 @@ namespace MarkLight
         /// </summary>
         public float VerticalMarginPixels
         {
-            get { return MarginTopPixels + MarginBottomPixels; }
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.Margins;
+            }
         }
 
         /// <summary>
@@ -913,6 +981,10 @@ namespace MarkLight
             public float ContainerPadY;
             public float MarginX;
             public float MarginY;
+            public float OffsetX;
+            public float OffsetY;
+            public float OffsetFromParentX;
+            public float OffsetFromParentY;
 
             public float ContainerPadding
             {
@@ -922,6 +994,16 @@ namespace MarkLight
             public float Margins
             {
                 get { return MarginX + MarginY; }
+            }
+
+            public float Offsets
+            {
+                get { return OffsetX + OffsetY; }
+            }
+
+            public float OffsetsFromParent
+            {
+                get { return OffsetFromParentX + OffsetFromParentY; }
             }
 
             public float PaddedContainerSize
