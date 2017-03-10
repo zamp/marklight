@@ -258,7 +258,6 @@ namespace MarkLight
             else if (components.Length == 2)
             {
                 properties.DefaultValue = components[1];
-                Debug.LogWarning(components[1]);
             }
 
             return components[0];
