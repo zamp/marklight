@@ -126,9 +126,16 @@ namespace MarkLight
         {
             var result = new PixelSizes();
             var containerWidth = ContainerPixelWidth;
+            var isAbsolute = PositionType == ElementPositionType.Absolute;
 
-            result.ContainerPadX = SizeToPixels(Padding.Left, containerWidth);
-            result.ContainerPadY = SizeToPixels(Padding.Right, containerWidth);
+            result.ContainerPadX = isAbsolute || Parent == null
+                ? 0f
+                : SizeToPixels(Parent.Padding.Left, containerWidth);
+
+            result.ContainerPadY = isAbsolute || Parent == null
+                ? 0f
+                : SizeToPixels(Padding.Right, containerWidth);
+
             result.ContainerSize = containerWidth;
 
             if (width.Unit == ElementSizeUnit.Pixels)
@@ -141,8 +148,8 @@ namespace MarkLight
                 result.TargetSize = result.ContainerSize * width.Percent;
             }
 
-            result.MarginX = SizeToPixels(Margin.Left, result.TargetSize);
-            result.MarginY = SizeToPixels(Margin.Right, result.TargetSize);
+            result.MarginX = isAbsolute ? 0f : SizeToPixels(Margin.Left, result.TargetSize);
+            result.MarginY = isAbsolute ? 0f : SizeToPixels(Margin.Right, result.TargetSize);
 
             return result;
         }
@@ -154,9 +161,16 @@ namespace MarkLight
         {
             var result = new PixelSizes();
             var containerHeight = ContainerPixelHeight;
+            var isAbsolute = PositionType == ElementPositionType.Absolute;
 
-            result.ContainerPadX = SizeToPixels(Padding.Top, containerHeight);
-            result.ContainerPadY = SizeToPixels(Padding.Bottom, containerHeight);
+            result.ContainerPadX = isAbsolute || Parent == null
+                ? 0f
+                : SizeToPixels(Parent.Padding.Top, containerHeight);
+
+            result.ContainerPadY = isAbsolute || Parent == null
+                ? 0f
+                : SizeToPixels(Parent.Padding.Bottom, containerHeight);
+
             result.ContainerSize = containerHeight;
 
             if (height.Unit == ElementSizeUnit.Pixels)
@@ -169,8 +183,8 @@ namespace MarkLight
                 result.TargetSize = result.ContainerSize * height.Percent;
             }
 
-            result.MarginX = SizeToPixels(Margin.Top, result.TargetSize);
-            result.MarginY = SizeToPixels(Margin.Bottom, result.TargetSize);
+            result.MarginX = isAbsolute ? 0f : SizeToPixels(Margin.Top, result.TargetSize);
+            result.MarginY = isAbsolute ? 0f : SizeToPixels(Margin.Bottom, result.TargetSize);
 
             return result;
         }
