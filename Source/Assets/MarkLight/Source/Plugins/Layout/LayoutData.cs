@@ -76,7 +76,8 @@ namespace MarkLight
         /// </summary>
         /// <param name="size">The size to convert.</param>
         /// <param name="containerSize">The size of the element container.</param>
-        public float SizeToPixels(ElementSize size, float containerSize) {
+        public float SizeToPixels(ElementSize size, float containerSize)
+        {
             return size != null
                 ? size.Unit == ElementSizeUnit.Percents
                     ? containerSize * size.Percent
@@ -85,10 +86,31 @@ namespace MarkLight
         }
 
         /// <summary>
+        /// Update the views RectTransform with layout data.
+        /// </summary>
+        public void UpdateRect(bool forceRecalculation = false)
+        {
+            if (forceRecalculation)
+                IsDirty = true;
+
+            IsDirty = false;
+
+            RectCalculator.CalculateInto(this);
+
+            View.RectTransform.anchorMin = AnchorMin;
+            View.RectTransform.anchorMax = AnchorMax;
+
+            // positioning and margins
+            View.RectTransform.offsetMin = OffsetMin;
+            View.RectTransform.offsetMax = OffsetMax;
+            View.RectTransform.anchoredPosition = AnchoredPosition;
+        }
+
+        /// <summary>
         /// Update RectTransform information.
         /// </summary>
-        private void UpdateRectData() {
-
+        private void UpdateRectData()
+        {
             if (!_isRectDirty)
                 return;
 
@@ -100,8 +122,8 @@ namespace MarkLight
         /// <summary>
         /// Update width, height, margin and padding data.
         /// </summary>
-        private void UpdateSizeData() {
-
+        private void UpdateSizeData()
+        {
             if (!_isSizeDirty)
                 return;
 
@@ -157,6 +179,12 @@ namespace MarkLight
             result.OffsetFromParentX = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Left, containerWidth);
             result.OffsetFromParentY = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Right, containerWidth);
 
+            result.IsPositionExplicit = Margin.Left.Unit == ElementSizeUnit.Pixels
+                                        && Margin.Right.Unit == ElementSizeUnit.Pixels
+                                        && Offset.Left.Unit == ElementSizeUnit.Pixels
+                                        && Offset.Right.Unit == ElementSizeUnit.Pixels
+                                        && OffsetFromParent.Left.Unit == ElementSizeUnit.Pixels
+                                        && OffsetFromParent.Right.Unit == ElementSizeUnit.Pixels;
             return result;
         }
 
@@ -197,6 +225,13 @@ namespace MarkLight
 
             result.OffsetFromParentX = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Top, containerHeight);
             result.OffsetFromParentY = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Bottom, containerHeight);
+
+            result.IsPositionExplicit = Margin.Top.Unit == ElementSizeUnit.Pixels
+                                        && Margin.Bottom.Unit == ElementSizeUnit.Pixels
+                                        && Offset.Top.Unit == ElementSizeUnit.Pixels
+                                        && Offset.Bottom.Unit == ElementSizeUnit.Pixels
+                                        && OffsetFromParent.Top.Unit == ElementSizeUnit.Pixels
+                                        && OffsetFromParent.Bottom.Unit == ElementSizeUnit.Pixels;
 
             return result;
         }
@@ -242,15 +277,39 @@ namespace MarkLight
                 _isSizeDirty = true;
 
                 // ensure parent sizes will be recalculated for views with an aspect ratio
-                if (View.AspectRatio.IsSet)
-                {
+                //if (View.AspectRatio.IsSet)
+                //{
                     var parent = Parent;
                     while (parent != null)
                     {
                         parent._isSizeDirty = true;
                         parent = parent.Parent;
                     }
-                }
+                //}
+            }
+        }
+
+        /// <summary>
+        /// Determine if width and height are both pixel unit values.
+        /// </summary>
+        public bool IsSizeExplicit
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.IsExplicit && _verticalSizes.IsExplicit;
+            }
+        }
+
+        /// <summary>
+        /// Determine if positioning values such as Margin, Offset, and OffsetFromParent consist of only pixel units.
+        /// </summary>
+        public bool IsPositionExplicit
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.IsPositionExplicit && _verticalSizes.IsPositionExplicit;
             }
         }
 
@@ -975,14 +1034,20 @@ namespace MarkLight
         private struct PixelSizes
         {
             public bool IsExplicit;
+            public bool IsPositionExplicit;
+
             public float TargetSize;
+
             public float ContainerSize;
             public float ContainerPadX;
             public float ContainerPadY;
+
             public float MarginX;
             public float MarginY;
+
             public float OffsetX;
             public float OffsetY;
+
             public float OffsetFromParentX;
             public float OffsetFromParentY;
 

@@ -51,7 +51,9 @@ namespace MarkLight
         private Dictionary<string, ResourceDictionary> _resourceDictionaries;
         private Dictionary<string, ValueConverter> _valueConvertersForType;
         private Dictionary<string, ValueConverter> _valueConverters;
-        private Dictionary<string, ValueInterpolator> _valueInterpolatorsForType;        
+        private Dictionary<string, ValueInterpolator> _valueInterpolatorsForType;
+
+        private Resolution _prevResolution;
 
         #endregion
 
@@ -83,6 +85,30 @@ namespace MarkLight
         public void Awake()
         {
             Initialize();
+        }
+
+        public override void LateUpdate() {
+            base.LateUpdate();
+
+            // check for resolution size change
+
+            var cam = Camera.main;
+            if (cam == null || RootView == null)
+                return;
+
+            var width = cam.pixelWidth;
+            var height = cam.pixelHeight;
+
+            if (_prevResolution.width == width && _prevResolution.height == height)
+                return;
+
+            this.ForThisAndEachChild<View>(x => x.ResolutionChanged());
+
+            _prevResolution = new Resolution
+            {
+                width = width,
+                height = height
+            };
         }
 
         /// <summary>

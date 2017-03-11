@@ -904,7 +904,7 @@ namespace MarkLight.Views.UI
             return GetContentChildren(SortDirection);
         }
 
-        protected override void ResolutionChanged() {
+        public override void ResolutionChanged() {
             NotifyLayoutChanged();
         }
 

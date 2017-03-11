@@ -328,7 +328,6 @@ namespace MarkLight
         private bool _isLayoutCalculating;
         private bool _isLayoutChanged;
         private LayoutCalculator _layoutCalculator;
-        private Resolution _prevResolution;
 
         [SerializeField]
         private string _viewXumlName;
@@ -388,22 +387,6 @@ namespace MarkLight
                 InitEventSystemTriggers();
             }
 #endif
-
-            // check for resolution size change
-            var cam = Camera.main;
-            var width = cam == null ? 0 : cam.pixelWidth;
-            var height = cam == null ? 0 : cam.pixelHeight;
-
-            if (_prevResolution.width != width ||
-                _prevResolution.height != height)
-            {
-                ResolutionChanged();
-                _prevResolution = new Resolution
-                {
-                    width = width,
-                    height = height
-                };
-            }
         }
 
         /// <summary>
@@ -672,7 +655,7 @@ namespace MarkLight
         /// <summary>
         /// Called when the resolution has changed.
         /// </summary>
-        protected virtual void ResolutionChanged()
+        public virtual void ResolutionChanged()
         {
         }
 

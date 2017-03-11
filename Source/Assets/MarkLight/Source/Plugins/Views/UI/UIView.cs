@@ -322,18 +322,15 @@ namespace MarkLight.Views.UI
         {
             base.RenderLayout();
 
-            Layout.IsDirty = false;
+            if (Layout.IsDirty)
+            {
+                Layout.IsDirty = false;
 
-            if (!UpdateRectTransform)
-                return; // rect transform is updated elsewhere
+                if (!UpdateRectTransform)
+                    return; // rect transform is updated elsewhere
 
-            RectTransform.anchorMin = Layout.AnchorMin;
-            RectTransform.anchorMax = Layout.AnchorMax;
-
-            // positioning and margins
-            RectTransform.offsetMin = Layout.OffsetMin;
-            RectTransform.offsetMax = Layout.OffsetMax;
-            RectTransform.anchoredPosition = Layout.AnchoredPosition;
+                Layout.UpdateRect();
+            }
         }
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
@@ -439,11 +436,15 @@ namespace MarkLight.Views.UI
             }
         }
 
-        protected override void ResolutionChanged()
+        public override void ResolutionChanged()
         {
-            if (AspectRatio.IsSet)
+            // Update layout if aspect ratio is set.
+            // Update layout if percent positioning or sizing is used.
+            if (AspectRatio.IsSet || !Layout.IsPositionExplicit || !Layout.IsSizeExplicit)
             {
-                Layout.IsDirty = true;
+                if (AspectRatio.IsSet)
+                    Layout.IsDirty = true;
+
                 NotifyLayoutChanged();
             }
         }
