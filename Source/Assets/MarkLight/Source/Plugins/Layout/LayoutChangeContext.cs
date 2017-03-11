@@ -12,7 +12,9 @@ namespace MarkLight
 
         private readonly int _maxCalculate;
         private readonly HashSet<View> _dirtyViews = new HashSet<View>();
+        private readonly List<View> _childCalculators = new List<View>(10);
         private int _calculates;
+        private bool _isRendering;
 
         #endregion
 
@@ -56,6 +58,16 @@ namespace MarkLight
         /// </summary>
         public void RenderLayout()
         {
+            _isRendering = true;
+
+            for (var i = _childCalculators.Count - 1; i >= 0; i--)
+            {
+                if (CalculateViewLayout(_childCalculators[i]))
+                {
+                    CalculateViewParent(_childCalculators[i]);
+                }
+            }
+
             foreach (var view in _dirtyViews) {
                 view.RenderLayout();
             }
@@ -82,6 +94,13 @@ namespace MarkLight
 
             RefreshLayoutData(view);
 
+            // check if view layout is affected by its child view layouts
+            if (!_isRendering && (view.LayoutCalculator.IsAffectedByChildren || view.LayoutCalculator.IsChildLayout))
+            {
+                // set aside for second and final recalculation
+                _childCalculators.Add(view);
+            }
+
             if (!CalculateViewLayout(view))
                 return false;
 
@@ -98,13 +117,15 @@ namespace MarkLight
             return true;
         }
 
-        private bool CanCalculate() {
+        private bool CanCalculate()
+        {
             // limit the total number of recalculations.
             _calculates++;
             return _calculates <= _maxCalculate;
         }
 
-        private void RefreshLayoutData(View view) {
+        private void RefreshLayoutData(View view)
+        {
             // refresh the layout data the first time the views layout is calculated in this context.
             var uiView = view as UIView;
             if (uiView != null && !_dirtyViews.Contains(view))
@@ -113,9 +134,10 @@ namespace MarkLight
             }
         }
 
-        private bool CalculateViewLayout(View view) {
-
+        private bool CalculateViewLayout(View view)
+        {
             var totalDirty = _dirtyViews.Count;
+
             if (!view.CalculateLayoutChanges(this) && totalDirty == _dirtyViews.Count) {
                 return false; // return false, unless new dirty views were added
             }
@@ -123,7 +145,8 @@ namespace MarkLight
             return true;
         }
 
-        private void CalculateViewParent(View view) {
+        private void CalculateViewParent(View view)
+        {
             // notify parent of child recalculation.
             var parent = view.LayoutParent;
             if (parent != null) {

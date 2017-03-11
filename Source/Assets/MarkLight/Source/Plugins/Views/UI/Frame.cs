@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -51,6 +50,8 @@ namespace MarkLight.Views.UI
             if (layout != null)
             {
                 layout.ContentMargin = ContentMargin.Value;
+                layout.AdjustToWidth = !Width.IsSet;
+                layout.AdjustToHeight = !Height.IsSet;
             }
 
             return base.CalculateLayoutChanges(context);

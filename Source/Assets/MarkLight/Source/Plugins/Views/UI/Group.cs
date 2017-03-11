@@ -90,6 +90,8 @@ namespace MarkLight.Views.UI
             var layoutCalc = LayoutCalculator as GroupLayoutCalculator;
             if (layoutCalc != null)
             {
+                layoutCalc.AdjustToWidth = !Width.IsSet;
+                layoutCalc.AdjustToHeight = !Height.IsSet;
 
                 layoutCalc.HorizontalSpacing = HorizontalSpacing.IsSet
                     ? HorizontalSpacing.Value
@@ -107,8 +109,8 @@ namespace MarkLight.Views.UI
             return base.CalculateLayoutChanges(context);
         }
 
-        protected override List<UIView> GetContentChildren() {
-            return GetContentChildren(SortDirection);
+        protected override List<UIView> GetContentChildren(View content) {
+            return GetContentChildren(content, SortDirection);
         }
 
         /// <summary>

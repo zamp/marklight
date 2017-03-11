@@ -80,14 +80,6 @@ namespace MarkLight.Views.UI
         public _ElementMargin Offset;
 
         /// <summary>
-        /// View offset from parent.
-        /// </summary>
-        /// <d>Used by parent views to adjust the positioning of its children without affecting the internal offset of
-        /// the children.</d>
-        [ChangeHandler("OffsetChanged")]
-        public _ElementMargin OffsetFromParent;
-
-        /// <summary>
         /// View pivot position.
         /// </summary>
         /// <d>The normalized position that the view rect transform rotates around.</d>
@@ -280,8 +272,8 @@ namespace MarkLight.Views.UI
             base.SetDefaultValues();
 
             Alignment.DirectValue = ElementAlignment.Center;
-            Width.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents);
-            Height.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents);
+            Width.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents) { Fill = true };
+            Height.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents) { Fill = true };
             OverrideWidth.DirectValue = ElementSize.FromPixels(0);
             OverrideHeight.DirectValue = ElementSize.FromPixels(0);
             Margin.DirectValue = new ElementMargin();
@@ -296,7 +288,6 @@ namespace MarkLight.Views.UI
             }
 
             IsActive.DirectValue = true;
-            OffsetFromParent.DirectValue = new ElementMargin();
             SortIndex.DirectValue = 0;
             UpdateRectTransform.DirectValue = true;
             UpdateBackground.DirectValue = true;
@@ -338,7 +329,7 @@ namespace MarkLight.Views.UI
             if (!LayoutCalculator.IsChildLayout)
                 return LayoutCalculator.CalculateLayoutChanges(this, context);
 
-            var children = GetContentChildren();
+            var children = GetContentChildren(Content ?? this);
             return LayoutCalculator.CalculateLayoutChanges(this, children, context);
         }
 
@@ -351,7 +342,6 @@ namespace MarkLight.Views.UI
                 return; // rect transform is updated elsewhere
 
             LayoutData.Copy(Offset.Value, Layout.Offset);
-            LayoutData.Copy(OffsetFromParent.Value, Layout.OffsetFromParent);
             Layout.IsDirty = true;
             RenderLayout();
         }
@@ -554,22 +544,21 @@ namespace MarkLight.Views.UI
             Layout.AspectRatio = AspectRatio.Value;
             LayoutData.Copy(Width.Value, Layout.Width);
             LayoutData.Copy(Height.Value, Layout.Height);
-            LayoutData.Copy(OffsetFromParent.Value, Layout.OffsetFromParent);
             LayoutData.Copy(Offset.Value, Layout.Offset);
             LayoutData.Copy(Margin.Value, Layout.Margin);
             Layout.IsDirty = isDirty;
         }
 
-        protected virtual List<UIView> GetContentChildren() {
-            return GetContentChildren(ElementSortDirection.Ascending);
+        protected virtual List<UIView> GetContentChildren(View content) {
+            return GetContentChildren(content, ElementSortDirection.Ascending);
         }
 
-        protected virtual List<UIView> GetContentChildren(ElementSortDirection sortDirection)
+        protected virtual List<UIView> GetContentChildren(View content, ElementSortDirection sortDirection)
         {
             var children = new List<UIView>();
             var childrenToBeSorted = new List<UIView>();
 
-            Content.ForEachChild<UIView>(x =>
+            content.ForEachChild<UIView>(x =>
             {
                 // should this be sorted?
                 if (x.SortIndex != 0)

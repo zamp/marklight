@@ -17,6 +17,11 @@ namespace MarkLight
         public abstract bool IsChildLayout { get; }
 
         /// <summary>
+        /// Determine if the calculator is affected or can be affected by child layout;
+        /// </summary>
+        public abstract bool IsAffectedByChildren { get; }
+
+        /// <summary>
         /// Calculate view layout.
         /// </summary>
         /// <param name="parent">The parent view.</param>
@@ -34,24 +39,6 @@ namespace MarkLight
         /// <returns>True if layout changes were made.</returns>
         public virtual bool CalculateLayoutChanges(UIView view, LayoutChangeContext context) {
             return CalculateLayoutChanges(view, EmptyList, context);
-        }
-
-        /// <summary>
-        /// Get the sum of all horizontal margins and padding.
-        /// </summary>
-        /// <param name="layout">The layout data to get margins and padding from.</param>
-        protected virtual float GetHorizontalMargins(LayoutData layout)
-        {
-            return layout.HorizontalMarginPixels + layout.HorizontalPaddingPixels;
-        }
-
-        /// <summary>
-        /// Get the sum of all vertical margins and padding.
-        /// </summary>
-        /// <param name="layout">The layout data to get margins and padding from.</param>
-        protected virtual float GetVerticalMargins(LayoutData layout)
-        {
-            return layout.VerticalMarginPixels + layout.VerticalPaddingPixels;
         }
 
         /// <summary>

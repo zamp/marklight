@@ -13,12 +13,30 @@ namespace MarkLight
 
         private static readonly ElementMargin EmptyMargin = new ElementMargin();
 
+        /// <summary>
+        /// Determine if the Width should be affected.
+        /// </summary>
+        public bool AdjustToWidth;
+
+        /// <summary>
+        /// Determine if the Height should be affected.
+        /// </summary>
+        public bool AdjustToHeight;
+
+        /// <summary>
+        /// The margin of the content.
+        /// </summary>
+        public ElementMargin ContentMargin;
+
         #endregion
 
         #region Methods
 
         public override bool CalculateLayoutChanges(UIView parent, IList<UIView> children, LayoutChangeContext context)
         {
+            if (!AdjustToWidth && !AdjustToHeight)
+                return parent.Layout.IsDirty;
+
             var maxWidth = 0f;
             var maxHeight = 0f;
             var childCount = children.Count;
@@ -55,12 +73,12 @@ namespace MarkLight
             maxHeight += contentMargin.Bottom.Pixels + contentMargin.Top.Pixels;
 
             // adjust size to content unless it has been set
-            if (!parent.Width.IsSet)
+            if (AdjustToWidth)
             {
                 parent.Layout.Width = new ElementSize(maxWidth);
             }
 
-            if (!parent.Height.IsSet)
+            if (AdjustToHeight)
             {
                 parent.Layout.Height = new ElementSize(maxHeight);
             }
@@ -77,9 +95,9 @@ namespace MarkLight
             get { return true; }
         }
 
-        public ElementMargin ContentMargin
+        public override bool IsAffectedByChildren
         {
-            get; set;
+            get { return true; }
         }
 
         #endregion

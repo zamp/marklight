@@ -15,6 +15,46 @@ namespace MarkLight
         private float _horzSpacePixels;
         private float _vertSpacePixels;
 
+        /// <summary>
+        /// Determine if the Width should be affected.
+        /// </summary>
+        public bool AdjustToWidth;
+
+        /// <summary>
+        /// Determine if the Height should be affected.
+        /// </summary>
+        public bool AdjustToHeight;
+
+        /// <summary>
+        /// Horizontal space between child elements.
+        /// </summary>
+        public ElementSize HorizontalSpacing;
+
+        /// <summary>
+        /// Vertical space between child elements.
+        /// </summary>
+        public ElementSize VerticalSpacing;
+
+        /// <summary>
+        /// Alignment of child elements.
+        /// </summary>
+        public ElementAlignment Alignment;
+
+        /// <summary>
+        /// Child layout orientation.
+        /// </summary>
+        public ElementOrientation Orientation;
+
+        /// <summary>
+        /// Get or set how child layout overflow is handled.
+        /// </summary>
+        public OverflowMode Overflow;
+
+        /// <summary>
+        /// Get or set the scroll content view, if any.
+        /// </summary>
+        public UIView ScrollContent;
+
         #endregion
 
         #region Methods
@@ -200,13 +240,13 @@ namespace MarkLight
                     ? (childCount > 1 ? (childIndex - 1) * _horzSpacePixels : 0f)
                     : 0f;
 
-                var widthMargins = GetHorizontalMargins(parentLayout);
+                var widthMargins = GetHorizontalPadding(parentLayout);
 
                 totalWidth += widthMargins;
                 maxWidth += widthMargins;
 
                 // set width and height of list
-                if (!parent.Width.IsSet)
+                if (AdjustToWidth)
                 {
                     // adjust width to content
                     parent.Layout.Width = new ElementSize(isHorizontal
@@ -228,12 +268,12 @@ namespace MarkLight
                     ? (childCount > 1 ? (childIndex - 1) * _vertSpacePixels : 0f)
                     : 0f;
 
-                var heightMargins = GetVerticalMargins(parentLayout);
+                var heightMargins = GetVerticalPadding(parentLayout);
 
                 totalHeight += heightMargins;
                 maxHeight += heightMargins;
 
-                if (!parent.Height.IsSet)
+                if (AdjustToHeight)
                 {
                     // if height is not explicitly set then adjust to content
                     parent.Layout.Height = new ElementSize(isHorizontal
@@ -255,28 +295,28 @@ namespace MarkLight
                 // adjust size to content
                 if (isHorizontal)
                 {
-                    maxHeight += GetVerticalMargins(parentLayout);
+                    maxHeight += GetVerticalPadding(parentLayout);
 
                     if (ScrollContent != null)
                     {
                         ScrollContent.Layout.Height = ElementSize.FromPixels(maxHeight);
                         updateScrollContent = true;
                     }
-                    else if (!parent.Height.IsSet)
+                    else if (AdjustToHeight)
                     {
                         parentLayout.Height = ElementSize.FromPixels(maxHeight);
                     }
                 }
                 else // Vertical
                 {
-                    maxWidth += GetHorizontalMargins(parentLayout);
+                    maxWidth += GetHorizontalPadding(parentLayout);
 
                     if (ScrollContent != null)
                     {
                         ScrollContent.Layout.Width = ElementSize.FromPixels(maxWidth);
                         updateScrollContent = true;
                     }
-                    else if (!parent.Width.IsSet)
+                    else if (AdjustToWidth)
                     {
                         parentLayout.Width = ElementSize.FromPixels(maxWidth);
                     }
@@ -291,6 +331,24 @@ namespace MarkLight
             return parentLayout.IsDirty;
         }
 
+        /// <summary>
+        /// Get the sum of all horizontal margins and padding.
+        /// </summary>
+        /// <param name="layout">The layout data to get margins and padding from.</param>
+        protected virtual float GetHorizontalPadding(LayoutData layout)
+        {
+            return 0f;
+        }
+
+        /// <summary>
+        /// Get the sum of all vertical margins and padding.
+        /// </summary>
+        /// <param name="layout">The layout data to get margins and padding from.</param>
+        protected virtual float GetVerticalPadding(LayoutData layout)
+        {
+            return 0f;
+        }
+
         #endregion
 
         #region Properties
@@ -300,52 +358,9 @@ namespace MarkLight
             get { return true; }
         }
 
-        /// <summary>
-        /// Horizontal space between child elements.
-        /// </summary>
-        public ElementSize HorizontalSpacing
+        public override bool IsAffectedByChildren
         {
-            get; set;
-        }
-
-        /// <summary>
-        /// Vertical space between child elements.
-        /// </summary>
-        public ElementSize VerticalSpacing
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Alignment of child elements.
-        /// </summary>
-        public ElementAlignment Alignment
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Child layout orientation.
-        /// </summary>
-        public ElementOrientation Orientation
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Get or set how child layout overflow is handled.
-        /// </summary>
-        public OverflowMode Overflow
-        {
-            get; set;
-        }
-
-        /// <summary>
-        /// Get or set the scroll content view, if any.
-        /// </summary>
-        public UIView ScrollContent
-        {
-            get; set;
+            get { return true; }
         }
 
         #endregion

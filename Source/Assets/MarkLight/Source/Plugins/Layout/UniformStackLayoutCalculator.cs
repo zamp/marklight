@@ -8,6 +8,20 @@ namespace MarkLight
     /// </summary>
     public class UniformStackLayoutCalculator : LayoutCalculator
     {
+        #region Fields
+
+        /// <summary>
+        /// Child layout orientation.
+        /// </summary>
+        public ElementOrientation Orientation;
+
+        /// <summary>
+        /// Get or set the visibility of children so they are made visible after they are arranged.
+        /// </summary>
+        public bool SetChildVisibility;
+
+        #endregion
+
         #region Methods
 
         public override bool CalculateLayoutChanges(UIView parent, IList<UIView> children, LayoutChangeContext context)
@@ -94,20 +108,9 @@ namespace MarkLight
             get { return true; }
         }
 
-        /// <summary>
-        /// Child layout orientation.
-        /// </summary>
-        public ElementOrientation Orientation
+        public override bool IsAffectedByChildren
         {
-            get; set;
-        }
-
-        /// <summary>
-        /// Get or set the visibility of children so they are made visible after they are arranged.
-        /// </summary>
-        public bool SetChildVisibility
-        {
-            get; set;
+            get { return false; }
         }
 
         #endregion

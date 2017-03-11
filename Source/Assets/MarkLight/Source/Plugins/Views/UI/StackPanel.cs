@@ -84,8 +84,8 @@ namespace MarkLight.Views.UI
             base.Initialize();
         }
 
-        protected override List<UIView> GetContentChildren() {
-            return GetContentChildren(SortDirection);
+        protected override List<UIView> GetContentChildren(View content) {
+            return GetContentChildren(content, SortDirection);
         }
 
         #endregion

@@ -778,6 +778,9 @@ namespace MarkLight.Views.UI
             var layoutCalc = LayoutCalculator as ListGroupLayout;
             if (layoutCalc != null)
             {
+                layoutCalc.AdjustToWidth = !Width.IsSet;
+                layoutCalc.AdjustToHeight = !Height.IsSet;
+
                 layoutCalc.HorizontalSpacing = HorizontalSpacing.IsSet
                     ? HorizontalSpacing.Value
                     : Spacing.Value;
@@ -792,7 +795,8 @@ namespace MarkLight.Views.UI
                 layoutCalc.ScrollContent = ScrollContent;
             }
 
-            base.CalculateLayoutChanges(context);
+            var children = GetContentChildren(ScrollContent ?? Content);
+            LayoutCalculator.CalculateLayoutChanges(this, children, context);
 
             if (UseVirtualization)
             {
@@ -900,8 +904,8 @@ namespace MarkLight.Views.UI
             }
         }
 
-        protected override List<UIView> GetContentChildren() {
-            return GetContentChildren(SortDirection);
+        protected override List<UIView> GetContentChildren(View content) {
+            return GetContentChildren(content, SortDirection);
         }
 
         public override void ResolutionChanged() {
@@ -1784,23 +1788,23 @@ namespace MarkLight.Views.UI
                 _list = list;
             }
 
-            protected override float GetHorizontalMargins(LayoutData layout)
+            protected override float GetHorizontalPadding(LayoutData layout)
             {
                 var listMaskMargin = _list.ListMask != null
                     ? _list.ListMask.Margin.Value
                     : EmptyMargin;
 
-                return base.GetHorizontalMargins(layout) +
+                return base.GetHorizontalPadding(layout) +
                        + listMaskMargin.Left.Pixels + listMaskMargin.Right.Pixels;
             }
 
-            protected override float GetVerticalMargins(LayoutData layout)
+            protected override float GetVerticalPadding(LayoutData layout)
             {
                 var listMaskMargin = _list.ListMask != null
                     ? _list.ListMask.Margin.Value
                     : EmptyMargin;
 
-                return base.GetVerticalMargins(layout)
+                return base.GetVerticalPadding(layout)
                        + listMaskMargin.Top.Pixels + listMaskMargin.Bottom.Pixels;
             }
         }

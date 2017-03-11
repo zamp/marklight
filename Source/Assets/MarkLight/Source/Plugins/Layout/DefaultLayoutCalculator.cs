@@ -11,9 +11,35 @@ namespace MarkLight
         #region Fields
 
         /// <summary>
-        /// Singletone instance.
+        /// Singleton instance.
         /// </summary>
-        public static readonly DefaultLayoutCalculator Instance = new DefaultLayoutCalculator();
+        public static readonly DefaultLayoutCalculator Instance = new DefaultLayoutCalculator(false, false);
+
+        /// <summary>
+        /// Singleton instance with IsAffectedByChildren flag set.
+        /// </summary>
+        public static readonly DefaultLayoutCalculator AffectedByChildren = new DefaultLayoutCalculator(false, true);
+
+        /// <summary>
+        /// Singleton instance with IsChildLayout flag set.
+        /// </summary>
+        public static readonly DefaultLayoutCalculator ChildLayout = new DefaultLayoutCalculator(true, false);
+
+        private readonly bool _isChildLayout;
+        private readonly bool _isAffectedByChildren;
+
+        #endregion
+
+        #region Constructor
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public DefaultLayoutCalculator(bool isChildLayout, bool isAffectedByChildren)
+        {
+            _isChildLayout = isChildLayout;
+            _isAffectedByChildren = isAffectedByChildren;
+        }
 
         #endregion
 
@@ -30,7 +56,12 @@ namespace MarkLight
 
         public override bool IsChildLayout
         {
-            get { return false; }
+            get { return _isChildLayout; }
+        }
+
+        public override bool IsAffectedByChildren
+        {
+            get { return _isAffectedByChildren; }
         }
 
         #endregion

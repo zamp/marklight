@@ -522,12 +522,12 @@ namespace MarkLight.Views.UI
         {
             if (IsDropUp)
             {
-                ComboBoxListCanvas.OffsetFromParent.Value = new ElementMargin(0, -ComboBoxList.ActualHeight, 0, 0);
+                ComboBoxListCanvas.Layout.OffsetFromParent = new ElementMargin(0, -ComboBoxList.ActualHeight, 0, 0);
                 ComboBoxList.SortDirection.Value = ElementSortDirection.Descending;
             }
             else
             {
-                ComboBoxListCanvas.OffsetFromParent.Value = new ElementMargin(0, ActualHeight, 0, 0);
+                ComboBoxListCanvas.Layout.OffsetFromParent = new ElementMargin(0, ActualHeight, 0, 0);
                 ComboBoxList.SortDirection.Value = ElementSortDirection.Ascending;
             }
         }
