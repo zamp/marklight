@@ -1,23 +1,16 @@
-﻿#region Using Statements
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using System.Collections;
-using System.Xml.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using System.Text.RegularExpressions;
 using Marklight.Themes;
-using UnityEditor.VersionControl;
+using Object = UnityEngine.Object;
 #if !UNITY_4_6 && !UNITY_5_0 && !UNITY_5_1 && !UNITY_5_2 && !UNITY_5_3_1 && !UNITY_5_3_2 && !UNITY_5_3_3
 using UnityEditor.SceneManagement;
 #endif
-#endregion
+
 
 namespace MarkLight.Editor
 {
@@ -31,17 +24,20 @@ namespace MarkLight.Editor
         /// <summary>
         /// Processes the XUML assets that are added, deleted, updated, etc. and generates the scene objects.
         /// </summary>
-        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+        static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
+                                           string[] movedAssets, string[] movedFromAssetPaths)
         {
             // don't process XUML assets while playing or when there is no view presenter in the scene
-            if (Application.isPlaying || ViewPresenter.Instance == null || ViewPresenter.Instance.DisableAutomaticReload)
+            if (Application.isPlaying
+                || ViewPresenter.Instance == null
+                || ViewPresenter.Instance.DisableAutomaticReload)
             {
                 return;
             }
 
             // check if any views have been added, moved, updated or deleted
             var configuration = Configuration.Instance;
-            bool viewAssetsUpdated = false;
+            var viewAssetsUpdated = false;
             foreach (var path in importedAssets.Concat(deletedAssets).Concat(movedAssets).Concat(movedFromAssetPaths))
             {
                 if (configuration.ViewPaths.Any(x => path.IndexOf(x, StringComparison.OrdinalIgnoreCase) >= 0) &&
@@ -76,15 +72,19 @@ namespace MarkLight.Editor
             }
 
             // get all XUML assets
-            HashSet<TextAsset> viewAssets = new HashSet<TextAsset>();
-            HashSet<CssAsset> cssAssets = new HashSet<CssAsset>();
+            var viewAssets = new HashSet<TextAsset>();
+            var cssAssets = new HashSet<CssAsset>();
             foreach (var path in Configuration.Instance.ViewPaths)
             {
-                string localPath = path.StartsWith("Assets/") ? path.Substring(7) : path;
+                var localPath = path.StartsWith("Assets/")
+                    ? path.Substring(7)
+                    : path;
+
                 foreach (var asset in GetXumlAssetsAtPath(localPath))
                 {
                     viewAssets.Add(asset);
                 }
+
                 foreach (var asset in GetCssAtPath(localPath))
                 {
                     cssAssets.Add(asset);
@@ -119,19 +119,19 @@ namespace MarkLight.Editor
         private static List<TextAsset> GetXumlAssetsAtPath(string path)
         {
             var assets = new List<TextAsset>();
-            string searchPath = Application.dataPath + "/" + path;
+            var searchPath = Application.dataPath + "/" + path;
 
-            if (Directory.Exists(searchPath))
+            if (!Directory.Exists(searchPath))
+                return assets;
+
+            var fileEntries = Directory.GetFiles(searchPath, "*.xml", SearchOption.AllDirectories);
+            foreach (var fileName in fileEntries)
             {
-                string[] fileEntries = Directory.GetFiles(searchPath, "*.xml", SearchOption.AllDirectories);
-                foreach (string fileName in fileEntries)
+                var localPath = "Assets/" + path + fileName.Substring(searchPath.Length);
+                var textAsset = AssetDatabase.LoadAssetAtPath(localPath, typeof(TextAsset)) as TextAsset;
+                if (textAsset != null)
                 {
-                    string localPath = "Assets/" + path + fileName.Substring(searchPath.Length);
-                    var textAsset = AssetDatabase.LoadAssetAtPath(localPath, typeof(TextAsset)) as TextAsset;
-                    if (textAsset != null)
-                    {
-                        assets.Add(textAsset);
-                    }
+                    assets.Add(textAsset);
                 }
             }
 
@@ -172,18 +172,28 @@ namespace MarkLight.Editor
         {
             if (ViewPresenter.Instance == null)
             {
-                Debug.LogError("[MarkLight] Unable to generate XSD schema. View presenter can't be found in scene. Make sure the view presenter is enabled.");
+                Debug.LogError(
+                    "[MarkLight] Unable to generate XSD schema. View presenter can't be found in scene. "+
+                    "Make sure the view presenter is enabled.");
                 return;
             }
 
             var sb = new StringBuilder();
             sb.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            sb.AppendLine("<xs:schema id=\"MarkLight\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"MarkLight\" xmlns=\"MarkLight\" attributeFormDefault=\"unqualified\" elementFormDefault=\"qualified\">");
+            sb.AppendLine(
+                "<xs:schema id=\"MarkLight\" "+
+                "xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" " +
+                "targetNamespace=\"MarkLight\" "+
+                "xmlns=\"MarkLight\" "+
+                "attributeFormDefault=\"unqualified\" "+
+                "elementFormDefault=\"qualified\">");
 
             // create temporary root view where instantiate each view to get info about view fields
             if (ViewPresenter.Instance.RootView == null)
             {
-                ViewPresenter.Instance.RootView = ViewData.CreateView<View>(ViewPresenter.Instance, ViewPresenter.Instance).gameObject;
+                ViewPresenter.Instance.RootView = ViewData
+                    .CreateView<View>(ViewPresenter.Instance, ViewPresenter.Instance)
+                    .gameObject;
             }
             var layoutRoot = ViewPresenter.Instance.RootView.GetComponent<View>();
             var temporaryRootView = ViewData.CreateView<View>(layoutRoot, layoutRoot);
@@ -222,7 +232,10 @@ namespace MarkLight.Editor
                         enums.Add(viewFieldData.Type);
                     }
 
-                    sb.AppendFormat("    <xs:attribute name=\"{0}\" type=\"{1}\" />{2}", viewField, isEnum ? "Enum" + viewFieldData.TypeName : "xs:string", Environment.NewLine);
+                    sb.AppendFormat("    <xs:attribute name=\"{0}\" type=\"{1}\" />{2}",
+                        viewField,
+                        isEnum ? "Enum" + viewFieldData.TypeName : "xs:string",
+                        Environment.NewLine);
                 }
 
                 sb.AppendFormat("    <xs:anyAttribute processContents=\"skip\" />{0}", Environment.NewLine);
@@ -233,7 +246,7 @@ namespace MarkLight.Editor
             Utils.SuppressLogging = false;
 
             // destroy temporary root view
-            GameObject.DestroyImmediate(temporaryRootView.gameObject);
+            Object.DestroyImmediate(temporaryRootView.gameObject);
 
             // add enums
             foreach (var enumType in enums)
@@ -302,7 +315,7 @@ namespace MarkLight.Editor
 
             // save file
             var path = Configuration.Instance.SchemaFile;
-            string localPath = path.StartsWith("Assets/") ? path.Substring(7) : path;
+            var localPath = path.StartsWith("Assets/") ? path.Substring(7) : path;
             File.WriteAllText(String.Format("{0}/{1}", Application.dataPath, localPath), sb.ToString());
 
             // print result
