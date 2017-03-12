@@ -41,6 +41,12 @@ namespace MarkLight.Views.UI
         public _float Elasticity;
 
         /// <summary>
+        /// Suppress scroll elasticity when rendering view.
+        /// </summary>
+        /// <d>True prevents scrolling movement due to elasticity when the layout is rendered.</d>
+        public _bool DisableRenderElasticity;
+
+        /// <summary>
         /// Horizontal normalized position.
         /// </summary>
         /// <d>Value between 0-1 indicating the position of the scrollable content.</d>
@@ -223,6 +229,17 @@ namespace MarkLight.Views.UI
             UnblockDragEvents();
 
             return base.CalculateLayoutChanges(context);
+        }
+
+        public override void RenderLayout()
+        {
+            if (DisableRenderElasticity)
+                ScrollRectComponent.elasticity = 0;
+
+            base.RenderLayout();
+
+            if (DisableRenderElasticity)
+                ScrollRectComponent.elasticity = Elasticity.Value;
         }
 
         public override void OffsetChanged()

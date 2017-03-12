@@ -340,6 +340,13 @@ namespace MarkLight.Views.UI
         public _float Elasticity;
 
         /// <summary>
+        /// Suppress scroll elasticity when rendering view.
+        /// </summary>
+        /// <d>True prevents scrolling movement due to elasticity when the layout is rendered.</d>
+        [MapTo("ListPanel.DisableRenderElasticity")]
+        public _bool DisableRenderElasticity;
+
+        /// <summary>
         /// Horizontal normalized position.
         /// </summary>
         /// <d>Value between 0-1 indicating the position of the scrollable content.</d>
@@ -806,7 +813,8 @@ namespace MarkLight.Views.UI
             return Layout.IsDirty;
         }
 
-        public override void RenderLayout() {
+        public override void RenderLayout()
+        {
             base.RenderLayout();
 
             var lastScroll = Items.Value != null ? Items.Value.LastScroll : null;
