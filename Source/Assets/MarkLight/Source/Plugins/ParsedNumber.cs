@@ -32,12 +32,12 @@ namespace Marklight
         /// </summary>
         public ElementSize ToElementSize(Vector3 unitSize) {
 
+            if (Unit == "*")
+                return new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
+
             var number = NumberAsFloat;
             if (String.IsNullOrEmpty(Unit) || Math.Abs(number) < 0.000001f)
                 return new ElementSize(number);
-
-            if (Unit == "*")
-                return new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
 
             if (Unit == "%")
                 return new ElementSize(number / 100f, ElementSizeUnit.Percents);
