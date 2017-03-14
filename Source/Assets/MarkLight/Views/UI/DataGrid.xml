@@ -1,5 +1,5 @@
 <DataGrid>
-  <List Id="DataGridList" Alignment="Top">
+  <List Id="DataGridList" CanScrollHorizontally="False">
     <ContentPlaceholder />
   </List>
 </DataGrid>

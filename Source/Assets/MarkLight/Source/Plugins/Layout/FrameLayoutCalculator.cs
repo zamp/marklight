@@ -32,10 +32,10 @@ namespace MarkLight
 
         #region Methods
 
-        public override bool CalculateLayoutChanges(UIView parent, IList<UIView> children, LayoutChangeContext context)
+        public override bool CalculateLayoutChanges(UIView view, IList<UIView> children, LayoutChangeContext context)
         {
             if (!AdjustToWidth && !AdjustToHeight)
-                return parent.Layout.IsDirty;
+                return view.Layout.IsDirty;
 
             var maxWidth = 0f;
             var maxHeight = 0f;
@@ -75,15 +75,15 @@ namespace MarkLight
             // adjust size to content unless it has been set
             if (AdjustToWidth)
             {
-                parent.Layout.Width = new ElementSize(maxWidth);
+                view.Layout.Width = new ElementSize(maxWidth);
             }
 
             if (AdjustToHeight)
             {
-                parent.Layout.Height = new ElementSize(maxHeight);
+                view.Layout.Height = new ElementSize(maxHeight);
             }
 
-            return parent.Layout.IsDirty;
+            return view.Layout.IsDirty;
         }
 
         #endregion

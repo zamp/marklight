@@ -59,9 +59,9 @@ namespace MarkLight
 
         #region Methods
 
-        public override bool CalculateLayoutChanges(UIView parent, IList<UIView> children, LayoutChangeContext context)
+        public override bool CalculateLayoutChanges(UIView view, IList<UIView> children, LayoutChangeContext context)
         {
-            var parentLayout = parent.Layout;
+            var parentLayout = view.Layout;
 
             _horzSpacePixels = parentLayout.WidthToPixels(HorizontalSpacing);
             _vertSpacePixels = parentLayout.HeightToPixels(VerticalSpacing);
@@ -249,7 +249,7 @@ namespace MarkLight
                 if (AdjustToWidth)
                 {
                     // adjust width to content
-                    parent.Layout.Width = new ElementSize(isHorizontal
+                    view.Layout.Width = new ElementSize(isHorizontal
                         ? totalWidth
                         : maxWidth, ElementSizeUnit.Pixels);
                 }
@@ -276,7 +276,7 @@ namespace MarkLight
                 if (AdjustToHeight)
                 {
                     // if height is not explicitly set then adjust to content
-                    parent.Layout.Height = new ElementSize(isHorizontal
+                    view.Layout.Height = new ElementSize(isHorizontal
                         ? maxHeight
                         : totalHeight, ElementSizeUnit.Pixels);
                 }

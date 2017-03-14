@@ -851,7 +851,7 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Adjusts scrollable layout.
         /// </summary>
-        private void AdjustScrollableLayout()
+        public void AdjustScrollableLayout()
         {
             // set default scrollable content alignment based on orientation
             if (!ScrollableContentAlignment.IsSet)
@@ -922,10 +922,6 @@ namespace MarkLight.Views.UI
 
         protected override List<UIView> GetContentChildren(View content) {
             return GetContentChildren(content, SortDirection);
-        }
-
-        public override void ResolutionChanged() {
-            NotifyLayoutChanged();
         }
 
         /// <summary>

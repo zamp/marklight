@@ -45,9 +45,9 @@ namespace MarkLight
 
         #region Methods
 
-        public override bool CalculateLayoutChanges(UIView parent, IList<UIView> children, LayoutChangeContext context)
+        public override bool CalculateLayoutChanges(UIView view, IList<UIView> children, LayoutChangeContext context)
         {
-            return parent.Layout.IsDirty;
+            return view.Layout.IsDirty;
         }
 
         #endregion

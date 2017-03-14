@@ -1,17 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -84,14 +71,16 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Column label text alignment.
         /// </summary>
-        /// <d>The alignment of the text inside the column label. Can be used with TextMargin and TextOffset to get desired positioning of the text.</d>
+        /// <d>The alignment of the text inside the column label. Can be used with TextMargin and TextOffset to get
+        /// desired positioning of the text.</d>
         [MapTo("ColumnLabel.TextAlignment")]
         public _ElementAlignment TextAlignment;
 
         /// <summary>
         /// Column label text offset.
         /// </summary>
-        /// <d>The offset of the column label. Can be used with TextMargin and TextAlignment to get desired positioning of the text.</d>
+        /// <d>The offset of the column label. Can be used with TextMargin and TextAlignment to get desired
+        /// positioning of the text.</d>
         [MapTo("ColumnLabel.Offset")]
         public _ElementMargin TextOffset;
 
@@ -149,6 +138,24 @@ namespace MarkLight.Views.UI
         {
             base.SetState(stateName);
             ColumnLabel.SetState(stateName);
+        }
+
+        public override void InitializeInternalDefaultValues() {
+            base.InitializeInternalDefaultValues();
+
+            LayoutCalculator = new FrameLayoutCalculator();
+        }
+
+        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
+
+            var layout = LayoutCalculator as FrameLayoutCalculator;
+            if (layout != null)
+            {
+                layout.AdjustToWidth = false;
+                layout.AdjustToHeight = !Height.IsSet;
+            }
+
+            return base.CalculateLayoutChanges(context);
         }
 
         #endregion

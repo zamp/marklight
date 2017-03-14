@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -18,86 +16,22 @@ namespace MarkLight.Views.UI
 
         #region Methods
 
-        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
+        public override void InitializeInternalDefaultValues() {
+            base.InitializeInternalDefaultValues();
 
-            if (ParentDataGrid == null)
+            LayoutCalculator = new DataGridRowLayoutCalculator();
+        }
+
+        public override bool CalculateLayoutChanges(LayoutChangeContext context)
+        {
+            var layout = LayoutCalculator as DataGridRowLayoutCalculator;
+            if (layout != null)
             {
-                return false;
+                layout.IsHeader = true;
+                layout.ParentDataGrid = ParentDataGrid;
             }
 
-            // arrange columns according to the settings in the parent datagrid
-            var columns = this.GetChildren<ColumnHeader>(
-                view => view.PositionType.Value != ElementPositionType.Absolute,
-                ViewSearchArgs.NonRecursive);
-
-            // adjust width of columns based on headers
-            var columnSpacing = (columns.Count - 1) * ParentDataGrid.ColumnSpacing.Value.Pixels / columns.Count;
-            var columnsToFill = new List<Column>();
-            float totalWidth = 0;
-
-            for (var i = 0; i < columns.Count; ++i)
-            {
-                var defWidth = columns[i].Layout.Width;
-                if (!columns[i].Width.IsSet || defWidth.Fill)
-                {
-                    columnsToFill.Add(columns[i]);
-                    continue;
-                }
-
-                if (defWidth.Unit == ElementSizeUnit.Percents)
-                {
-                    columns[i].Layout.Width = new ElementSize(
-                        defWidth.Percent * ActualWidth - columnSpacing, ElementSizeUnit.Pixels);
-                }
-                else
-                {
-                    columns[i].Layout.Width = new ElementSize(
-                        defWidth.Pixels - columnSpacing, ElementSizeUnit.Pixels);
-                }
-
-                totalWidth += columns[i].Layout.Width.Pixels;
-                //columns[i].SetIsSet("OverrideWidth");
-            }
-
-            // adjust width of fill columns
-            if (columnsToFill.Count > 0)
-            {
-                var columnWidth = Math.Max(columnSpacing, (ActualWidth - totalWidth) / columnsToFill.Count);
-                foreach (var column in columnsToFill)
-                {
-                    column.Layout.Width = new ElementSize(columnWidth - columnSpacing, ElementSizeUnit.Pixels);
-                    //column.SetIsSet("OverrideWidth");
-                }
-            }
-
-            // adjust column offsets and settings
-            float offset = 0;
-            foreach (var column in columns)
-            {
-                if (!column.TextAlignment.IsSet)
-                {
-                    var textAlignment = ParentDataGrid.ColumnHeaderTextAlignment.IsSet
-                        ? ParentDataGrid.ColumnHeaderTextAlignment
-                        : ParentDataGrid.ColumnTextAlignment;
-
-                    column.TextAlignment.Value = textAlignment.Value;
-                }
-
-                if (!column.TextMargin.IsSet)
-                {
-                    var textMargin = ParentDataGrid.ColumnHeaderTextMargin.IsSet
-                        ? ParentDataGrid.ColumnHeaderTextMargin
-                        : ParentDataGrid.ColumnTextMargin;
-
-                    column.TextMargin.Value = textMargin.Value;
-                }
-
-                column.Layout.OffsetFromParent = new ElementMargin(offset, 0, 0, 0);
-                offset += column.OverrideWidth.Value.Pixels + ParentDataGrid.ColumnSpacing.Value.Pixels;
-                context.NotifyLayoutUpdated(column);
-            }
-
-            return base.CalculateLayoutChanges(context);
+            return LayoutCalculator.CalculateLayoutChanges(this, context);
         }
 
         #endregion
@@ -109,14 +43,9 @@ namespace MarkLight.Views.UI
         /// </summary>
         public DataGrid ParentDataGrid
         {
-            get
-            {
-                if (_parentDataGrid == null)
-                {
-                    _parentDataGrid = this.FindParent<DataGrid>();
-                }
-
-                return _parentDataGrid;
+            get {
+                return _parentDataGrid
+                         ?? (_parentDataGrid = this.FindParent<DataGrid>());
             }
         }
 

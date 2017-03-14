@@ -24,7 +24,7 @@ namespace MarkLight
 
         #region Methods
 
-        public override bool CalculateLayoutChanges(UIView parent, IList<UIView> children, LayoutChangeContext context)
+        public override bool CalculateLayoutChanges(UIView view, IList<UIView> children, LayoutChangeContext context)
         {
             var isHorizontal = Orientation == ElementOrientation.Horizontal;
 
@@ -90,13 +90,13 @@ namespace MarkLight
                 }
             }
 
-            if (!parent.Width.IsSet)
-                parent.Layout.Width = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
+            if (!view.Width.IsSet)
+                view.Layout.Width = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
 
-            if (!parent.Height.IsSet)
-                parent.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
+            if (!view.Height.IsSet)
+                view.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents) { Fill = true };
 
-            return parent.Layout.IsDirty;
+            return view.Layout.IsDirty;
         }
 
         #endregion
