@@ -9,7 +9,6 @@ namespace MarkLight
     /// </summary>
     public class LayoutData
     {
-
         #region Fields
 
         /// <summary>
@@ -276,16 +275,13 @@ namespace MarkLight
                 _isRectDirty = true;
                 _isSizeDirty = true;
 
-                // ensure parent sizes will be recalculated for views with an aspect ratio
-                //if (View.AspectRatio.IsSet)
-                //{
-                    var parent = Parent;
-                    while (parent != null)
-                    {
-                        parent._isSizeDirty = true;
-                        parent = parent.Parent;
-                    }
-                //}
+                // ensure parent sizes will be recalculated for accuracy
+                var parent = Parent;
+                while (parent != null && !parent.IsDirty)
+                {
+                    parent._isSizeDirty = true;
+                    parent = parent.Parent;
+                }
             }
         }
 

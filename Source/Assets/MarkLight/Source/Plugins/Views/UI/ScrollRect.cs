@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace MarkLight.Views.UI
@@ -151,7 +152,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Scroll delta distance for disabling interaction.
         /// </summary>
-        /// <d>If set any interaction with child views (clicks, etc) is disabled when the specified amount of pixels has been scrolled. This is used e.g. to disable clicks while scrolling a selectable list of items.</d>
+        /// <d>If set any interaction with child views (clicks, etc) is disabled when the specified amount of pixels
+        /// has been scrolled. This is used e.g. to disable clicks while scrolling a selectable list of items.</d>
         public _float DisableInteractionScrollDelta;
 
         /// <summary>
@@ -171,7 +173,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if normalized position should be updated from NormalizedPosition field.
         /// </summary>
-        /// <d>When NormalizedPosition is changed from the outside UpdateNormalizedPosition is set to true so that the scroll rect updates from the field instead of the other way around.</d>
+        /// <d>When NormalizedPosition is changed from the outside UpdateNormalizedPosition is set to true so that the
+        /// scroll rect updates from the field instead of the other way around.</d>
         [ChangeHandler("NormalizedPositionChanged", TriggerImmediately = true)]
         public _bool UpdateNormalizedPosition;
 
@@ -208,7 +211,10 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
-            var child = this.Find<UIView>(view => view.PositionType.Value != ElementPositionType.Absolute, false);
+            var child = this.Find<UIView>(
+                view => view.PositionType.Value != ElementPositionType.Absolute,
+                ViewSearchArgs.NonRecursive);
+
             if (child == null)
                 return false;
 
@@ -322,7 +328,10 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void UnblockDragEvents()
         {
-            this.ForEachChild<View>(UnblockDragEvents);
+            this.ForEachChild<View>(x =>
+            {
+                UnblockDragEvents(x);
+            });
         }
 
         /// <summary>
@@ -366,9 +375,11 @@ namespace MarkLight.Views.UI
             if (!hasScrollEntries)
             {
                 // unblock scroll
-                var scrollEntry = new EventTrigger.Entry();
-                scrollEntry.eventID = EventTriggerType.Scroll;
-                scrollEntry.callback = new EventTrigger.TriggerEvent();
+                var scrollEntry = new EventTrigger.Entry
+                {
+                    eventID = EventTriggerType.Scroll,
+                    callback = new EventTrigger.TriggerEvent()
+                };
                 scrollEntry.callback.AddListener(eventData =>
                 {
                     ScrollRectComponent.SendMessage("OnScroll", eventData);
@@ -441,7 +452,10 @@ namespace MarkLight.Views.UI
             // unblock raycasts
             if (_hasDisabledInteraction)
             {
-                this.ForEachChild<UIView>(x => x.RaycastBlockMode.Value = MarkLight.RaycastBlockMode.Default, false);
+                this.ForEachChild<UIView>(
+                    x => x.RaycastBlockMode.Value = MarkLight.RaycastBlockMode.Default,
+                    ViewSearchArgs.NonRecursive);
+
                 _hasDisabledInteraction = false;
             }
         }
@@ -459,7 +473,10 @@ namespace MarkLight.Views.UI
             var pos = eventData.position - eventData.pressPosition;
             if (pos.magnitude > DisableInteractionScrollDelta)
             {
-                this.ForEachChild<UIView>(x => x.RaycastBlockMode.Value = MarkLight.RaycastBlockMode.Never, false);
+                this.ForEachChild<UIView>(
+                    x => x.RaycastBlockMode.Value = MarkLight.RaycastBlockMode.Never,
+                    ViewSearchArgs.NonRecursive);
+
                 _hasDisabledInteraction = true;
             }
         }

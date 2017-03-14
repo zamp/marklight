@@ -27,7 +27,8 @@ namespace MarkLight.Views.UI
 
             // arrange columns according to the settings in the parent datagrid
             var columns = this.GetChildren<ColumnHeader>(
-                view => view.PositionType.Value != ElementPositionType.Absolute, false);
+                view => view.PositionType.Value != ElementPositionType.Absolute,
+                ViewSearchArgs.NonRecursive);
 
             // adjust width of columns based on headers
             var columnSpacing = (columns.Count - 1) * ParentDataGrid.ColumnSpacing.Value.Pixels / columns.Count;

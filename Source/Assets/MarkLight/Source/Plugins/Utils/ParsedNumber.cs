@@ -1,8 +1,7 @@
 ﻿using System;
-using MarkLight;
 using UnityEngine;
 
-namespace Marklight
+namespace MarkLight
 {
     /// <summary>
     /// Holds parsed value split into 2 parts. The "Number" which is the initial text comprised of digits only,

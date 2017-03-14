@@ -1,13 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using MarkLight.Views.UI;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
+﻿using MarkLight.Views.UI;
 
 namespace MarkLight
 {
@@ -29,7 +20,7 @@ namespace MarkLight
         /// </summary>
         public ViewPool(ViewPoolContainer viewPoolContainer)
         {
-            this.ViewPoolContainer = viewPoolContainer;
+            ViewPoolContainer = viewPoolContainer;
         }
 
         #endregion
@@ -47,9 +38,14 @@ namespace MarkLight
         /// <summary>
         /// Gets first available view in the pool.
         /// </summary>
-        public View GetView()
+        public View RemoveView()
         {
-            return ViewPoolContainer.GetChild(0);
+            var index = ViewPoolContainer.LayoutChildren.Count - 1;
+            var result = ViewPoolContainer.LayoutChildren[index];
+
+            ViewPoolContainer.LayoutChildren.RemoveAt(index);
+
+            return result;
         }
 
         #endregion

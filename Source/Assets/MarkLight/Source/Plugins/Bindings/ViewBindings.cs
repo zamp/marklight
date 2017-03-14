@@ -308,15 +308,17 @@ namespace MarkLight
                 var old = _item;
                 _item = value;
                 OwnerView.DataModelItemChanged(old, _item);
-                OwnerView.ForEachBranch<View>(x =>
+                OwnerView.ForEachChild<View>(x =>
                 {
-                    // skip child data model items and their descendants
                     if (x.Bindings._item != null)
+                    {
+                        // skip child data model items and their descendants
                         return false;
+                    }
 
                     x.DataModelItemChanged(old, _item);
                     return true;
-                });
+                }, ViewSearchArgs.ContinueOnFalsePredicate);
             }
         }
 

@@ -1,13 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+﻿using System.Collections.Generic;
 using MarkLight.Views.UI;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
 
 namespace MarkLight
 {
@@ -58,7 +50,7 @@ namespace MarkLight
                 {
                     items.Add(x);
                 }
-            }, false);
+            }, ViewSearchArgs.NonRecursive);
 
             return items;
         }
@@ -70,15 +62,15 @@ namespace MarkLight
         {
             if (Orientation == ElementOrientation.Vertical)
             {
-                float itemMin = item.Layout.OffsetFromParent.Top.Pixels;
-                float itemMax = itemMin + item.Layout.Height.Pixels;
+                var itemMin = item.Layout.OffsetFromParent.Top.Pixels;
+                var itemMax = itemMin + item.Layout.Height.Pixels;
 
                 return itemMax >= min && itemMin <= max;
             }
             else
             {
-                float itemMin = item.Layout.OffsetFromParent.Left.Pixels;
-                float itemMax = itemMin + item.Layout.Width.Pixels;
+                var itemMin = item.Layout.OffsetFromParent.Left.Pixels;
+                var itemMax = itemMin + item.Layout.Width.Pixels;
 
                 return itemMax >= min && itemMin <= max;
             }

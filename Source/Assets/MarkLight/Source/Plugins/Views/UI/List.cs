@@ -746,7 +746,10 @@ namespace MarkLight.Views.UI
             var newItems = _virtualizedItems.GetItemsInRange(vpMin, vpMax);
 
             // remove any items not in new list from viewport to virtualized list
-            var previousItems = Content.GetChildren<ListItem>(x => x.IsLive && !x.IsTemplate, false);
+            var previousItems = Content.GetChildren<ListItem>(
+                x => x.IsLive && !x.IsTemplate,
+                ViewSearchArgs.NonRecursive);
+
             foreach (var item in previousItems)
             {
                 if (!_virtualizedItems.IsInRange(item, vpMin, vpMax))
@@ -833,10 +836,15 @@ namespace MarkLight.Views.UI
             if (UseVirtualization)
             {
                 listItems.AddRange(
-                    _virtualizedItems.VirtualizedItemsContainer.GetChildren<ListItem>(x => x.IsLive, false));
+                    _virtualizedItems.VirtualizedItemsContainer.GetChildren<ListItem>(
+                        x => x.IsLive,
+                        ViewSearchArgs.NonRecursive));
             }
 
-            listItems.AddRange(Content.GetChildren<ListItem>(x => x.IsLive && !x.IsTemplate, false));
+            listItems.AddRange(Content.GetChildren<ListItem>(
+                x => x.IsLive && !x.IsTemplate,
+                ViewSearchArgs.NonRecursive));
+
             return listItems;
         }
 
@@ -1614,7 +1622,9 @@ namespace MarkLight.Views.UI
 
             // does a virtualized items container exist for this view?
             var virtualizedItemsContainer =
-                LayoutRoot.Find<VirtualizedItemsContainer>(x => ReferenceEquals(x.Owner, this), false);
+                LayoutRoot.Find<VirtualizedItemsContainer>(
+                    x => ReferenceEquals(x.Owner, this),
+                    ViewSearchArgs.NonRecursive);
 
             if (virtualizedItemsContainer == null)
             {
@@ -1738,7 +1748,9 @@ namespace MarkLight.Views.UI
             if (_listItemTemplates != null)
                 return;
 
-            _listItemTemplates = Content.GetChildren<ListItem>(x => x.IsTemplate, false);
+            _listItemTemplates = Content.GetChildren<ListItem>(
+                x => x.IsTemplate,
+                ViewSearchArgs.NonRecursive);
 
             if (!ShowTemplateInEditor || !Application.isEditor || Application.isPlaying)
                 _listItemTemplates.ForEach(x => x.Deactivate());

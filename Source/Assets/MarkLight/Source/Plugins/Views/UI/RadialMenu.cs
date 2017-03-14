@@ -1,17 +1,9 @@
-﻿#region Using Statements
-using MarkLight.Animation;
+﻿using MarkLight.Animation;
 using MarkLight.ValueConverters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
 
 namespace MarkLight.Views.UI
 {
@@ -205,10 +197,12 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void ActivateMenuItem(string id)
         {
-            var view = this.Find<UIView>(id, false);
+            var view = this.Find<UIView>(id, new ViewSearchArgs { IsRecursive = false});
             if (view == null)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to activate menu item. Menu item \"{1}\" not found.", GameObjectName, id));
+                Debug.LogError(String.Format(
+                    "[MarkLight] {0}: Unable to activate menu item. Menu item \"{1}\" not found.",
+                    GameObjectName, id));
                 return;
             }
 
@@ -220,9 +214,10 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void ActivateMenuItem(int index)
         {
-            if (index >= _menuItems.Count() || index < 0)
+            if (index >= _menuItems.Count || index < 0)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to activate menu item. Index out of range.", GameObjectName));
+                Debug.LogError(String.Format("[MarkLight] {0}: Unable to activate menu item. Index out of range.",
+                    GameObjectName));
                 return;
             }
 
@@ -246,10 +241,12 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void DeactivateMenuItem(string id)
         {
-            var view = this.Find<UIView>(id, false);
+            var view = this.Find<UIView>(id, new ViewSearchArgs {IsRecursive = false});
             if (view == null)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to deactivate menu item. Menu item \"{1}\" not found.", GameObjectName, id));
+                Debug.LogError(String.Format(
+                    "[MarkLight] {0}: Unable to deactivate menu item. Menu item \"{1}\" not found.",
+                    GameObjectName, id));
                 return;
             }
 
@@ -261,9 +258,10 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void DeactivateMenuItem(int index)
         {
-            if (index >= _menuItems.Count() || index < 0)
+            if (index >= _menuItems.Count || index < 0)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to deactivate menu item. Index out of range.", GameObjectName));
+                Debug.LogError(String.Format("[MarkLight] {0}: Unable to deactivate menu item. Index out of range.",
+                    GameObjectName));
                 return;
             }
 
@@ -341,7 +339,7 @@ namespace MarkLight.Views.UI
             _menuOffset = new Vector2();
             _menuAnimators = new List<ViewFieldAnimator>();            
             _deactivatedMenuItems = new List<UIView>();
-            _menuItems = this.GetChildren<UIView>(false);
+            _menuItems = this.GetChildren<UIView>(new ViewSearchArgs { IsRecursive = false });
 
             UpdateMenu();
             Close(false);

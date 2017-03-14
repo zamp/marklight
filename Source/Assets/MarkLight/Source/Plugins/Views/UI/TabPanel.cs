@@ -8,7 +8,9 @@ namespace MarkLight.Views.UI
     /// <summary>
     /// TabPanel view.
     /// </summary>
-    /// <d>Arranges content in a series of tabs that can be switched between. Tabs can be oriented horizontallt/vertically and aligned topleft/bottom/etc. Tabs can be generated from a template and bound list data.</d>
+    /// <d>Arranges content in a series of tabs that can be switched between. Tabs can be oriented
+    /// horizontallt/vertically and aligned topleft/bottom/etc. Tabs can be generated from a template and bound
+    /// list data.</d>
     [HideInPresenter]
     public class TabPanel : UIView
     {
@@ -169,7 +171,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// The alignment of tab header list items.
         /// </summary>
-        /// <d>If the tab header list items varies in size the content alignment specifies how the tab header list items should be arranged in relation to each other.</d>
+        /// <d>If the tab header list items varies in size the content alignment specifies how the tab header list
+        /// items should be arranged in relation to each other.</d>
         [MapTo("TabHeaderList.ContentAlignment")]
         public _ElementAlignment TabListContentAlignment;
 
@@ -272,7 +275,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// User-defined list data.
         /// </summary>
-        /// <d>Can be bound to an generic ObservableList to dynamically generate tab content and headers based on a template.</d>
+        /// <d>Can be bound to an generic ObservableList to dynamically generate tab content and headers based on a
+        /// template.</d>
         [ChangeHandler("ItemsChanged")]
         public IObservableList Items;
 
@@ -285,13 +289,17 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if tab content margin should be automatically adjusted.
         /// </summary>
-        /// <d>Boolean indicating if the tab panel content margin should automatically be adjusted to make room for the tab headers.</d>
+        /// <d>Boolean indicating if the tab panel content margin should automatically be adjusted to make room for
+        /// the tab headers.</d>
         public _bool AutoAdjustContentMargin;
 
         /// <summary>
         /// Indicates if tab list content should be automatically adjusted.
         /// </summary>
-        /// <d>Boolean indicating if tab list content alignment should automatically be adjusted to the tab list orientation/alignment. E.g. if tab list is oriented horizontally to the top-left then the content alignment of the list is set to bottom so the tab headers hug the top border of the tab panel content region.</d>
+        /// <d>Boolean indicating if tab list content alignment should automatically be adjusted to the tab list
+        /// orientation/alignment. E.g. if tab list is oriented horizontally to the top-left then the content
+        /// alignment of the list is set to bottom so the tab headers hug the top border of the tab panel content
+        /// region.</d>
         public _bool AutoAdjustTabListContentAlignment;
 
         /// <summary>
@@ -406,7 +414,11 @@ namespace MarkLight.Views.UI
                 TabItemTemplate.Deactivate();
             }
 
-            _presentedTabs.AddRange(TabSwitcher.GetChildren<Tab>(x => !x.IsTemplate && !x.IsDestroyed, false));
+            _presentedTabs.AddRange(
+                TabSwitcher.GetChildren<Tab>(
+                    x => !x.IsTemplate && !x.IsDestroyed,
+                    ViewSearchArgs.NonRecursive));
+
             if (TabItemTemplate != null)
                 return;
 
@@ -432,7 +444,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void NextTab(bool animate = true, bool cycle = true)
         {
-            var tabs = TabSwitcher.GetChildren<Tab>(false);
+            var tabs = TabSwitcher.GetChildren<Tab>(ViewSearchArgs.NonRecursive);
             var tabCount = tabs.Count;
 
             if (tabCount <= 0)
@@ -459,7 +471,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void PreviousTab(bool animate = true, bool cycle = true)
         {
-            var tabs = this.GetChildren<Tab>(false);
+            var tabs = this.GetChildren<Tab>(ViewSearchArgs.NonRecursive);
             var tabCount = tabs.Count;
 
             if (tabCount <= 0)
@@ -563,7 +575,9 @@ namespace MarkLight.Views.UI
             if (selected)
             {
                 // select tab header if it's not selected
-                var tabHeader = TabHeaderList.Content.Find<TabHeader>(x => x.ParentTab == tab, false);
+                var tabHeader =
+                    TabHeaderList.Content.Find<TabHeader>(x => x.ParentTab == tab, ViewSearchArgs.NonRecursive);
+
                 if (tabHeader != null && !tabHeader.IsSelected)
                 {
                     tabHeader.IsSelected.Value = false;
@@ -705,7 +719,10 @@ namespace MarkLight.Views.UI
             // make sure we have a template
             if (TabItemTemplate == null)
             {
-                Debug.LogError(String.Format("[MarkLight] {0}: Unable to generate tabs from items. Template missing. Add a template by adding a Tab view with IsTemplate=\"True\" to the TabPanel.", GameObjectName));
+                Debug.LogError(String.Format(
+                    "[MarkLight] {0}: Unable to generate tabs from items. Template missing. Add a template by adding "+
+                    "a Tab view with IsTemplate=\"True\" to the TabPanel.",
+                    GameObjectName));
                 return;
             }
 
@@ -827,12 +844,13 @@ namespace MarkLight.Views.UI
         private void CreateTabHeader(Tab tab, int index = -1)
         {
             // check if the tab has a custom tab header
-            var tabHeader = tab.Find<TabHeader>(false);
+            var tabHeader = tab.Find<TabHeader>(ViewSearchArgs.NonRecursive);
             if (tabHeader == null)
             {
                 // create default TabHeader                
-                tabHeader = ViewData.CreateView<TabHeader>(TabHeaderList.Content, tab.Parent, null, Theme, String.Empty,
-                    Style);
+                tabHeader = ViewData.CreateView<TabHeader>(TabHeaderList.Content,
+                    tab.Parent, null, Theme, String.Empty, Style);
+
                 tabHeader.ParentList = TabHeaderList;
                 tabHeader.ParentTab = tab;
                 if (index >= 0)
@@ -892,7 +910,7 @@ namespace MarkLight.Views.UI
             {
                 if (_tabItemTemplate == null)
                 {
-                    _tabItemTemplate = TabSwitcher.Find<Tab>(x => x.IsTemplate, false);
+                    _tabItemTemplate = TabSwitcher.Find<Tab>(x => x.IsTemplate, ViewSearchArgs.NonRecursive);
                 }
 
                 return _tabItemTemplate;

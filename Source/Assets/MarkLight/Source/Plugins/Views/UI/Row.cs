@@ -27,9 +27,11 @@ namespace MarkLight.Views.UI
             }
 
             // arrange columns according to the settings in the parent datagrid
-            var columns = this.GetChildren<Column>(view => PositionType.Value != ElementPositionType.Absolute, false);
+            var columns = this.GetChildren<Column>(
+                view => PositionType.Value != ElementPositionType.Absolute, ViewSearchArgs.NonRecursive);
+
             var columnHeaders = ParentDataGrid.RowHeader != null
-                ? ParentDataGrid.RowHeader.GetChildren<ColumnHeader>(false)
+                ? ParentDataGrid.RowHeader.GetChildren<ColumnHeader>(ViewSearchArgs.NonRecursive)
                 : new List<ColumnHeader>();
 
             if (columnHeaders.Count > 0 && columns.Count > columnHeaders.Count)
@@ -115,7 +117,7 @@ namespace MarkLight.Views.UI
         public override void SetState(string stateName)
         {
             base.SetState(stateName);
-            this.ForEachChild<Column>(x => x.SetState(stateName), false);
+            this.ForEachChild<Column>(x => x.SetState(stateName), ViewSearchArgs.NonRecursive);
         }
 
         #endregion

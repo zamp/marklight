@@ -697,7 +697,10 @@ namespace MarkLight
             }
 
             // search for a content placeholder
-            var contentContainer = view.Find<ContentPlaceholder>(true, view);
+            var contentContainer = view.Find<ContentPlaceholder>(new ViewSearchArgs
+            {
+                Parent = view
+            });
             var contentLayoutParent = result;
             if (contentContainer != null)
             {
@@ -736,8 +739,7 @@ namespace MarkLight
             {
                 // is this a reference to a view?
                 var field = referenceField;
-                var referencedView = view.Find<View>(
-                    x => String.Equals(x.Id, field, StringComparison.OrdinalIgnoreCase), true, view);
+                var referencedView = view.Find<View>(field, new ViewSearchArgs { Parent = view });
 
                 if (referencedView != null)
                 {

@@ -150,7 +150,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// The alignment of data grid list items.
         /// </summary>
-        /// <d>If the data grid list items varies in size the content alignment specifies how the data grid list items should be arranged in relation to each other.</d>
+        /// <d>If the data grid list items varies in size the content alignment specifies how the data grid list items
+        /// should be arranged in relation to each other.</d>
         [MapTo("DataGridList.ContentAlignment")]
         public _ElementAlignment ListContentAlignment;
 
@@ -253,25 +254,29 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Column text margin.
         /// </summary>
-        /// <d>The margin of the column text. If set the text margin is applied to all columns that doesn't have a custom text margin set.</d>
+        /// <d>The margin of the column text. If set the text margin is applied to all columns that doesn't have a
+        /// custom text margin set.</d>
         public _ElementMargin ColumnTextMargin;
 
         /// <summary>
         /// Column text alignment.
         /// </summary>
-        /// <d>The alignment of the column text. If set the alignment is applied to all columns that doesn't have a custom alignment set.</d>
+        /// <d>The alignment of the column text. If set the alignment is applied to all columns that doesn't have a
+        /// custom alignment set.</d>
         public _ElementAlignment ColumnTextAlignment;
 
         /// <summary>
         /// Column header text margin.
         /// </summary>
-        /// <d>The margin of the column header text. If set the text margin is applied to all column headers that doesn't have a custom text margin set.</d>
+        /// <d>The margin of the column header text. If set the text margin is applied to all column headers that
+        /// doesn't have a custom text margin set.</d>
         public _ElementMargin ColumnHeaderTextMargin;
 
         /// <summary>
         /// Column header text alignment.
         /// </summary>
-        /// <d>The alignment of the column header text. If set the alignment is applied to all column header that doesn't have a custom alignment set.</d>
+        /// <d>The alignment of the column header text. If set the alignment is applied to all column header that
+        /// doesn't have a custom alignment set.</d>
         public _ElementAlignment ColumnHeaderTextAlignment;
 
         /// <summary>
@@ -297,7 +302,8 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
-            Layout.Height = new ElementSize(DataGridList.Layout.Height.Pixels + DataGridList.Layout.OffsetFromParent.Top.Pixels);
+            Layout.Height = new ElementSize(DataGridList.Layout.Height.Pixels +
+                                            DataGridList.Layout.OffsetFromParent.Top.Pixels);
             return base.CalculateLayoutChanges(context);
         }
 
@@ -309,7 +315,7 @@ namespace MarkLight.Views.UI
             base.Initialize();
 
             // parse header columns
-            var rowHeader = DataGridList.Content.Find<RowHeader>(false);
+            var rowHeader = DataGridList.Content.Find<RowHeader>(ViewSearchArgs.NonRecursive);
             if (rowHeader != null)
             {
                 rowHeader.MoveTo(this, 0);

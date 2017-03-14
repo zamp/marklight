@@ -245,14 +245,7 @@ namespace MarkLight.Views.UI
             if (IsDisabled)
                 return;
 
-            if (IsChecked)
-            {
-                SetState("Checked");
-            }
-            else
-            {
-                SetState(DefaultStateName);
-            }
+            SetState(IsChecked ? "Checked" : DefaultStateName);
         }
 
         /// <summary>
@@ -293,7 +286,7 @@ namespace MarkLight.Views.UI
                     {
                         x.IsChecked.Value = false;
                     }
-                }, false);
+                }, ViewSearchArgs.NonRecursive);
             }
 
             // select this radio button

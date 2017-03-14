@@ -1,23 +1,12 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
+﻿using System;
 
 namespace MarkLight.Views.UI
 {
     /// <summary>
     /// ViewSwitcher view.
     /// </summary>
-    /// <d>Provides functionality for switching between views (presenting one view at a time). Can apply animations to views being switched to/from.</d>
+    /// <d>Provides functionality for switching between views (presenting one view at a time). Can apply animations
+    /// to views being switched to/from.</d>
     [HideInPresenter]
     public class ViewSwitcher : UIView
     {
@@ -56,13 +45,15 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Transition in reverse animation ID.
         /// </summary>
-        /// <d>ID of view animation to apply on views transitioned to when going from a higher indexed view to a lower.</d>
+        /// <d>ID of view animation to apply on views transitioned to when going from a higher indexed view to a
+        /// lower.</d>
         public _string TransitionInReverse;
 
         /// <summary>
         /// Transition out reverse animation ID.
         /// </summary>
-        /// <d>ID of view animation to apply on views transitioned from when going from a higher indexed view to a lower.</d>
+        /// <d>ID of view animation to apply on views transitioned from when going from a higher indexed view to a
+        /// lower.</d>
         public _string TransitionOutReverse;
 
         /// <summary>
@@ -80,13 +71,15 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Transition in reverse animation.
         /// </summary>
-        /// <d>Reference to the animation applied to views transitioned to when going from a higher indexed view to a lower.</d>
+        /// <d>Reference to the animation applied to views transitioned to when going from a higher indexed view to
+        /// a lower.</d>
         public ViewAnimation TransitionInReverseAnimation;
 
         /// <summary>
         /// Transition out reverse animation.
         /// </summary>
-        /// <d>Reference to the animation applied to views transitioned from when going from a higher indexed view to a lower.</d>
+        /// <d>Reference to the animation applied to views transitioned from when going from a higher indexed view
+        /// to a lower.</d>
         public ViewAnimation TransitionOutReverseAnimation;
 
         /// <summary>
@@ -170,7 +163,7 @@ namespace MarkLight.Views.UI
                     // deactive all views
                     if (DeactiveViews)
                     {
-                        this.ForEachChild<View>(x => x.Deactivate(), false);
+                        this.ForEachChild<View>(x => x.Deactivate(), ViewSearchArgs.NonRecursive);
                     }
                 }
             }
@@ -209,7 +202,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void SwitchTo(string id, object data, bool animate)
         {
-            var view = this.Find<View>(id, false);
+            var view = this.Find<View>(id, ViewSearchArgs.NonRecursive);
             SwitchTo(view, data, animate);
         }
 
@@ -320,7 +313,7 @@ namespace MarkLight.Views.UI
                         return;
 
                     x.Deactivate();
-                }, false);
+                }, ViewSearchArgs.NonRecursive);
             }
         }
 
@@ -343,7 +336,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void Next(bool animate = true, bool cycle = true)
         {
-            var views = this.GetChildren<View>(false);
+            var views = this.GetChildren<View>(ViewSearchArgs.NonRecursive);
             int viewCount = views.Count;
 
             if (viewCount <= 0)
@@ -370,13 +363,13 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void Previous(bool animate = true, bool cycle = true)
         {
-            var views = this.GetChildren<View>(false);
-            int viewCount = views.Count;
+            var views = this.GetChildren<View>(ViewSearchArgs.NonRecursive);
+            var viewCount = views.Count;
 
             if (viewCount <= 0)
                 return;
 
-            int index = views.IndexOf(ActiveView);
+            var index = views.IndexOf(ActiveView);
             --index;
 
             if (index < 0)

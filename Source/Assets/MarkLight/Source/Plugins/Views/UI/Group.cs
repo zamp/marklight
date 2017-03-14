@@ -55,14 +55,16 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Sort direction.
         /// </summary>
-        /// <d>If children has SortIndex set the sort direction determines which order the views should be arranged in the group.</d>
+        /// <d>If children has SortIndex set the sort direction determines which order the views should be arranged in
+        /// the group.</d>
         [ChangeHandler("LayoutChanged")]
         public _ElementSortDirection SortDirection;
 
         /// <summary>
         /// Sets the visibility of children so they are made visible after they are arranged.
         /// </summary>
-        /// <d>Boolean indicating that the group should set the visibility of children so they are only made visible after they are arranged.</d>
+        /// <d>Boolean indicating that the group should set the visibility of children so they are only made visible
+        /// after they are arranged.</d>
         public _bool SetChildVisibility;
 
         #endregion
@@ -127,7 +129,7 @@ namespace MarkLight.Views.UI
                     {
                         x.IsVisible.Value = false;
                     }
-                }, false);
+                }, ViewSearchArgs.NonRecursive);
             }
 
             base.Initialize();            

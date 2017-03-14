@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Marklight
+namespace MarkLight
 {
     /// <summary>
     /// String parsing utilities.

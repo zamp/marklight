@@ -426,19 +426,6 @@ namespace MarkLight.Views.UI
             }
         }
 
-        public override void ResolutionChanged()
-        {
-            // Update layout if aspect ratio is set.
-            // Update layout if percent positioning or sizing is used.
-            if (AspectRatio.IsSet || !Layout.IsPositionExplicit || !Layout.IsSizeExplicit)
-            {
-                if (AspectRatio.IsSet)
-                    Layout.IsDirty = true;
-
-                NotifyLayoutChanged();
-            }
-        }
-
         /// <summary>
         /// Gets local point in view from screen point (e.g. mouse position).
         /// </summary>
@@ -569,7 +556,7 @@ namespace MarkLight.Views.UI
                 }
 
                 children.Add(x);
-            }, false);
+            }, ViewSearchArgs.NonRecursive);
 
             children.AddRange(sortDirection == ElementSortDirection.Ascending
                 ? childrenToBeSorted.OrderBy(x => x.SortIndex.Value)

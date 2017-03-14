@@ -28,7 +28,7 @@ namespace MarkLight
         /// <param name="children">The child views of the parent view.</param>
         /// <param name="context">The layout change context.</param>
         /// <returns>True if layout changes were made.</returns>
-        public abstract bool CalculateLayoutChanges(UIView parent, IList<UIView> children,
+        public abstract bool CalculateLayoutChanges(UIView view, IList<UIView> children,
             LayoutChangeContext context);
 
         /// <summary>

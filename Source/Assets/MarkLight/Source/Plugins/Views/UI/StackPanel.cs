@@ -78,7 +78,7 @@ namespace MarkLight.Views.UI
                     {
                         x.IsVisible.Value = false;
                     }
-                }, false);
+                }, ViewSearchArgs.NonRecursive);
             }
 
             base.Initialize();

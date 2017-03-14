@@ -1,14 +1,5 @@
-﻿#region Using Statements
-using MarkLight.Animation;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-#endregion
 
 namespace MarkLight.Views
 {
@@ -68,7 +59,7 @@ namespace MarkLight.Views
                 }
 
                 _animatedFields[x.Field].Add(x);
-            }, false);
+            }, ViewSearchArgs.NonRecursive);
         }
 
         /// <summary>
@@ -76,7 +67,7 @@ namespace MarkLight.Views
         /// </summary>
         public override void StartAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.StartAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.StartAnimation(), ViewSearchArgs.NonRecursive);
             AnimationStarted.Trigger();
         }
 
@@ -85,7 +76,7 @@ namespace MarkLight.Views
         /// </summary>
         public override void StopAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.StopAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.StopAnimation(), ViewSearchArgs.NonRecursive);
             AnimationStopped.Trigger();
         }
 
@@ -94,7 +85,7 @@ namespace MarkLight.Views
         /// </summary>
         public override void ResetAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ResetAnimation(), false);            
+            this.ForEachChild<ViewAnimation>(x => x.ResetAnimation(), ViewSearchArgs.NonRecursive);
         }
 
         /// <summary>
@@ -102,7 +93,8 @@ namespace MarkLight.Views
         /// </summary>
         public override void ResetAndStopAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ResetAndStopAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.ResetAndStopAnimation(), ViewSearchArgs.NonRecursive);
+
             AnimationStopped.Trigger();
         }
 
@@ -111,7 +103,7 @@ namespace MarkLight.Views
         /// </summary>
         public override void ReverseAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ReverseAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.ReverseAnimation(), ViewSearchArgs.NonRecursive);
             AnimationReversed.Trigger();
         }
 
@@ -120,7 +112,7 @@ namespace MarkLight.Views
         /// </summary>
         public override void PauseAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.PauseAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.PauseAnimation(), ViewSearchArgs.NonRecursive);
             AnimationPaused.Trigger();
         }
 
@@ -129,7 +121,7 @@ namespace MarkLight.Views
         /// </summary>
         public override void ResumeAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ResumeAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.ResumeAnimation(), ViewSearchArgs.NonRecursive);
             AnimationResumed.Trigger();
         }
 

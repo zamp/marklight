@@ -103,7 +103,7 @@ namespace MarkLight
         public View Parent;
 
         /// <summary>
-        /// Content view.        
+        /// Content view.
         /// </summary>
         /// <d>View that is the parent to the content of this view. Usually it is the current view itself but
         /// when a ContentPlaceholder is used the Content points to the view that contains the ContentPlaceholder.</d>
@@ -314,7 +314,7 @@ namespace MarkLight
         public _bool IsDestroyed;
 
         /// <summary>
-        /// Indicates if the view has been created dynamically. 
+        /// Indicates if the view has been created dynamically.
         /// </summary>
         [NotSetFromXuml]
         public _bool IsDynamic;
@@ -328,6 +328,7 @@ namespace MarkLight
         private bool _isLayoutCalculating;
         private bool _isLayoutChanged;
         private LayoutCalculator _layoutCalculator;
+        private ViewPresenter _presenter;
 
         [SerializeField]
         private string _viewXumlName;
@@ -345,7 +346,7 @@ namespace MarkLight
         private ViewFieldStates _states;
 
 #if UNITY_4_6 || UNITY_5_0
-        private bool _eventSystemTriggersInitialized;
+        protected bool _eventSystemTriggersInitialized;
 #endif
 
         #endregion
@@ -373,21 +374,6 @@ namespace MarkLight
         #endregion
 
         #region Methods
-
-        /// <summary>
-        /// Called once at the end of a frame. Triggers queued change handlers.
-        /// </summary>
-        public virtual void LateUpdate()
-        {
-            TriggerChangeHandlers();
-
-#if UNITY_4_6 || UNITY_5_0
-            if (!_eventSystemTriggersInitialized)
-            {
-                InitEventSystemTriggers();
-            }
-#endif
-        }
 
         /// <summary>
         /// Activates the view.
@@ -486,7 +472,7 @@ namespace MarkLight
             if (viewFieldData == null)
             {
                 Debug.LogError(String.Format(
-                    "[MarkLight] {0}: Unable to assign view action handler \"{1}.{2}()\" to view action \"{3}\". "+
+                    "[MarkLight] {0}: Unable to assign view action handler \"{1}.{2}()\" to view action \"{3}\". " +
                     "View action not found.",
                     GameObjectName, Parent.ViewTypeName, entry.HandlerName, entry.FieldName));
                 return;
@@ -557,6 +543,7 @@ namespace MarkLight
         public void NotifyLayoutChanged()
         {
             _isLayoutChanged = true;
+            Presenter.IsLayoutDirty = true;
         }
 
         /// <summary>
@@ -689,7 +676,7 @@ namespace MarkLight
             // if pool isn't empty get an item from the pool
             if (viewPool != null && !viewPool.IsEmpty)
             {
-                go = viewPool.GetView().gameObject;
+                go = viewPool.RemoveView().gameObject;
             }
             else
             {
@@ -734,7 +721,9 @@ namespace MarkLight
         {
             // does a view pool container exist for this template?
             var container = this.Find<ViewPoolContainer>(
-                                x => x.Id == poolName && x.Template == template, false);
+                x => x.Id == poolName && x.Template == template,
+                ViewSearchArgs.NonRecursive);
+
 
             if (container == null)
             {
@@ -793,7 +782,6 @@ namespace MarkLight
             _eventSystemViewActions = new List<ViewAction>();
             _changeHandlers = new HashSet<string>();
             _changeHandlerMethods = new Dictionary<string, MethodInfo>();
-            _layoutCalculator = DefaultLayoutCalculator.Instance;
         }
 
         /// <summary>
@@ -1083,29 +1071,41 @@ namespace MarkLight
         /// <summary>
         /// Triggers queued change handlers.
         /// </summary>
-        private void TriggerChangeHandlers()
+        internal void TriggerChangeHandlers()
         {
-            if (_changeHandlers.Count > 0)
-            {
-                var triggeredChangeHandlers = new List<string>(_changeHandlers);
-                _changeHandlers.Clear();
+            if (_changeHandlers.Count <= 0)
+                return;
 
-                foreach (var changeHandler in triggeredChangeHandlers)
+            var triggeredChangeHandlers = new List<string>(_changeHandlers);
+            _changeHandlers.Clear();
+
+            foreach (var changeHandler in triggeredChangeHandlers)
+            {
+                try
                 {
-                    try
-                    {
-                        _changeHandlerMethods[changeHandler].Invoke(this, null);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError(String.Format("[MarkLight] {0}: Exception thrown in change handler \"{1}\": {2}",
-                            GameObjectName, changeHandler, Utils.GetError(e)));
-                    }
+                    _changeHandlerMethods[changeHandler].Invoke(this, null);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(String.Format("[MarkLight] {0}: Exception thrown in change handler \"{1}\": {2}",
+                        GameObjectName, changeHandler, Utils.GetError(e)));
                 }
             }
+        }
 
-            if (!_isLayoutChanged || _isLayoutCalculating)
+        /// <summary>
+        /// Calculate and render the view layout.
+        /// </summary>
+        public void CalculateAndRenderLayout(bool force = false)
+        {
+            if (!force && (!_isLayoutChanged || _isLayoutCalculating || !IsActive))
+            {
+                if (!_isLayoutChanged && !IsActive)
+                {
+                    NotifyLayoutChanged();
+                }
                 return;
+            }
 
             _isLayoutChanged = false;
             _isLayoutCalculating = true;
@@ -1198,7 +1198,7 @@ namespace MarkLight
         /// </summary>
         public int ChildCount
         {
-            get { return transform.childCount; }
+            get { return LayoutChildren.Count; }
         }
 
         /// <summary>
@@ -1206,7 +1206,7 @@ namespace MarkLight
         /// </summary>
         public LayoutCalculator LayoutCalculator
         {
-            get { return _layoutCalculator; }
+            get { return _layoutCalculator ?? (_layoutCalculator = DefaultLayoutCalculator.Instance); }
             protected set { _layoutCalculator = value; }
         }
 
@@ -1237,6 +1237,23 @@ namespace MarkLight
         {
             get { return _isInitialized; }
             set { _isInitialized = value; }
+        }
+
+        /// <summary>
+        /// Get the parent ViewPresenter
+        /// </summary>
+        protected ViewPresenter Presenter
+        {
+            get
+            {
+                if (_presenter != null)
+                    return _presenter;
+
+                if (LayoutParent != null)
+                    return LayoutParent.Presenter;
+
+                return _presenter ?? (_presenter = this as ViewPresenter) ?? (_presenter = ViewPresenter.Instance);
+            }
         }
 
         #endregion

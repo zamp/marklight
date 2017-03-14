@@ -1,15 +1,4 @@
-﻿#region Using Statements
-using MarkLight.Animation;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-#endregion
-
+﻿
 namespace MarkLight.Views
 {
     /// <summary>
@@ -75,8 +64,12 @@ namespace MarkLight.Views
         {
             get
             {
-                bool isActive = false;
-                this.ForEachChild<ViewAnimation>(x => isActive = isActive || x.IsAnimationRunning, false);
+                var isActive = false;
+
+                this.ForEachChild<ViewAnimation>(
+                    x => isActive = isActive || x.IsAnimationRunning,
+                    ViewSearchArgs.NonRecursive);
+
                 return isActive;
             }
         }
@@ -88,8 +81,12 @@ namespace MarkLight.Views
         {
             get
             {
-                bool isReversing = false;
-                this.ForEachChild<ViewAnimation>(x => isReversing = isReversing || x.IsAnimationReversing, false);
+                var isReversing = false;
+
+                this.ForEachChild<ViewAnimation>(
+                    x => isReversing = isReversing || x.IsAnimationReversing,
+                    ViewSearchArgs.NonRecursive);
+
                 return isReversing;
             }
         }
@@ -101,8 +98,12 @@ namespace MarkLight.Views
         {
             get
             {
-                bool isCompleted = true;
-                this.ForEachChild<ViewAnimation>(x => isCompleted = isCompleted && x.IsAnimationCompleted, false);
+                var isCompleted = true;
+
+                this.ForEachChild<ViewAnimation>(
+                    x => isCompleted = isCompleted && x.IsAnimationCompleted,
+                    ViewSearchArgs.NonRecursive);
+
                 return isCompleted;
             }
         }
@@ -114,8 +115,12 @@ namespace MarkLight.Views
         {
             get
             {
-                bool isPaused = true;
-                this.ForEachChild<ViewAnimation>(x => isPaused = isPaused && x.IsAnimationPaused, false);
+                var isPaused = true;
+
+                this.ForEachChild<ViewAnimation>(
+                    x => isPaused = isPaused && x.IsAnimationPaused,
+                    ViewSearchArgs.NonRecursive);
+
                 return isPaused;
             }
         }
@@ -138,7 +143,7 @@ namespace MarkLight.Views
         /// </summary>
         public virtual void StartAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.StartAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.StartAnimation(), ViewSearchArgs.NonRecursive);
             AnimationStarted.Trigger();
         }
 
@@ -147,7 +152,7 @@ namespace MarkLight.Views
         /// </summary>
         public virtual void StopAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.StopAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.StopAnimation(), ViewSearchArgs.NonRecursive);
             AnimationStopped.Trigger();
         }
 
@@ -156,7 +161,7 @@ namespace MarkLight.Views
         /// </summary>
         public virtual void ResetAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ResetAnimation(), false);            
+            this.ForEachChild<ViewAnimation>(x => x.ResetAnimation(), ViewSearchArgs.NonRecursive);
         }
 
         /// <summary>
@@ -164,7 +169,7 @@ namespace MarkLight.Views
         /// </summary>
         public virtual void ResetAndStopAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ResetAndStopAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.ResetAndStopAnimation(), ViewSearchArgs.NonRecursive);
             AnimationStopped.Trigger();
         }
 
@@ -173,7 +178,7 @@ namespace MarkLight.Views
         /// </summary>
         public virtual void ReverseAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ReverseAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.ReverseAnimation(), ViewSearchArgs.NonRecursive);
             AnimationReversed.Trigger();
         }
 
@@ -182,7 +187,7 @@ namespace MarkLight.Views
         /// </summary>
         public virtual void PauseAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.PauseAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.PauseAnimation(), ViewSearchArgs.NonRecursive);
             AnimationPaused.Trigger();
         }
 
@@ -191,7 +196,7 @@ namespace MarkLight.Views
         /// </summary>
         public virtual void ResumeAnimation()
         {
-            this.ForEachChild<ViewAnimation>(x => x.ResumeAnimation(), false);
+            this.ForEachChild<ViewAnimation>(x => x.ResumeAnimation(), ViewSearchArgs.NonRecursive);
             AnimationResumed.Trigger();
         }
 
@@ -201,7 +206,7 @@ namespace MarkLight.Views
         public virtual void SetAnimationTarget(View view)
         {
             Target = view;
-            this.ForEachChild<ViewAnimation>(x => x.SetAnimationTarget(view), false);
+            this.ForEachChild<ViewAnimation>(x => x.SetAnimationTarget(view), ViewSearchArgs.NonRecursive);
         }
 
         /// <summary>

@@ -4,7 +4,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.EventSystems;
 #endregion
 
 namespace MarkLight
@@ -18,8 +17,8 @@ namespace MarkLight
                 
         public static System.Diagnostics.Stopwatch Stopwatch;
         public static string ErrorMessage = string.Empty;
-        private static System.Random _random;
-        private static bool _suppressLogging = false;
+        private static readonly System.Random _random;
+        private static bool _suppressLogging;
 
         #endregion
 
@@ -41,8 +40,9 @@ namespace MarkLight
         /// Returns a random (named) color.
         /// </summary>
         public static Color GetRandomColor()
-        {            
-            return ColorValueConverter.ColorCodes.Values.ElementAt(_random.Next(ColorValueConverter.ColorCodes.Values.Count));
+        {
+            return ColorValueConverter.ColorCodes.Values.ElementAt(
+                _random.Next(ColorValueConverter.ColorCodes.Values.Count));
         }
 
         /// <summary>
@@ -51,12 +51,9 @@ namespace MarkLight
         public static object GetError(Exception e)
         {
             var exception = e;
-            if (e is TargetInvocationException)
+            if (e is TargetInvocationException && e.InnerException != null)
             {
-                if (e.InnerException != null)
-                {
-                    exception = e.InnerException;
-                }
+                exception = e.InnerException;
             }
                       
             return String.Format("{0}{1}{2}", exception.Message, Environment.NewLine, exception.StackTrace);
@@ -141,7 +138,7 @@ namespace MarkLight
 
             try
             {
-                Utils.LogWarning(String.Format(format, args));
+                LogWarning(String.Format(format, args));
             }
             catch
             {
