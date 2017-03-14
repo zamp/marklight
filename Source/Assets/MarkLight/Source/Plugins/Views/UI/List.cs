@@ -1215,7 +1215,7 @@ namespace MarkLight.Views.UI
             }
 
             if (Parent != null)
-                Parent.Fields.NotifyDependentValueObservers(Id, true);
+                Parent.Fields.NotifyDependentValueObservers(Id, true, false);
         }
 
         /// <summary>
@@ -1349,7 +1349,7 @@ namespace MarkLight.Views.UI
                 NotifyLayoutChanged();
 
             if (Parent != null)
-                Parent.Fields.NotifyDependentValueObservers(Id, true);
+                Parent.Fields.NotifyDependentValueObservers(Id, true, false);
         }
 
         public override void ValueObserversNotified(ViewFieldData viewFieldData, HashSet<ViewFieldData> callstack)

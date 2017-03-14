@@ -247,10 +247,14 @@ namespace MarkLight
         /// Notifies all value observers that are dependent on the specified field. E.g. when field "Name" changes,
         /// value observers on "Name.FirstName" and "Name.LastName" are notified in this method.
         /// </summary>
-        public void NotifyDependentValueObservers(string fieldPath, bool includeViewField = false)
+        public void NotifyDependentValueObservers(string fieldPath,
+                                                  bool includeViewField = false, bool includeMapped = true)
         {
             foreach (var viewFieldData in _fieldData.Values)
             {
+                if (!includeMapped && viewFieldData.IsMapped)
+                    continue;
+
                 var isMatch = includeViewField && viewFieldData.Path == fieldPath ||
                               viewFieldData.HasDependency(fieldPath);
 
@@ -260,7 +264,7 @@ namespace MarkLight
                 if (viewFieldData.IsMapped)
                 {
                     viewFieldData.TargetView.Fields.NotifyDependentValueObservers(
-                        viewFieldData.TargetPath,includeViewField);
+                        viewFieldData.TargetPath, includeViewField);
                 }
                 else
                 {
