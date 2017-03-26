@@ -126,9 +126,11 @@ namespace MarkLight
                 });
             }
 
+            var isRenderRequired = !isResolutionChanged && IsLayoutDirty;
+            var changeContext = isRenderRequired ? new LayoutChangeContext() : null;
+
             this.ForThisAndEachChild<View>(x =>
             {
-
                 x.TriggerChangeHandlers();
 
 #if UNITY_4_6 || UNITY_5_0
@@ -138,12 +140,15 @@ namespace MarkLight
                 }
 #endif
 
-                if (!isResolutionChanged && IsLayoutDirty)
+                if (isRenderRequired)
                 {
-                    x.CalculateAndRenderLayout();
+                    x.CalculateAndRenderLayout(changeContext);
                 }
 
             }, CalculateAndRenderViewSearchArgs);
+
+            if (isRenderRequired)
+                changeContext.RenderLayout();
         }
 
         /// <summary>
@@ -208,12 +213,16 @@ namespace MarkLight
                     break;
                 }
 
+                var changeContext = new LayoutChangeContext();
+
                 // as long as there are change handlers queued, go through all views and trigger them
                 rootView.ForThisAndEachChild<View>(x =>
                 {
                     x.TryTriggerChangeHandlers();
-                    x.CalculateAndRenderLayout(true);
+                    x.CalculateAndRenderLayout(changeContext, true);
                 }, ViewSearchArgs.ReverseBreadthFirst);
+
+                changeContext.RenderLayout();
 
                 ++pass;
             }

@@ -96,6 +96,13 @@ namespace MarkLight.Views.UI
         public _ElementMargin ContentMargin;
 
         /// <summary>
+        /// Content padding.
+        /// </summary>
+        /// <d>The amount of margin around all list items within the list.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementMargin Padding;
+
+        /// <summary>
         /// List mask.
         /// </summary>
         /// <d>The list mask can be used to mask the list and its items using a mask graphic.</d>
@@ -541,27 +548,6 @@ namespace MarkLight.Views.UI
         public _OverflowMode Overflow;
 
         /// <summary>
-        /// Spacing between list items.
-        /// </summary>
-        /// <d>The spacing between list items.</d>
-        [ChangeHandler("LayoutChanged")]
-        public _ElementSize Spacing;
-
-        /// <summary>
-        /// Horizontal spacing between list items.
-        /// </summary>
-        /// <d>The horizontal spacing between list items.</d>
-        [ChangeHandler("LayoutChanged")]
-        public _ElementSize HorizontalSpacing;
-
-        /// <summary>
-        /// Vertical spacing between list items.
-        /// </summary>
-        /// <d>The vertical spacing between list items.</d>
-        [ChangeHandler("LayoutChanged")]
-        public _ElementSize VerticalSpacing;
-
-        /// <summary>
         /// The alignment of list items.
         /// </summary>
         /// <d>If the list items varies in size the content alignment specifies how the list items should be arranged
@@ -624,13 +610,6 @@ namespace MarkLight.Views.UI
         /// </summary>
         /// <d>Boolean indicating how many pixels should be scrolled before virtualization updates.</d>
         public _float VirtualizationUpdateThreshold;
-
-        /// <summary>
-        /// List item padding.
-        /// </summary>
-        /// <d>Adds padding to the list.</d>
-        [ChangeHandler("LayoutChanged")]
-        public _ElementMargin Padding;
 
         /// <summary>
         /// Selected data list item.
@@ -705,11 +684,9 @@ namespace MarkLight.Views.UI
         public override void SetDefaultValues()
         {
             base.SetDefaultValues();
-            Spacing.DirectValue = new ElementSize();
             CanSelect.DirectValue = true;
             CanDeselect.DirectValue = false;
             CanMultiSelect.DirectValue = false;
-            Padding.DirectValue = new ElementMargin();
             RealizationMargin.DirectValue = 50;
             VirtualizationUpdateThreshold.DirectValue = 25;
         }
@@ -768,7 +745,6 @@ namespace MarkLight.Views.UI
 
         public override void RefreshLayoutData()
         {
-            LayoutData.Copy(Padding.Value, Layout.Padding);
             Layout.Orientation = Orientation.Value;
             base.RefreshLayoutData();
         }
@@ -791,15 +767,8 @@ namespace MarkLight.Views.UI
                 layoutCalc.AdjustToWidth = !Width.IsSet;
                 layoutCalc.AdjustToHeight = !Height.IsSet;
 
-                layoutCalc.HorizontalSpacing = HorizontalSpacing.IsSet
-                    ? HorizontalSpacing.Value
-                    : Spacing.Value;
-
-                layoutCalc.VerticalSpacing = VerticalSpacing.IsSet
-                    ? VerticalSpacing.Value
-                    : Spacing.Value;
-
                 layoutCalc.Alignment = ContentAlignment.IsSet ? ContentAlignment.Value : ElementAlignment.TopLeft;
+                layoutCalc.Padding = Padding.Value;
                 layoutCalc.Orientation = Orientation.Value;
                 layoutCalc.Overflow = Overflow.Value;
                 layoutCalc.ScrollContent = ScrollContent;

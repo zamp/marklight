@@ -326,6 +326,9 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
+            if (IsDestroyed)
+                return false;
+
             if (!LayoutCalculator.IsChildLayout)
                 return LayoutCalculator.CalculateLayoutChanges(this, context);
 
@@ -540,7 +543,7 @@ namespace MarkLight.Views.UI
             return GetContentChildren(content, ElementSortDirection.Ascending);
         }
 
-        protected virtual List<UIView> GetContentChildren(View content, ElementSortDirection sortDirection)
+        protected static List<UIView> GetContentChildren(View content, ElementSortDirection sortDirection)
         {
             var children = new List<UIView>();
             var childrenToBeSorted = new List<UIView>();

@@ -131,23 +131,21 @@ namespace MarkLight.Views.UI
 
         #region Methods
 
-        /// <summary>
-        /// Sets the state of the view.
-        /// </summary>
         public override void SetState(string stateName)
         {
             base.SetState(stateName);
             ColumnLabel.SetState(stateName);
         }
 
-        public override void InitializeInternalDefaultValues() {
+        public override void InitializeInternalDefaultValues()
+        {
             base.InitializeInternalDefaultValues();
 
             LayoutCalculator = new FrameLayoutCalculator();
         }
 
-        public override bool CalculateLayoutChanges(LayoutChangeContext context) {
-
+        public override bool CalculateLayoutChanges(LayoutChangeContext context)
+        {
             var layout = LayoutCalculator as FrameLayoutCalculator;
             if (layout != null)
             {

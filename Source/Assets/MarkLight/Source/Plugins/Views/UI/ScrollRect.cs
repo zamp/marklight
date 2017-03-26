@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace MarkLight.Views.UI
 {
@@ -254,7 +255,8 @@ namespace MarkLight.Views.UI
             UpdateNormalizedPosition.Value = true;
         }
 
-        public virtual void OnEnable() {
+        public virtual void OnEnable()
+        {
             UpdateNormalizedPosition.DirectValue = true;
             QueueChangeHandler("NormalizedPositionChanged");
         }
@@ -274,7 +276,8 @@ namespace MarkLight.Views.UI
             // We get here if we want to change the normalized position from outside.
 
             // Setting this value even if it's already set forces a scrollbar refresh.
-            ScrollRectComponent.normalizedPosition = NormalizedPosition.Value;
+            if (ScrollRectComponent.content != null)
+                ScrollRectComponent.normalizedPosition = NormalizedPosition.Value;
 
             // workaround for issue where scroll rect resets its normalized position when the content
             // updates its rect transform, keep updating for a few frames to restore reset position

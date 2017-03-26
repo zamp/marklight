@@ -25,32 +25,18 @@ namespace MarkLight.Views.UI
         public _OverflowMode Overflow;
 
         /// <summary>
-        /// Spacing between views.
-        /// </summary>
-        /// <d>Determines the spacing to be added between views in the group.</d>
-        [ChangeHandler("LayoutChanged")]
-        public _ElementSize Spacing;
-
-        /// <summary>
-        /// Horizontal spacing between child views.
-        /// </summary>
-        /// <d>The horizontal spacing between child views.</d>
-        [ChangeHandler("LayoutChanged")]
-        public _ElementSize HorizontalSpacing;
-
-        /// <summary>
-        /// Vertical spacing between child views.
-        /// </summary>
-        /// <d>The vertical spacing between child views.</d>
-        [ChangeHandler("LayoutChanged")]
-        public _ElementSize VerticalSpacing;
-
-        /// <summary>
         /// Content alignment.
         /// </summary>
         /// <d>Determines how the children should be aligned in relation to each other.</d>
         [ChangeHandler("LayoutChanged")]
         public _ElementAlignment ContentAlignment;
+
+        /// <summary>
+        /// Content padding.
+        /// </summary>
+        /// <d>The amount of margin around all content within the group.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementMargin Padding;
 
         /// <summary>
         /// Sort direction.
@@ -82,7 +68,6 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Spacing.DirectValue = new ElementSize();
             Orientation.DirectValue = ElementOrientation.Vertical;
             SortDirection.DirectValue = ElementSortDirection.Ascending;
         }
@@ -95,15 +80,8 @@ namespace MarkLight.Views.UI
                 layoutCalc.AdjustToWidth = !Width.IsSet;
                 layoutCalc.AdjustToHeight = !Height.IsSet;
 
-                layoutCalc.HorizontalSpacing = HorizontalSpacing.IsSet
-                    ? HorizontalSpacing.Value
-                    : Spacing.Value;
-
-                layoutCalc.VerticalSpacing = VerticalSpacing.IsSet
-                    ? VerticalSpacing.Value
-                    : Spacing.Value;
-
                 layoutCalc.Alignment = ContentAlignment.IsSet ? ContentAlignment.Value : ElementAlignment.Top;
+                layoutCalc.Padding = Padding.Value;
                 layoutCalc.Orientation = Orientation.Value;
                 layoutCalc.Overflow = Overflow.Value;
             }

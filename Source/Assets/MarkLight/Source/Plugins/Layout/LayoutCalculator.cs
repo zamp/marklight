@@ -24,7 +24,7 @@ namespace MarkLight
         /// <summary>
         /// Calculate view layout.
         /// </summary>
-        /// <param name="parent">The parent view.</param>
+        /// <param name="view">The parent view.</param>
         /// <param name="children">The child views of the parent view.</param>
         /// <param name="context">The layout change context.</param>
         /// <returns>True if layout changes were made.</returns>

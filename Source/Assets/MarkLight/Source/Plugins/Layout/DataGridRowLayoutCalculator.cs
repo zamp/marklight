@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using MarkLight.Views.UI;
 using UnityEngine;
@@ -28,21 +27,20 @@ namespace MarkLight
             if (ParentDataGrid == null)
                 return view.Layout.IsDirty;
 
-            // require row header is already calculated
+            context.CalculateRequired(ParentDataGrid);
+
+            // require row header must already be calculated.
             if (!IsHeader && ParentDataGrid.RowHeader != null)
-                context.CalculateAsParent(ParentDataGrid.RowHeader);
+                context.CalculateRequired(ParentDataGrid.RowHeader);
 
             // arrange columns according to the settings in the parent datagrid
             var columns = view.GetChildren<Column>(
                 column => column.PositionType.Value != ElementPositionType.Absolute,
                 ViewSearchArgs.NonRecursive);
 
-            var columnSpacing = (columns.Count - 1) *
-                                ParentDataGrid.Layout.WidthToPixels(ParentDataGrid.ColumnSpacing.Value.Pixels) /
-                                columns.Count;
-
             var columnsToFill = new List<Column>();
-            var pixelWidth = IsHeader || ParentDataGrid.RowHeader == null
+
+            var rowWidth = IsHeader || ParentDataGrid.RowHeader == null
                 ? view.Layout.AspectPixelWidth
                 : ParentDataGrid.RowHeader.Layout.AspectPixelWidth;
 
@@ -59,28 +57,55 @@ namespace MarkLight
                 var column = columns[i];
                 var defWidth = column.Width.Value;
 
-                maxHeight = Mathf.Max(maxHeight, column.Layout.PixelHeight);
-
                 if (IsHeader || columnHeaders == null)
                 {
+                    if (!column.Margin.IsSet && !IsHeader && columnHeaders != null)
+                    {
+                        var header = columnHeaders[i];
+                        column.Layout.Margin = new ElementMargin(header.Layout.Margin);
+                    }
+
                     // set aside fill width columns
                     if (defWidth.Fill)
                     {
                         columnsToFill.Add(column);
+                        maxHeight = Mathf.Max(maxHeight, column.Layout.AspectPixelHeight);
                         continue;
                     }
 
                     column.Layout.Width = defWidth.Unit == ElementSizeUnit.Percents
-                        ? ElementSize.FromPixels(defWidth.Percent * pixelWidth - columnSpacing)
-                        : ElementSize.FromPixels(defWidth.Pixels - columnSpacing);
+                        ? ElementSize.FromPixels(defWidth.Percent * rowWidth - column.Layout.HorizontalMarginPixels)
+                        : ElementSize.FromPixels(defWidth.Pixels - column.Layout.HorizontalMarginPixels);
                 }
                 else
                 {
+                    // copy width of header column
                     var header = columnHeaders[i];
-                    LayoutData.Copy(header.Layout.Width, column.Layout.Width);
+                    column.Layout.Width = new ElementSize(header.Layout.Width);
+
+                    if (!column.Margin.IsSet)
+                    {
+                        column.Layout.Margin = new ElementMargin(header.Layout.Margin);
+                    }
                 }
 
-                totalWidth += column.Layout.Width.Pixels;
+                maxHeight = Mathf.Max(maxHeight, column.Layout.AspectPixelHeight);
+                totalWidth += column.Layout.Width.Pixels + column.Layout.HorizontalMarginPixels;
+            }
+
+            // adjust width of fill columns
+            if (columnsToFill.Count > 0)
+            {
+                var fillWidth = rowWidth - totalWidth;
+                var columnWidth = fillWidth / columnsToFill.Count;
+
+                foreach (var column in columnsToFill)
+                {
+                    column.Layout.Width = ElementSize.FromPixels(
+                        columnWidth - column.Layout.HorizontalMarginPixels);
+
+                    maxHeight = Mathf.Max(maxHeight, column.Layout.AspectPixelHeight);
+                }
             }
 
             if (!view.Height.IsSet)
@@ -90,45 +115,19 @@ namespace MarkLight
 
             if (!IsHeader && !view.Width.IsSet && ParentDataGrid.RowHeader != null)
             {
-                view.Layout.Width = ElementSize.FromPixels(ParentDataGrid.RowHeader.Layout.PixelWidth);
-            }
-
-            // adjust width of fill columns
-            if (columnsToFill.Count > 0)
-            {
-                var fillWidth = pixelWidth - totalWidth;
-                var columnWidth = Math.Max(columnSpacing, fillWidth / columnsToFill.Count);
-                foreach (var column in columnsToFill)
-                {
-                    column.Layout.Width = ElementSize.FromPixels(columnWidth - columnSpacing);
-                }
+                var headerLayout = ParentDataGrid.RowHeader.Layout;
+                view.Layout.Width = new ElementSize(headerLayout.Width);
             }
 
             // adjust column offsets and settings
             float offset = 0;
             foreach (var column in columns)
             {
-                if (!column.TextAlignment.IsSet)
-                {
-                    var textAlignment = ParentDataGrid.ColumnHeaderTextAlignment.IsSet
-                        ? ParentDataGrid.ColumnHeaderTextAlignment
-                        : ParentDataGrid.ColumnTextAlignment;
-
-                    column.TextAlignment.Value = textAlignment.Value;
-                }
-
-                if (!column.TextMargin.IsSet)
-                {
-                    var textMargin = ParentDataGrid.ColumnHeaderTextMargin.IsSet
-                        ? ParentDataGrid.ColumnHeaderTextMargin
-                        : ParentDataGrid.ColumnTextMargin;
-
-                    column.TextMargin.Value = textMargin.Value;
-                }
-
+                column.Layout.IsDirty = true;
                 column.Layout.Height = ElementSize.FromPixels(maxHeight);
-                column.Layout.OffsetFromParent = new ElementMargin(offset, 0, 0, 0);
-                offset += column.Layout.Width.Pixels + columnSpacing;
+                column.Layout.OffsetFromParent = new ElementMargin(offset, 0f, 0f, 0f);
+
+                offset += column.Layout.Width.Pixels + column.Layout.HorizontalMarginPixels;
                 context.NotifyLayoutUpdated(column, true);
             }
 

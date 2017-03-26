@@ -96,13 +96,6 @@ namespace MarkLight.Views.UI
         public _bool AlternateRows;
 
         /// <summary>
-        /// Spacing between data grid list items.
-        /// </summary>
-        /// <d>The spacing between data grid list items.</d>
-        [MapTo("DataGridList.Spacing")]
-        public _ElementSize Spacing;
-
-        /// <summary>
         /// The alignment of data grid list items.
         /// </summary>
         /// <d>If the data grid list items varies in size the content alignment specifies how the data grid list
@@ -520,40 +513,6 @@ namespace MarkLight.Views.UI
 
         #endregion
 
-        /// <summary>
-        /// Column text margin.
-        /// </summary>
-        /// <d>The margin of the column text. If set the text margin is applied to all columns that doesn't have a
-        /// custom text margin set.</d>
-        public _ElementMargin ColumnTextMargin;
-
-        /// <summary>
-        /// Column text alignment.
-        /// </summary>
-        /// <d>The alignment of the column text. If set the alignment is applied to all columns that doesn't have a
-        /// custom alignment set.</d>
-        public _ElementAlignment ColumnTextAlignment;
-
-        /// <summary>
-        /// Column header text margin.
-        /// </summary>
-        /// <d>The margin of the column header text. If set the text margin is applied to all column headers that
-        /// doesn't have a custom text margin set.</d>
-        public _ElementMargin ColumnHeaderTextMargin;
-
-        /// <summary>
-        /// Column header text alignment.
-        /// </summary>
-        /// <d>The alignment of the column header text. If set the alignment is applied to all column header that
-        /// doesn't have a custom alignment set.</d>
-        public _ElementAlignment ColumnHeaderTextAlignment;
-
-        /// <summary>
-        /// Spacing between columns.
-        /// </summary>
-        /// <d>Specifies the spacing that should be between columns.</d>
-        public _ElementSize ColumnSpacing;
-
         #endregion
 
         #region Methods
@@ -561,9 +520,6 @@ namespace MarkLight.Views.UI
         public override void SetDefaultValues()
         {
             base.SetDefaultValues();
-            ColumnSpacing.DirectValue = new ElementSize();
-            ColumnTextMargin.DirectValue = new ElementMargin();
-            ColumnHeaderTextMargin.DirectValue = new ElementMargin();
 
             DataGridList.Fields.SetIsSet("Width");
             DataGridList.Fields.SetIsSet("Height");
@@ -594,9 +550,6 @@ namespace MarkLight.Views.UI
                 layoutCalc.AdjustToWidth = !IsScrollable || !CanScrollHorizontally;
                 layoutCalc.AdjustToHeight = !IsScrollable || !CanScrollVertically;
 
-                layoutCalc.HorizontalSpacing = Spacing.Value;
-                layoutCalc.VerticalSpacing = Spacing.Value;
-
                 layoutCalc.Alignment = ContentAlignment.IsSet
                     ? ContentAlignment.Value
                     : ElementAlignment.TopLeft;
@@ -606,8 +559,17 @@ namespace MarkLight.Views.UI
                 layoutCalc.ScrollContent = list.ScrollContent;
             }
 
+            list.RefreshLayoutData();
+            context.NotifyLayoutUpdated(list);
+
             var children = GetContentChildren(list.ScrollContent ?? list.Content);
-            return list.LayoutCalculator.CalculateLayoutChanges(list, children, context);
+            if (list.LayoutCalculator.CalculateLayoutChanges(list, children, context))
+            {
+                list.Layout.Width = new ElementSize(1f, ElementSizeUnit.Percents) {Fill = true};
+                list.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents) {Fill = true};
+                return true;
+            }
+            return false;
         }
 
         public override void Initialize()

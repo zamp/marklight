@@ -12,9 +12,6 @@ namespace MarkLight
 
         #region Fields
 
-        private float _horzSpacePixels;
-        private float _vertSpacePixels;
-
         /// <summary>
         /// Determine if the Width should be affected.
         /// </summary>
@@ -24,16 +21,6 @@ namespace MarkLight
         /// Determine if the Height should be affected.
         /// </summary>
         public bool AdjustToHeight;
-
-        /// <summary>
-        /// Horizontal space between child elements.
-        /// </summary>
-        public ElementSize HorizontalSpacing;
-
-        /// <summary>
-        /// Vertical space between child elements.
-        /// </summary>
-        public ElementSize VerticalSpacing;
 
         /// <summary>
         /// Alignment of child elements.
@@ -51,6 +38,11 @@ namespace MarkLight
         public OverflowMode Overflow;
 
         /// <summary>
+        /// Get or set the container padding when setting width or height.
+        /// </summary>
+        public ElementMargin Padding;
+
+        /// <summary>
         /// Get or set the scroll content view, if any.
         /// </summary>
         public UIView ScrollContent;
@@ -62,9 +54,6 @@ namespace MarkLight
         public override bool CalculateLayoutChanges(UIView view, IList<UIView> children, LayoutChangeContext context)
         {
             var parentLayout = view.Layout;
-
-            _horzSpacePixels = parentLayout.WidthToPixels(HorizontalSpacing);
-            _vertSpacePixels = parentLayout.HeightToPixels(VerticalSpacing);
 
             var maxWidth = 0f;
             var maxHeight = 0f;
@@ -86,7 +75,14 @@ namespace MarkLight
             var row = new Row();
 
             var isLeftAligned = Alignment.HasFlag(ElementAlignment.Left);
+            var isTopAligned = Alignment.HasFlag(ElementAlignment.Top);
             var isRightAligned = Alignment.HasFlag(ElementAlignment.Right);
+            var isBottomAligned = Alignment.HasFlag(ElementAlignment.Bottom);
+
+            var padLeft = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Left);
+            var padTop = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Top);
+            var padRight = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Right);
+            var padBottom = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Bottom);
 
             for (var i = 0; i < childCount; i++)
             {
@@ -97,16 +93,40 @@ namespace MarkLight
                 if (!child.IsActive || child.IsDestroyed || !CanEffectChild(child))
                     continue;
 
-                var pixelWidth = child.Layout.AspectPixelWidth;
-                var pixelHeight = child.Layout.AspectPixelHeight;
+                var boxWidth = child.Layout.AspectPixelWidth;
+                var boxHeight = child.Layout.AspectPixelHeight;
+                var topMargin = child.Layout.MarginTopPixels;
+                var bottomMargin = child.Layout.MarginBottomPixels;
+                var leftMargin = child.Layout.MarginLeftPixels;
+                var rightMargin = child.Layout.MarginRightPixels;
+                var displacedWidth = boxWidth + leftMargin + rightMargin;
+                var displacedHeight = boxHeight + topMargin + bottomMargin;
 
                 // set offsets and alignment
                 var offset = new ElementMargin(
                     new ElementSize(
-                        (isRightAligned ? -1 : 1) * (isHorizontal ? totalWidth + _horzSpacePixels * childIndex : 0f),
+                        (isRightAligned ? -1 : 1) * (isHorizontal ? totalWidth : 0f),
                         ElementSizeUnit.Pixels),
-                    new ElementSize(!isHorizontal ? totalHeight + _vertSpacePixels * childIndex : 0f,
+                    new ElementSize(!isHorizontal ? totalHeight : 0f,
                         ElementSizeUnit.Pixels));
+
+                if (isLeftAligned)
+                {
+                    offset.Left.Value += padLeft;
+                }
+                else if (isRightAligned)
+                {
+                    offset.Right.Value += padRight;
+                }
+
+                if (isTopAligned)
+                {
+                    offset.Top.Value += padTop;
+                }
+                else if (isBottomAligned)
+                {
+                    offset.Bottom.Value += padBottom;
+                }
 
                 child.Layout.OffsetFromParent = offset;
                 child.Layout.Alignment = Alignment;
@@ -114,11 +134,11 @@ namespace MarkLight
                 if (Overflow == OverflowMode.Overflow)
                 {
                     // get size of content
-                    totalWidth += pixelWidth;
-                    maxWidth = Mathf.Max(maxWidth, pixelWidth);
+                    totalWidth += displacedWidth;
+                    maxWidth = Mathf.Max(maxWidth, displacedWidth);
 
-                    totalHeight += pixelHeight;
-                    maxHeight = Mathf.Max(maxHeight, pixelHeight);
+                    totalHeight += displacedHeight;
+                    maxHeight = Mathf.Max(maxHeight, displacedHeight);
 
                     if (!isHorizontal)
                     {
@@ -141,7 +161,7 @@ namespace MarkLight
                             xOffset = 0;
                             firstItem = false;
                         }
-                        else if (xOffset + pixelWidth + _horzSpacePixels > parentLayout.AspectPixelWidth)
+                        else if (xOffset + displacedWidth > parentLayout.AspectPixelWidth)
                         {
                             if (row.Children.Count > 0)
                                 rows.Add(row);
@@ -150,13 +170,8 @@ namespace MarkLight
 
                             // item overflows to the next row
                             xOffset = 0;
-                            yOffset += maxRowHeight + _vertSpacePixels;
+                            yOffset += maxRowHeight;
                             maxRowHeight = 0;
-                        }
-                        else
-                        {
-                            // item continues on the same row
-                            xOffset += _horzSpacePixels;
                         }
 
                         // set offset
@@ -164,10 +179,10 @@ namespace MarkLight
                             ElementSize.FromPixels(xOffset),
                             ElementSize.FromPixels(yOffset));
 
-                        xOffset += pixelWidth;
-                        maxRowHeight = Mathf.Max(maxRowHeight, pixelHeight);
+                        xOffset += displacedWidth;
+                        maxRowHeight = Mathf.Max(maxRowHeight, displacedHeight);
                         maxWidth = Mathf.Max(maxWidth, xOffset);
-                        maxHeight = Mathf.Max(maxHeight, yOffset + pixelHeight);
+                        maxHeight = Mathf.Max(maxHeight, yOffset + displacedHeight);
                     }
                     else
                     {
@@ -182,17 +197,12 @@ namespace MarkLight
                             yOffset = 0;
                             firstItem = false;
                         }
-                        else if (yOffset + pixelHeight + _vertSpacePixels > parentLayout.AspectPixelHeight)
+                        else if (yOffset + displacedHeight > parentLayout.AspectPixelHeight)
                         {
                             // overflow to next column
                             yOffset = 0;
-                            xOffset += maxColumnWidth + _horzSpacePixels;
+                            xOffset += maxColumnWidth;
                             maxColumnWidth = 0;
-                        }
-                        else
-                        {
-                            // add spacing
-                            yOffset += _vertSpacePixels;
                         }
 
                         // set offset
@@ -200,14 +210,14 @@ namespace MarkLight
                             ElementSize.FromPixels(xOffset),
                             ElementSize.FromPixels(yOffset));
 
-                        yOffset += pixelHeight;
-                        maxColumnWidth = Mathf.Max(maxColumnWidth, pixelWidth);
-                        maxWidth = Mathf.Max(maxWidth, xOffset + pixelWidth);
+                        yOffset += displacedHeight;
+                        maxColumnWidth = Mathf.Max(maxColumnWidth, displacedWidth);
+                        maxWidth = Mathf.Max(maxWidth, xOffset + displacedWidth);
                         maxHeight = Mathf.Max(maxHeight, yOffset);
                     }
                 }
 
-                row.AddChild(child, pixelWidth, _horzSpacePixels);
+                row.AddChild(child, displacedWidth);
 
                 // update child layout
                 context.NotifyLayoutUpdated(child);
@@ -235,15 +245,10 @@ namespace MarkLight
 
             if (Overflow == OverflowMode.Overflow)
             {
-                // add margins
-                totalWidth += isHorizontal
-                    ? (childCount > 1 ? (childIndex - 1) * _horzSpacePixels : 0f)
-                    : 0f;
+                var widthPadding = GetHorizontalPadding(parentLayout) + padLeft + padRight;
 
-                var widthMargins = GetHorizontalPadding(parentLayout);
-
-                totalWidth += widthMargins;
-                maxWidth += widthMargins;
+                totalWidth += widthPadding;
+                maxWidth += widthPadding;
 
                 // set width and height of list
                 if (AdjustToWidth)
@@ -263,15 +268,10 @@ namespace MarkLight
                     updateScrollContent = true;
                 }
 
-                // add margins
-                totalHeight += !isHorizontal
-                    ? (childCount > 1 ? (childIndex - 1) * _vertSpacePixels : 0f)
-                    : 0f;
+                var heightPadding = GetVerticalPadding(parentLayout) + padTop + padBottom;
 
-                var heightMargins = GetVerticalPadding(parentLayout);
-
-                totalHeight += heightMargins;
-                maxHeight += heightMargins;
+                totalHeight += heightPadding;
+                maxHeight += heightPadding;
 
                 if (AdjustToHeight)
                 {
@@ -295,7 +295,7 @@ namespace MarkLight
                 // adjust size to content
                 if (isHorizontal)
                 {
-                    maxHeight += GetVerticalPadding(parentLayout);
+                    maxHeight += GetVerticalPadding(parentLayout) + padTop + padBottom;
 
                     if (ScrollContent != null)
                     {
@@ -309,7 +309,7 @@ namespace MarkLight
                 }
                 else // Vertical
                 {
-                    maxWidth += GetHorizontalPadding(parentLayout);
+                    maxWidth += GetHorizontalPadding(parentLayout) + padLeft + padRight;
 
                     if (ScrollContent != null)
                     {
@@ -376,12 +376,10 @@ namespace MarkLight
             public float FirstChildWidth;
             public readonly List<UIView> Children = new List<UIView>(10);
 
-            public void AddChild(UIView child, float width, float space) {
+            public void AddChild(UIView child, float width) {
 
                 if (Children.Count == 0)
                     FirstChildWidth = width;
-                else
-                    Width += space;
 
                 Children.Add(child);
                 Width += width;

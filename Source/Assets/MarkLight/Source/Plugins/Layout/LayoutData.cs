@@ -26,7 +26,6 @@ namespace MarkLight
         private ElementMargin _offsetFromParent = new ElementMargin();
         private ElementMargin _offset = new ElementMargin();
         private ElementMargin _margin = new ElementMargin();
-        private ElementMargin _padding = new ElementMargin();
 
         private LayoutRectCalculator _layoutRect = LayoutRectCalculator.Default;
         private Vector2 _anchorMin;
@@ -149,14 +148,6 @@ namespace MarkLight
             var containerWidth = ContainerPixelWidth;
             var isAbsolute = PositionType == ElementPositionType.Absolute;
 
-            result.ContainerPadX = isAbsolute || Parent == null
-                ? 0f
-                : SizeToPixels(Parent.Padding.Left, containerWidth);
-
-            result.ContainerPadY = isAbsolute || Parent == null
-                ? 0f
-                : SizeToPixels(Padding.Right, containerWidth);
-
             result.ContainerSize = containerWidth;
 
             if (width.Unit == ElementSizeUnit.Pixels)
@@ -169,14 +160,14 @@ namespace MarkLight
                 result.TargetSize = result.ContainerSize * width.Percent;
             }
 
-            result.MarginX = SizeToPixels(Margin.Left, result.TargetSize);
-            result.MarginY = SizeToPixels(Margin.Right, result.TargetSize);
+            result.MarginXPixels = SizeToPixels(Margin.Left, result.TargetSize);
+            result.MarginYPixels = SizeToPixels(Margin.Right, result.TargetSize);
 
-            result.OffsetX = SizeToPixels(Offset.Left, containerWidth);
-            result.OffsetY = SizeToPixels(Offset.Right, containerWidth);
+            result.OffsetXPixels = SizeToPixels(Offset.Left, containerWidth);
+            result.OffsetYPixels = SizeToPixels(Offset.Right, containerWidth);
 
-            result.OffsetFromParentX = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Left, containerWidth);
-            result.OffsetFromParentY = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Right, containerWidth);
+            result.OffsetFromParentXPixels = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Left, containerWidth);
+            result.OffsetFromParentYPixels = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Right, containerWidth);
 
             result.IsPositionExplicit = Margin.Left.Unit == ElementSizeUnit.Pixels
                                         && Margin.Right.Unit == ElementSizeUnit.Pixels
@@ -196,14 +187,6 @@ namespace MarkLight
             var containerHeight = ContainerPixelHeight;
             var isAbsolute = PositionType == ElementPositionType.Absolute;
 
-            result.ContainerPadX = isAbsolute || Parent == null
-                ? 0f
-                : SizeToPixels(Parent.Padding.Top, containerHeight);
-
-            result.ContainerPadY = isAbsolute || Parent == null
-                ? 0f
-                : SizeToPixels(Parent.Padding.Bottom, containerHeight);
-
             result.ContainerSize = containerHeight;
 
             if (height.Unit == ElementSizeUnit.Pixels)
@@ -216,14 +199,14 @@ namespace MarkLight
                 result.TargetSize = result.ContainerSize * height.Percent;
             }
 
-            result.MarginX = SizeToPixels(Margin.Top, result.TargetSize);
-            result.MarginY = SizeToPixels(Margin.Bottom, result.TargetSize);
+            result.MarginXPixels = SizeToPixels(Margin.Top, result.TargetSize);
+            result.MarginYPixels = SizeToPixels(Margin.Bottom, result.TargetSize);
 
-            result.OffsetX = SizeToPixels(Offset.Top, containerHeight);
-            result.OffsetY = SizeToPixels(Offset.Bottom, containerHeight);
+            result.OffsetXPixels = SizeToPixels(Offset.Top, containerHeight);
+            result.OffsetYPixels = SizeToPixels(Offset.Bottom, containerHeight);
 
-            result.OffsetFromParentX = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Top, containerHeight);
-            result.OffsetFromParentY = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Bottom, containerHeight);
+            result.OffsetFromParentXPixels = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Top, containerHeight);
+            result.OffsetFromParentYPixels = isAbsolute ? 0f : SizeToPixels(OffsetFromParent.Bottom, containerHeight);
 
             result.IsPositionExplicit = Margin.Top.Unit == ElementSizeUnit.Pixels
                                         && Margin.Bottom.Unit == ElementSizeUnit.Pixels
@@ -347,18 +330,6 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Get the container width in pixels and adjusted for padding.
-        /// </summary>
-        public float PaddedContainerPixelWidth
-        {
-            get
-            {
-                UpdateSizeData();
-                return _horizontalSizes.PaddedContainerSize;
-            }
-        }
-
-        /// <summary>
         /// Get the container height in pixels.
         /// </summary>
         public float ContainerPixelHeight
@@ -384,18 +355,6 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Get the container height in pixels and adjusted for padding.
-        /// </summary>
-        public float PaddedContainerPixelHeight
-        {
-            get
-            {
-                UpdateSizeData();
-                return _verticalSizes.PaddedContainerSize;
-            }
-        }
-
-        /// <summary>
         /// Calculate the pixel Width of the view based on the LayoutData width, margin and padding. Does not adjust
         /// for AspectRatio field.
         /// </summary>
@@ -404,7 +363,7 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.Size;
+                return _horizontalSizes.BoxSize;
             }
         }
 
@@ -417,7 +376,7 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.Size;
+                return _verticalSizes.BoxSize;
             }
         }
 
@@ -433,26 +392,26 @@ namespace MarkLight
                 if (Width.Unit == ElementSizeUnit.Pixels || !View.AspectRatio.IsSet)
                     return Width;
 
-                var pixelHeight = _verticalSizes.Size;
+                var pixelHeight = _verticalSizes.BoxSize;
                 var aspectWidth = pixelHeight * (AspectRatio.X / AspectRatio.Y);
 
                 if (Height.Unit == ElementSizeUnit.Pixels)
                 {
-                    return new ElementSize(aspectWidth + _horizontalSizes.Margins);
+                    return new ElementSize(aspectWidth);
                 }
 
-                var pixelWidth = _horizontalSizes.Size;
+                var pixelWidth = _horizontalSizes.BoxSize;
 
                 if (AspectRatio.X >= AspectRatio.Y)
                 {
                     var aspectHeight = pixelWidth * (AspectRatio.Y / AspectRatio.X);
                     return aspectHeight > pixelHeight
-                        ? new ElementSize(aspectWidth + _horizontalSizes.Margins)
+                        ? new ElementSize(aspectWidth)
                         : Width;
                 }
 
                 return aspectWidth <= pixelWidth
-                    ? new ElementSize(aspectWidth + _horizontalSizes.Margins)
+                    ? new ElementSize(aspectWidth)
                     : Width;
             }
         }
@@ -483,26 +442,26 @@ namespace MarkLight
                 if (Height.Unit == ElementSizeUnit.Pixels || !View.AspectRatio.IsSet)
                     return Height;
 
-                var pixelWidth = _horizontalSizes.Size;
+                var pixelWidth = _horizontalSizes.BoxSize;
                 var aspectHeight = pixelWidth * (AspectRatio.Y / AspectRatio.X);
 
                 if (Width.Unit == ElementSizeUnit.Pixels)
                 {
-                    return new ElementSize(aspectHeight + _verticalSizes.Margins);
+                    return new ElementSize(aspectHeight);
                 }
 
-                var pixelHeight = _verticalSizes.Size;
+                var pixelHeight = _verticalSizes.BoxSize;
 
                 if (AspectRatio.X >= AspectRatio.Y)
                 {
                     return aspectHeight <= pixelHeight
-                        ? new ElementSize(aspectHeight + _verticalSizes.Margins)
+                        ? new ElementSize(aspectHeight)
                         : Height;
                 }
 
                 var aspectWidth = pixelHeight * (AspectRatio.X / AspectRatio.Y);
                 return aspectWidth > pixelWidth
-                    ? new ElementSize(aspectHeight + _verticalSizes.Margins)
+                    ? new ElementSize(aspectHeight)
                     : Height;
             }
         }
@@ -617,6 +576,30 @@ namespace MarkLight
         }
 
         /// <summary>
+        /// Get the pixel width of area displaced by view within its container.
+        /// </summary>
+        public float PixelDisplacementWidth
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.BoxSize + _horizontalSizes.MarginPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the pixel height of area displaced by view within its container.
+        /// </summary>
+        public float PixelDisplacementHeight
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.BoxSize + _verticalSizes.MarginPixels;
+            }
+        }
+
+        /// <summary>
         /// Get or set the layout offset from parent. Setting value causes IsDirty field to be true.
         /// </summary>
         public ElementMargin OffsetFromParent
@@ -640,7 +623,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.OffsetsFromParent;
+                return _horizontalSizes.OffsetFromParentPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the left and right offset as a percent.
+        /// </summary>
+        public float HorizontalOffsetFromParentPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetFromParentPercent;
             }
         }
 
@@ -652,7 +647,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.OffsetsFromParent;
+                return _verticalSizes.OffsetFromParentPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the top and bottom offset as a percent.
+        /// </summary>
+        public float VerticalOffsetFromParentPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetFromParentPercent;
             }
         }
 
@@ -664,7 +671,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.OffsetFromParentX;
+                return _horizontalSizes.OffsetFromParentXPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout left offset as a percent.
+        /// </summary>
+        public float OffsetFromParentLeftPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetFromParentXPercent;
             }
         }
 
@@ -676,7 +695,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.OffsetFromParentX;
+                return _verticalSizes.OffsetFromParentXPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout top offset as a percent.
+        /// </summary>
+        public float OffsetFromParentTopPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetFromParentXPercent;
             }
         }
 
@@ -688,7 +719,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.OffsetFromParentY;
+                return _horizontalSizes.OffsetFromParentYPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout right offset as a percent.
+        /// </summary>
+        public float OffsetFromParentRightPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetFromParentYPercent;
             }
         }
 
@@ -700,7 +743,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.OffsetFromParentY;
+                return _verticalSizes.OffsetFromParentYPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout bottom offset as a percent.
+        /// </summary>
+        public float OffsetFromParentBottomPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetFromParentYPercent;
             }
         }
 
@@ -729,7 +784,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.Offsets;
+                return _horizontalSizes.OffsetPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the left and right offset as a percent.
+        /// </summary>
+        public float HorizontalOffsetPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetPercent;
             }
         }
 
@@ -741,7 +808,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.Offsets;
+                return _verticalSizes.OffsetPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the top and bottom offset as a percent.
+        /// </summary>
+        public float VerticalOffsetPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetPercent;
             }
         }
 
@@ -753,7 +832,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.OffsetX;
+                return _horizontalSizes.OffsetXPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout left offset as a percent.
+        /// </summary>
+        public float OffsetLeftPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetXPercent;
             }
         }
 
@@ -765,7 +856,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.OffsetX;
+                return _verticalSizes.OffsetXPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout top offset as a percent.
+        /// </summary>
+        public float OffsetTopPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetXPercent;
             }
         }
 
@@ -777,7 +880,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.OffsetY;
+                return _horizontalSizes.OffsetYPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout right offset as a percent.
+        /// </summary>
+        public float OffsetRightPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.OffsetYPercent;
             }
         }
 
@@ -789,7 +904,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.OffsetY;
+                return _verticalSizes.OffsetYPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout bottom offset as a percent.
+        /// </summary>
+        public float OffsetBottomPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.OffsetYPercent;
             }
         }
 
@@ -817,7 +944,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.Margins;
+                return _horizontalSizes.MarginPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the left and right margin as a percent.
+        /// </summary>
+        public float HorizontalMarginPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.MarginPercent;
             }
         }
 
@@ -829,7 +968,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.Margins;
+                return _verticalSizes.MarginPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the top and bottom margin as a percent.
+        /// </summary>
+        public float VerticalMarginPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.MarginPercent;
             }
         }
 
@@ -841,7 +992,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.MarginX;
+                return _horizontalSizes.MarginXPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout left margin as a percent.
+        /// </summary>
+        public float MarginLeftPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.MarginXPercent;
             }
         }
 
@@ -853,7 +1016,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.MarginX;
+                return _verticalSizes.MarginXPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout top margin as a percent.
+        /// </summary>
+        public float MarginTopPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _verticalSizes.MarginXPercent;
             }
         }
 
@@ -865,7 +1040,19 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _horizontalSizes.MarginY;
+                return _horizontalSizes.MarginYPixels;
+            }
+        }
+
+        /// <summary>
+        /// Get the layout right margin as a percent.
+        /// </summary>
+        public float MarginRightPercent
+        {
+            get
+            {
+                UpdateSizeData();
+                return _horizontalSizes.MarginYPercent;
             }
         }
 
@@ -877,72 +1064,20 @@ namespace MarkLight
             get
             {
                 UpdateSizeData();
-                return _verticalSizes.MarginY;
+                return _verticalSizes.MarginYPixels;
             }
         }
 
         /// <summary>
-        /// Get or set the layout padding. Setting value causes IsDirty field to be true.
+        /// Get the layout bottom margin as a percent.
         /// </summary>
-        public ElementMargin Padding
+        public float MarginBottomPercent
         {
-            get { return _padding; }
-            set
+            get
             {
-                if (Equals(_padding, value))
-                    return;
-
-                _padding = value;
-                IsDirty = true;
+                UpdateSizeData();
+                return _verticalSizes.MarginYPercent;
             }
-        }
-
-        /// <summary>
-        /// Get the left and right padding in pixels.
-        /// </summary>
-        public float HorizontalPaddingPixels
-        {
-            get { return PaddingLeftPixels + PaddingRightPixels; }
-        }
-
-        /// <summary>
-        /// Get the top and bottom margin in pixels
-        /// </summary>
-        public float VerticalPaddingPixels
-        {
-            get { return PaddingTopPixels + PaddingBottomPixels; }
-        }
-
-        /// <summary>
-        /// Get the layout left padding in pixels.
-        /// </summary>
-        public float PaddingLeftPixels
-        {
-            get { return WidthToPixels(_padding.Left); }
-        }
-
-        /// <summary>
-        /// Get the layout top padding in pixels.
-        /// </summary>
-        public float PaddingTopPixels
-        {
-            get { return HeightToPixels(_padding.Top); }
-        }
-
-        /// <summary>
-        /// Get the layout right padding in pixels.
-        /// </summary>
-        public float PaddingRightPixels
-        {
-            get { return WidthToPixels(_padding.Right); }
-        }
-
-        /// <summary>
-        /// Get the layout bottom padding in pixels.
-        /// </summary>
-        public float PaddingBottomPixels
-        {
-            get { return HeightToPixels(_padding.Bottom); }
         }
 
         /// <summary>
@@ -1035,44 +1170,117 @@ namespace MarkLight
             public float TargetSize;
 
             public float ContainerSize;
-            public float ContainerPadX;
-            public float ContainerPadY;
 
-            public float MarginX;
-            public float MarginY;
+            public float MarginXPixels;
+            public float MarginYPixels;
 
-            public float OffsetX;
-            public float OffsetY;
+            public float OffsetXPixels;
+            public float OffsetYPixels;
 
-            public float OffsetFromParentX;
-            public float OffsetFromParentY;
+            public float OffsetFromParentXPixels;
+            public float OffsetFromParentYPixels;
 
-            public float ContainerPadding
+            public float DisplacementLeftTop
             {
-                get { return ContainerPadX + ContainerPadY; }
+                get
+                {
+                    return TargetSize
+                           + MarginPixels
+                           + OffsetXPixels
+                           + OffsetFromParentPixels
+                           - OffsetYPixels
+                           - OffsetFromParentPixels;
+                }
             }
 
-            public float Margins
+            public float DisplacementRightBottom
             {
-                get { return MarginX + MarginY; }
+                get
+                {
+                    return Mathf.Max(0f, TargetSize
+                           + MarginPixels
+                           - OffsetXPixels
+                           - OffsetFromParentPixels
+                           + OffsetYPixels
+                           + OffsetFromParentPixels);
+                }
             }
 
-            public float Offsets
+            public float DisplacementCenter
             {
-                get { return OffsetX + OffsetY; }
+                get
+                {
+                    // centered
+                    return Mathf.Max(0f, TargetSize
+                           + MarginPixels
+                           - OffsetXPixels
+                           - OffsetFromParentPixels
+                           - OffsetYPixels
+                           - OffsetFromParentPixels);
+                }
             }
 
-            public float OffsetsFromParent
+            public float MarginPixels
             {
-                get { return OffsetFromParentX + OffsetFromParentY; }
+                get { return MarginXPixels + MarginYPixels; }
             }
 
-            public float PaddedContainerSize
+            public float MarginPercent
             {
-                get { return ContainerSize - ContainerPadding; }
+                get { return MarginXPercent + MarginYPercent; }
             }
 
-            public float Size
+            public float MarginXPercent
+            {
+                get { return MarginXPixels / TargetSize; }
+            }
+
+            public float MarginYPercent
+            {
+                get { return MarginYPixels / TargetSize; }
+            }
+
+            public float OffsetPixels
+            {
+                get { return OffsetXPixels + OffsetYPixels; }
+            }
+
+            public float OffsetPercent
+            {
+                get { return OffsetXPercent + OffsetYPercent; }
+            }
+
+            public float OffsetXPercent
+            {
+                get { return OffsetXPixels / ContainerSize; }
+            }
+
+            public float OffsetYPercent
+            {
+                get { return OffsetYPixels / ContainerSize; }
+            }
+
+            public float OffsetFromParentPixels
+            {
+                get { return OffsetFromParentXPixels + OffsetFromParentYPixels; }
+            }
+
+            public float OffsetFromParentPercent
+            {
+                get { return OffsetFromParentXPercent + OffsetFromParentYPercent; }
+            }
+
+            public float OffsetFromParentXPercent
+            {
+                get { return OffsetFromParentXPixels / ContainerSize; }
+            }
+
+            public float OffsetFromParentYPercent
+            {
+                get { return OffsetFromParentYPixels / ContainerSize; }
+            }
+
+            public float BoxSize
             {
                 get
                 {
@@ -1080,8 +1288,7 @@ namespace MarkLight
                         return TargetSize;
 
                     return Mathf.Min(TargetSize,
-                        ContainerSize - Margins,
-                        PaddedContainerSize);
+                        ContainerSize - MarginPixels);
                 }
             }
         }
