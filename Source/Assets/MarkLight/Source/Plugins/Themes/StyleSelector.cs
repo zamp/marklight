@@ -25,6 +25,7 @@ namespace Marklight.Themes
         private string _localSelector;
         private string[] _localSelectors;
         private StyleClass _class;
+        private StyleSpecificity _specificity;
 
         #endregion
 
@@ -381,6 +382,19 @@ namespace Marklight.Themes
         public StyleClass StyleClass
         {
             get { return _class ?? (_class = new StyleClass(_className)); }
+        }
+
+        /// <summary>
+        /// Get the selector specificity
+        /// </summary>
+        public StyleSpecificity Specificity
+        {
+            get
+            {
+                return _specificity.IsValid 
+                    ? _specificity 
+                    : (_specificity = new StyleSpecificity(this));
+            }
         }
 
         /// <summary>

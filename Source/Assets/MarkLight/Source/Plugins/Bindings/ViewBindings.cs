@@ -154,7 +154,6 @@ namespace MarkLight
                     var matchCountString = matchCount.ToString();
                     ++matchCount;
 
-                    BufferPools.MatchLists.Recycle(matches);
                     return String.Format("{{{0}{1}}}", matchCountString, x.Groups["format"]);
                 });
 

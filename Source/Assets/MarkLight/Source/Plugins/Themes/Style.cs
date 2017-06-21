@@ -102,35 +102,7 @@ namespace Marklight.Themes
         /// </summary>
         public static void Sort(List<Style> styles)
         {
-            styles.Sort((style1, style2) =>
-            {
-                var score1 = GetSortScore(style1);
-                var score2 = GetSortScore(style2);
-
-                return score1 > score2 ? 1 : (score1 < score2 ? -1 : 0);
-            });
-        }
-
-        private static int GetSortScore(StyleSelector style) {
-
-            var score = 0;
-
-            if (style.SelectorType.HasFlag(StyleSelectorType.Element))
-                score += 100;
-
-            if (style.SelectorType.HasFlag(StyleSelectorType.Id))
-                score += 50;
-
-            if (style.SelectorType.HasFlag(StyleSelectorType.Class))
-                score += 1;
-
-            if (style.Parent != null)
-            {
-                score += 1000;
-                score += GetSortScore(style.Parent);
-            }
-
-            return score;
+            styles.Sort((style1, style2) => style1.Specificity.CompareTo(style2.Specificity));
         }
 
         private static Style GetParent(Theme theme, StyleData data) {
