@@ -1,13 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-#endregion
-
+﻿
 namespace MarkLight.Animation
 {
     /// <summary>
@@ -34,23 +25,14 @@ namespace MarkLight.Animation
         /// </summary>
         public override object Interpolate(object from, object to, float weight)
         {
-            ElementSize a = from as ElementSize;
-            ElementSize b = to as ElementSize;
-
-            if (a == null || b == null)
-                return base.Interpolate(from, to, weight);
+            var a = (ElementSize)from;
+            var b = (ElementSize)to;
 
             if (a.Unit == ElementSizeUnit.Percents || b.Unit == ElementSizeUnit.Percents)
             {
-                if (a.Unit != b.Unit)
-                {
-                    // can't interpolate between percent and another unit type
-                    return from;
-                }
-                else
-                {
-                    return new ElementSize(Lerp(a.Percent, b.Percent, weight), ElementSizeUnit.Percents);
-                }
+                return a.Unit != b.Unit
+                    ? from
+                    : new ElementSize(Lerp(a.Percent, b.Percent, weight), ElementSizeUnit.Percents);
             }
             
             return new ElementSize(Lerp(a.Pixels, b.Pixels, weight), ElementSizeUnit.Pixels);

@@ -562,11 +562,14 @@ namespace MarkLight.Views.UI
             list.RefreshLayoutData();
             context.NotifyLayoutUpdated(list);
 
-            var children = GetContentChildren(list.ScrollContent ?? list.Content);
-            if (list.LayoutCalculator.CalculateLayoutChanges(list, children, context))
+            GetContentChildren(list.ScrollContent ?? list.Content, _childBuffer);
+            var result = list.LayoutCalculator.CalculateLayoutChanges(list, _childBuffer, context);
+            _childBuffer.Clear();
+
+            if (result)
             {
-                list.Layout.Width = new ElementSize(1f, ElementSizeUnit.Percents) {Fill = true};
-                list.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents) {Fill = true};
+                list.Layout.Width = ElementSize.FromPercents(1f, true);
+                list.Layout.Height = ElementSize.FromPercents(1f, true);
                 return true;
             }
             return false;
@@ -577,7 +580,7 @@ namespace MarkLight.Views.UI
             base.Initialize();
 
             // parse header columns
-            var header = DataGridList.Content.Find<RowHeader>(new ViewSearchArgs
+            var header = DataGridList.Content.Find<RowHeader>(new ViewSearchArgs(true)
             {
                 IsRecursive = false
             });

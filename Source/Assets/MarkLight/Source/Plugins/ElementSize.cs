@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Text;
-using Marklight;
 using UnityEngine;
 
 namespace MarkLight
@@ -10,7 +9,7 @@ namespace MarkLight
     /// Represents size in pixels, elements or percentage.
     /// </summary>
     [Serializable]
-    public class ElementSize
+    public struct ElementSize
     {
         #region Fields
 
@@ -30,28 +29,21 @@ namespace MarkLight
         /// <summary>
         /// Initializes a new instance of the class.
         /// </summary>
-        public ElementSize()
-        {
-            _value = 0f;
-            _unit = ElementSizeUnit.Pixels;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the class.
-        /// </summary>
-        public ElementSize(float pixels)
+        public ElementSize(float pixels, bool fill = false)
         {
             _value = pixels;
             _unit = ElementSizeUnit.Pixels;
+            _fill = fill;
         }
 
         /// <summary>
         /// Initializes a new instance of the class.
         /// </summary>
-        public ElementSize(float value, ElementSizeUnit unit)
+        public ElementSize(float value, ElementSizeUnit unit, bool fill = false)
         {
             _value = value;
             _unit = unit;
+            _fill = fill;
         }
 
         /// <summary>
@@ -87,9 +79,9 @@ namespace MarkLight
         /// <summary>
         /// Gets element size with the specified percent size (0.0 - 1.0).
         /// </summary>
-        public static ElementSize FromPercents(float percents)
+        public static ElementSize FromPercents(float percents, bool fill = false)
         {
-            return new ElementSize(percents, ElementSizeUnit.Percents);
+            return new ElementSize(percents, ElementSizeUnit.Percents, fill);
         }
 
         /// <summary>
@@ -110,7 +102,7 @@ namespace MarkLight
         public override string ToString() {
             if (Unit == ElementSizeUnit.Percents)
             {
-                return Value + "%";
+                return Value * 100f + "%";
             }
             return Value.ToString(CultureInfo.InvariantCulture);
         }
@@ -119,12 +111,27 @@ namespace MarkLight
             return (int)Value;
         }
 
-        public override bool Equals(object obj) {
-            var other = obj as ElementSize;
-            if (other == null)
+        public override bool Equals(object obj)
+        {
+            if (!(obj is ElementSize))
                 return false;
 
+            var other = (ElementSize)obj;
             return Math.Abs(other.Value - Value) < 0.00001 && other.Unit == Unit;
+        }
+
+        public static bool operator ==(ElementSize size1, ElementSize size2)
+        {
+            return size1.Fill == size2.Fill
+                   && Math.Abs(size1._value - size2._value) < 0.0001f
+                   && size1._unit == size2._unit;
+        }
+
+        public static bool operator !=(ElementSize size1, ElementSize size2)
+        {
+            return size1.Fill != size2.Fill
+                   || Math.Abs(size1._value - size2._value) > 0.0001f
+                   || size1._unit != size2._unit;
         }
 
         #endregion
@@ -132,17 +139,13 @@ namespace MarkLight
         #region Properties
 
         /// <summary>
-        /// Gets or sets element size value.
+        /// Gets element size value.
         /// </summary>
         public float Value
         {
             get
             {
                 return _value;
-            }
-            set
-            {
-                _value = value;
             }
         }
 
@@ -181,10 +184,6 @@ namespace MarkLight
             {
                 return _unit;
             }
-            set
-            {
-                _unit = value;
-            }
         }
 
         /// <summary>
@@ -195,10 +194,6 @@ namespace MarkLight
             get
             {
                 return _fill;
-            }
-            set
-            {
-                _fill = value;
             }
         }
 

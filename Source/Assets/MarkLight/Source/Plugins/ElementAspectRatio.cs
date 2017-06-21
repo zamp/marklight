@@ -92,6 +92,18 @@ namespace MarkLight
             return new ElementAspectRatio(1f);
         }
 
+        public static bool operator ==(ElementAspectRatio ratio1, ElementAspectRatio ratio2)
+        {
+            return Math.Abs(ratio1._x - ratio2._x) < 0.0001f
+                   && Math.Abs(ratio1._y - ratio2._y) < 0.0001f;
+        }
+
+        public static bool operator !=(ElementAspectRatio ratio1, ElementAspectRatio ratio2)
+        {
+            return Math.Abs(ratio1._x - ratio2._x) > 0.0001f
+                   && Math.Abs(ratio1._y - ratio2._y) > 0.0001f;
+        }
+
         #endregion
 
         #region Properties

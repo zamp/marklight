@@ -9,10 +9,11 @@ namespace MarkLight
     /// </summary>
     public static class ViewSearchExtensions
     {
-
         #region Fields
 
-        private static readonly ViewSearchArgs DefaultArgs = new ViewSearchArgs();
+        private static readonly List<View[]> ViewArrayPool = new List<View[]>(50);
+        private static readonly List<View[]> DirtyViewArrayPool = new List<View[]>(50);
+        private const int PooledViewBufferSize = 15;
 
         #endregion
 
@@ -21,7 +22,7 @@ namespace MarkLight
         /// <summary>
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
-        public static void ForEachChild<T>(this View view, Action<T> action, ViewSearchArgs args = null) where T : View
+        public static void ForEachChild<T>(this View view, Action<T> action, ViewSearchArgs args) where T : View
         {
             DoUntil<T>(view, x =>
             {
@@ -34,9 +35,8 @@ namespace MarkLight
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
         public static void ForEachChild<T>(this View view,
-                                           Predicate<T> predicate, ViewSearchArgs args = null) where T : View
+                                           Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
-            args = args ?? DefaultArgs;
             DoUntil(view, predicate, args);
         }
 
@@ -44,7 +44,7 @@ namespace MarkLight
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
         public static void ForEachChild<T>(this GameObject gameObject,
-                                           Action<T> action, ViewSearchArgs args = null) where T : View
+                                           Action<T> action, ViewSearchArgs args) where T : View
         {
             var view = gameObject.GetComponent<View>();
             if (view == null)
@@ -57,7 +57,7 @@ namespace MarkLight
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
         public static void ForEachChild<T>(this GameObject gameObject,
-                                           Predicate<T> predicate, ViewSearchArgs args = null) where T : View
+                                           Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
             var view = gameObject.GetComponent<View>();
             if (view == null)
@@ -70,7 +70,7 @@ namespace MarkLight
         /// Traverses the view object tree and performs an action on this view and its children until the action returns false.
         /// </summary>
         public static void ForThisAndEachChild<T>(this View view,
-                                                  Action<T> action, ViewSearchArgs args = null) where T : View
+                                                  Action<T> action, ViewSearchArgs args) where T : View
         {
             ForThisAndEachChild<T>(view, x =>
             {
@@ -83,10 +83,8 @@ namespace MarkLight
         /// Traverses the view object tree and performs an action on this view and its children until the action returns false.
         /// </summary>
         public static void ForThisAndEachChild<T>(this View view,
-            Predicate<T> predicate, ViewSearchArgs args = null) where T : View
+            Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
-            args = args ?? DefaultArgs;
-
             var thisView = view as T;
             if (thisView != null)
             {
@@ -105,7 +103,7 @@ namespace MarkLight
         /// Traverses the view object tree and performs an action on each child until the predicate returns false.
         /// </summary>
         public static void ForThisAndEachChild<T>(this GameObject gameObject,
-                                                  Action<T> action, ViewSearchArgs args = null) where T : View
+                                                  Action<T> action, ViewSearchArgs args) where T : View
         {
             ForThisAndEachChild<T>(gameObject, x =>
             {
@@ -118,10 +116,8 @@ namespace MarkLight
         /// Traverses the view object tree and performs an action on each child until the predicate returns false.
         /// </summary>
         public static void ForThisAndEachChild<T>(this GameObject gameObject,
-                                                  Predicate<T> predicate, ViewSearchArgs args = null) where T : View
+                                                  Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
-            args = args ?? DefaultArgs;
-
             var view = gameObject.GetComponent<T>();
             if (view == null)
                 return;
@@ -138,7 +134,7 @@ namespace MarkLight
         /// <summary>
         /// Traverses the view object tree and returns the first view that matches the predicate.
         /// </summary>
-        public static T Find<T>(this View view, ViewSearchArgs args = null) where T : View
+        public static T Find<T>(this View view, ViewSearchArgs args) where T : View
         {
             return Find<T>(view, x => true, args);
         }
@@ -146,10 +142,9 @@ namespace MarkLight
         /// <summary>
         /// Returns first view of type T found.
         /// </summary>
-        public static T Find<T>(this View view, Predicate<T> predicate, ViewSearchArgs args = null) where T : View
+        public static T Find<T>(this View view, Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
             T result = null;
-            args = args ?? DefaultArgs;
 
             DoUntil<T>(view, x =>
             {
@@ -166,7 +161,7 @@ namespace MarkLight
         /// <summary>
         /// Returns first view of type T found.
         /// </summary>
-        public static T Find<T>(this GameObject gameObject, ViewSearchArgs args = null) where T : View
+        public static T Find<T>(this GameObject gameObject, ViewSearchArgs args) where T : View
         {
             var view = gameObject.GetComponent<View>();
             return view == null ? null : Find<T>(view, args);
@@ -176,7 +171,7 @@ namespace MarkLight
         /// Returns first view of type T found.
         /// </summary>
         public static T Find<T>(this GameObject gameObject,
-                                Predicate<T> predicate, ViewSearchArgs args = null) where T : View
+                                Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
             var view = gameObject.GetComponent<View>();
             return view == null ? null : Find(view, predicate, args);
@@ -185,10 +180,8 @@ namespace MarkLight
         /// <summary>
         /// Returns first view of type T with the specified ID.
         /// </summary>
-        public static T Find<T>(this View view, string id, ViewSearchArgs args = null) where T : View
+        public static T Find<T>(this View view, string id, ViewSearchArgs args) where T : View
         {
-            args = args ?? DefaultArgs;
-
             return Find<T>(view, x => String.Equals(x.Id, id, StringComparison.OrdinalIgnoreCase), args);
         }
 
@@ -282,11 +275,10 @@ namespace MarkLight
         /// <summary>
         /// Gets a list of all descendants matching the predicate.
         /// </summary>
-        public static List<T> GetChildren<T>(this View view, Predicate<T> predicate, ViewSearchArgs args = null)
+        public static List<T> GetChildren<T>(this View view, Predicate<T> predicate, ViewSearchArgs args)
                                              where T : View
         {
             var children = new List<T>();
-            args = args ?? DefaultArgs;
 
             ForEachChild<T>(view, x =>
                 {
@@ -302,11 +294,10 @@ namespace MarkLight
         /// <summary>
         /// Gets a list of all descendants.
         /// </summary>
-        public static List<T> GetChildren<T>(this View view, ViewSearchArgs args = null)
+        public static List<T> GetChildren<T>(this View view, ViewSearchArgs args)
             where T : View
         {
             var children = new List<T>();
-            args = args ?? DefaultArgs;
 
             ForEachChild<T>(view, x =>
             {
@@ -320,10 +311,9 @@ namespace MarkLight
         /// Gets a list of all descendants matching the predicate.
         /// </summary>
         public static List<T> GetChildren<T>(this GameObject gameObject,
-                                             Predicate<T> predicate, ViewSearchArgs args = null) where T : View
+                                             Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
             var view = gameObject.GetComponent<View>();
-            args = args ?? DefaultArgs;
 
             return view == null
                 ? new List<T>()
@@ -356,11 +346,9 @@ namespace MarkLight
         /// <summary>
         /// Traverses the view object tree and performs an action on each child until the action returns false.
         /// </summary>
-        public static void DoUntil<T>(this View view, Predicate<T> predicate, ViewSearchArgs args = null)
+        public static void DoUntil<T>(this View view, Predicate<T> predicate, ViewSearchArgs args)
                                     where T : View
         {
-            args = args ?? DefaultArgs;
-
             switch (args.TraversalAlgorithm)
             {
                 case TraversalAlgorithm.DepthFirst:
@@ -381,12 +369,16 @@ namespace MarkLight
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            CleanViewBuffers();
         }
 
         private static void DoUntilDepth<T>(View view, Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
-            foreach (var childView in view.LayoutChildren)
+            var count = view.LayoutChildren.Count;
+            for (var i=0; i < count; i++)
             {
+                var childView = view.LayoutChildren[i];
                 if (childView == null || args.SkipInactive && !childView.IsActive)
                     continue;
 
@@ -425,7 +417,7 @@ namespace MarkLight
         private static void DoUntilBreadth<T>(View view, Predicate<T> predicate, ViewSearchArgs args) where T : View
         {
             var count = view.LayoutChildren.Count;
-            var children = new View[count];
+            var children = GetViewBuffer(count);
             for (var i=0; i < count; i++)
             {
                 var childView = view.LayoutChildren[i];
@@ -450,7 +442,10 @@ namespace MarkLight
                         {
                             // done traversing
                             if (args.StopOnFalsePredicate)
+                            {
+                                RecycleViewBuffer(children);
                                 return;
+                            }
 
                             continue;
                         }
@@ -472,13 +467,17 @@ namespace MarkLight
 
                 DoUntilBreadth(child, predicate, args);
             }
+
+            RecycleViewBuffer(children);
         }
 
         private static void DoUntilReverseDepth<T>(View view, Predicate<T> predicate, ViewSearchArgs args)
                                                    where T : View
         {
-            foreach (var childView in view.LayoutChildren)
+            var count = view.LayoutChildren.Count;
+            for (var i=0; i < count; i++)
             {
+                var childView = view.LayoutChildren[i];
                 if (childView == null || args.SkipInactive && !childView.IsActive)
                     continue;
 
@@ -511,8 +510,8 @@ namespace MarkLight
                                                      where T : View
         {
             var count = view.LayoutChildren.Count;
-            var componentStack = new T[count];
-            var childStack = new View[count];
+            var componentStack = GetViewBuffer(count);
+            var childStack = GetViewBuffer(count);
 
             for (var i = 0; i < count; i++)
             {
@@ -538,7 +537,7 @@ namespace MarkLight
                 }
             }
 
-            for (var i = 0; i < childStack.Length; i++)
+            for (var i = 0; i < count; i++)
             {
                 var child = childStack[i];
                 if (child == null)
@@ -547,9 +546,9 @@ namespace MarkLight
                 DoUntilReverseBreadth(child, predicate, args);
             }
 
-            for (var i = 0; i < componentStack.Length; i++)
+            for (var i = 0; i < count; i++)
             {
-                var component = componentStack[i];
+                var component = componentStack[i] as T;
                 if (component == null)
                     continue;
 
@@ -560,6 +559,51 @@ namespace MarkLight
                     if (args.StopOnFalsePredicate)
                         return;
                 }
+            }
+
+            RecycleViewBuffer(componentStack);
+            RecycleViewBuffer(childStack);
+        }
+
+        private static View[] GetViewBuffer(int elementCount)
+        {
+            if (elementCount > PooledViewBufferSize)
+                return new View[elementCount];
+
+            if (DirtyViewArrayPool.Count > 0)
+            {
+                var index = DirtyViewArrayPool.Count - 1;
+                var result = DirtyViewArrayPool[index];
+                DirtyViewArrayPool.RemoveAt(index);
+                return result;
+            }
+            if (ViewArrayPool.Count > 0)
+            {
+                var index = ViewArrayPool.Count - 1;
+                var result = ViewArrayPool[index];
+                ViewArrayPool.RemoveAt(index);
+                return result;
+            }
+
+            return new View[PooledViewBufferSize];
+        }
+
+        private static void RecycleViewBuffer(View[] buffer)
+        {
+            if (buffer.Length != PooledViewBufferSize)
+                return;
+
+            DirtyViewArrayPool.Add(buffer);
+        }
+
+        private static void CleanViewBuffers()
+        {
+            for (var i = DirtyViewArrayPool.Count - 1; i >= 0; i--)
+            {
+                var buffer = DirtyViewArrayPool[i];
+                Array.Clear(buffer, 0, buffer.Length);
+                DirtyViewArrayPool.RemoveAt(i);
+                ViewArrayPool.Add(buffer);
             }
         }
 

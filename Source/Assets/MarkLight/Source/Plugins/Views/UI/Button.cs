@@ -218,20 +218,25 @@ namespace MarkLight.Views.UI
             // adjust button size to text
             if (AdjustToText == MarkLight.AdjustToText.Width)
             {
-                Width.DirectValue = new ElementSize(ButtonLabel.PreferredWidth + TextPadding.Value.Left.Pixels +
-                                                    TextPadding.Value.Right.Pixels);
+                Width.DirectValue = ElementSize.FromPixels(ButtonLabel.PreferredWidth
+                                                           + TextPadding.Value.Left.Pixels
+                                                           + TextPadding.Value.Right.Pixels);
             }
             else if (AdjustToText == MarkLight.AdjustToText.Height)
             {
-                Height.DirectValue = new ElementSize(ButtonLabel.PreferredHeight + TextPadding.Value.Top.Pixels +
-                                                     TextPadding.Value.Bottom.Pixels);
+                Height.DirectValue = ElementSize.FromPixels(ButtonLabel.PreferredHeight
+                                                            + TextPadding.Value.Top.Pixels
+                                                            + TextPadding.Value.Bottom.Pixels);
             }
             else if (AdjustToText == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Width.DirectValue = new ElementSize(ButtonLabel.PreferredWidth + TextPadding.Value.Left.Pixels +
-                                                    TextPadding.Value.Right.Pixels);
-                Height.DirectValue = new ElementSize(ButtonLabel.PreferredHeight + TextPadding.Value.Top.Pixels +
-                                                     TextPadding.Value.Bottom.Pixels);
+                Width.DirectValue = ElementSize.FromPixels(ButtonLabel.PreferredWidth
+                                                           + TextPadding.Value.Left.Pixels
+                                                           + TextPadding.Value.Right.Pixels);
+
+                Height.DirectValue = ElementSize.FromPixels(ButtonLabel.PreferredHeight
+                                                            + TextPadding.Value.Top.Pixels
+                                                            + TextPadding.Value.Bottom.Pixels);
             }
 
             LayoutChanged();
@@ -274,14 +279,7 @@ namespace MarkLight.Views.UI
             // toggle state
             if (IsToggleButton)
             {
-                if (ToggleValue)
-                {
-                    SetState("Pressed");
-                }
-                else
-                {
-                    SetState(DefaultStateName);
-                }
+                SetState(ToggleValue ? "Pressed" : DefaultStateName);
 
                 ToggleClick.Trigger(ToggleValue.Value);
             }
@@ -349,14 +347,7 @@ namespace MarkLight.Views.UI
             if (TogglePressed)
                 return;
 
-            if (IsMouseOver)
-            {
-                SetState("Highlighted");                
-            }
-            else
-            {
-                SetState(DefaultStateName);
-            }
+            SetState(IsMouseOver ? "Highlighted" : DefaultStateName);
         }
 
         /// <summary>

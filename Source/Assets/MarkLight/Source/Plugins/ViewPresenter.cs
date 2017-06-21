@@ -49,10 +49,11 @@ namespace MarkLight
         private Dictionary<string, ValueConverter> _valueConvertersForType;
         private Dictionary<string, ValueConverter> _valueConverters;
         private Dictionary<string, ValueInterpolator> _valueInterpolatorsForType;
+        private readonly LayoutChangeContext _layoutContext = new LayoutChangeContext();
 
         private Resolution _prevResolution;
 
-        private static readonly ViewSearchArgs CalculateAndRenderViewSearchArgs = new ViewSearchArgs
+        private static readonly ViewSearchArgs CalculateAndRenderViewSearchArgs = new ViewSearchArgs(true)
         {
             TraversalAlgorithm = TraversalAlgorithm.ReverseBreadthFirst,
             SkipInactive = true
@@ -123,11 +124,10 @@ namespace MarkLight
                     x.Layout.IsDirty = true;
                     x.NotifyLayoutChanged();
                     x.ResolutionChanged();
-                });
+                }, ViewSearchArgs.Default);
             }
 
             var isRenderRequired = !isResolutionChanged && IsLayoutDirty;
-            var changeContext = isRenderRequired ? new LayoutChangeContext() : null;
 
             this.ForThisAndEachChild<View>(x =>
             {
@@ -142,13 +142,15 @@ namespace MarkLight
 
                 if (isRenderRequired)
                 {
-                    x.CalculateAndRenderLayout(changeContext);
+                    x.CalculateAndRenderLayout(_layoutContext);
                 }
 
             }, CalculateAndRenderViewSearchArgs);
 
             if (isRenderRequired)
-                changeContext.RenderLayout();
+                _layoutContext.RenderLayout();
+
+            _layoutContext.Reset();
         }
 
         /// <summary>
@@ -194,8 +196,8 @@ namespace MarkLight
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
 
-            rootView.ForThisAndEachChild<View>(x => x.TryInitializeInternalDefaultValues());
-            rootView.ForThisAndEachChild<View>(x => x.TryInitializeInternal());
+            rootView.ForThisAndEachChild<View>(x => x.TryInitializeInternalDefaultValues(), ViewSearchArgs.Default);
+            rootView.ForThisAndEachChild<View>(x => x.TryInitializeInternal(), ViewSearchArgs.Default);
             rootView.ForThisAndEachChild<View>(x => x.TryInitialize(), ViewSearchArgs.ReverseBreadthFirst);
             rootView.ForThisAndEachChild<View>(x => x.TryPropagateBindings(), ViewSearchArgs.BreadthFirst);
             rootView.ForThisAndEachChild<View>(x => x.TryQueueAllChangeHandlers(), ViewSearchArgs.ReverseBreadthFirst);
@@ -205,7 +207,7 @@ namespace MarkLight
 
             // trigger change handlers
             int pass = 0;
-            while (rootView.Find<View>(x => x.HasQueuedChangeHandlers) != null)
+            while (rootView.Find<View>(x => x.HasQueuedChangeHandlers, ViewSearchArgs.Default) != null)
             {
                 if (pass >= 1000)
                 {
@@ -240,16 +242,19 @@ namespace MarkLight
         /// </summary>
         private void PrintTriggeredChangeHandlerOverflowError(int pass, View rootView)
         {
-            var sb = new StringBuilder();
+            var sb = BufferPools.StringBuilders.Get();
             var triggeredViews =
-                rootView.GetChildren<View>(x => x.HasQueuedChangeHandlers);
+                rootView.GetChildren<View>(x => x.HasQueuedChangeHandlers, ViewSearchArgs.Default);
 
-            foreach (var triggeredView in triggeredViews)
+            for (var i = 0; i < triggeredViews.Count; i++)
             {
+                var triggeredView = triggeredViews[i];
                 sb.AppendFormat("{0}: ", triggeredView.GameObjectName);
                 sb.AppendLine();
-                foreach (var triggeredChangeHandler in triggeredView.QueuedChangeHandlers)
+
+                for (var j = 0; j < triggeredView.QueuedChangeHandlers.Count; j++)
                 {
+                    var triggeredChangeHandler = triggeredView.QueuedChangeHandlers[j];
                     sb.AppendFormat("\t{0}", triggeredChangeHandler);
                     sb.AppendLine();
                 }
@@ -260,6 +265,8 @@ namespace MarkLight
                 "Make sure your change handlers doesn't trigger each other in a loop. "+
                 "The following change handlers were still triggered after {0} passes:{1}{2}",
                 pass, Environment.NewLine, sb));
+
+            BufferPools.StringBuilders.Recycle(sb);
         }
 
         /// <summary>
@@ -450,9 +457,9 @@ namespace MarkLight
             {
                 {"Object", new ValueConverter()},
                 {"Single", new FloatValueConverter()},
-                {"Int32", new IntValueConverter()},
+                {"Int32", IntValueConverter.Instance},
                 {"Boolean", new BoolValueConverter()},
-                {"Color", new ColorValueConverter()},
+                {"Color", ColorValueConverter.Instance},
                 {"ElementSize", new ElementSizeValueConverter()},
                 {"Enum", new EnumValueConverter()},
                 {"Component", new ComponentValueConverter()},
@@ -622,9 +629,9 @@ namespace MarkLight
                 {
                     {"ValueConverter", new ValueConverter()},
                     {"FloatValueConverter", new FloatValueConverter()},
-                    {"IntValueConverter", new IntValueConverter()},
+                    {"IntValueConverter", IntValueConverter.Instance},
                     {"BoolValueConverter", new BoolValueConverter()},
-                    {"ColorValueConverter", new ColorValueConverter()},
+                    {"ColorValueConverter", ColorValueConverter.Instance},
                     {"ElementSizeValueConverter", new ElementSizeValueConverter()},
                     {"ComponentValueConverter", new ComponentValueConverter()},
                     {"EnumValueConverter", new EnumValueConverter()},

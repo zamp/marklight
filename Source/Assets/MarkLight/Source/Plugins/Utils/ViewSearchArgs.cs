@@ -5,70 +5,85 @@ namespace MarkLight
     /// <summary>
     /// Argument object for use when performing View searches via ViewSearchExtension methods.
     /// </summary>
-    public class ViewSearchArgs
+    public struct ViewSearchArgs
     {
+        #region Constants
+
+        private const byte ReadonlyFlag = 1 << 0;
+        private const byte SkipInactiveFlag = 1 << 1;
+        private const byte IsRecursiveFlag = 1 << 2;
+        private const byte StopOnFalsePredicateFlag = 1 << 3;
+
+        #endregion
+
         #region Fields
+
+        /// <summary>
+        /// Default search arguments.
+        /// </summary>
+        public static readonly ViewSearchArgs Default = new ViewSearchArgs(true).MakeReadonly();
 
         /// <summary>
         /// Depth first traversal args.
         /// </summary>
-        public static readonly ViewSearchArgs DepthFirst =
-            new ViewSearchArgs { TraversalAlgorithm = TraversalAlgorithm.DepthFirst }.MakeReadonly();
+        public static readonly ViewSearchArgs DepthFirst = new ViewSearchArgs(true).MakeReadonly();
 
         /// <summary>
         /// Breadth first traversal args.
         /// </summary>
         public static readonly ViewSearchArgs BreadthFirst =
-            new ViewSearchArgs { TraversalAlgorithm = TraversalAlgorithm.BreadthFirst }.MakeReadonly();
+            new ViewSearchArgs(true, true, TraversalAlgorithm.BreadthFirst).MakeReadonly();
 
         /// <summary>
         /// Reverse depth first traversal args.
         /// </summary>
         public static readonly ViewSearchArgs ReverseDepthFirst =
-            new ViewSearchArgs { TraversalAlgorithm = TraversalAlgorithm.ReverseDepthFirst }.MakeReadonly();
+            new ViewSearchArgs(true, true, TraversalAlgorithm.ReverseDepthFirst).MakeReadonly();
 
         /// <summary>
         /// Reverse breadth first traversal args.
         /// </summary>
         public static readonly ViewSearchArgs ReverseBreadthFirst =
-            new ViewSearchArgs { TraversalAlgorithm = TraversalAlgorithm.ReverseBreadthFirst }.MakeReadonly();
+            new ViewSearchArgs(true, true, TraversalAlgorithm.ReverseBreadthFirst).MakeReadonly();
 
         /// <summary>
         /// No recursion (first level only) args.
         /// </summary>
         public static readonly ViewSearchArgs NonRecursive =
-            new ViewSearchArgs { IsRecursive = false }.MakeReadonly();
+            new ViewSearchArgs(true) { IsRecursive = false }.MakeReadonly();
 
         /// <summary>
         /// False predicate in traversal causes a child branch to be ignored (non reversed traversal), but
         /// traversal continues.
         /// </summary>
         public static readonly ViewSearchArgs ContinueOnFalsePredicate =
-            new ViewSearchArgs { StopOnFalsePredicate = false };
+            new ViewSearchArgs(true) { StopOnFalsePredicate = false };
 
-        private bool _isReadonly;
-        private TraversalAlgorithm _traversalAlgorithm = TraversalAlgorithm.DepthFirst;
-        private bool _skipInactive;
         private View _parent;
-        private bool _isRecursive = true;
-        private bool _stopOnFalsePredicate = true;
+        private TraversalAlgorithm _traversalAlgorithm;
+        private byte _flags;
 
         #endregion
 
         #region Constructors
 
-        public ViewSearchArgs()
+        public ViewSearchArgs(bool isRecursive = true, bool stopOnFalsePredicate = true,
+                              TraversalAlgorithm traversalAlgorithm = TraversalAlgorithm.DepthFirst) : this()
         {
+            if (isRecursive)
+                _flags |= IsRecursiveFlag;
+
+            if (stopOnFalsePredicate)
+                _flags |= StopOnFalsePredicateFlag;
+
+            _traversalAlgorithm = traversalAlgorithm;
         }
 
-        public ViewSearchArgs(ViewSearchArgs args)
+        public ViewSearchArgs(ViewSearchArgs args) : this()
         {
-            if (args == null)
-                return;
-
-            _isRecursive = args.IsRecursive;
-            _parent = args.Parent;
-            _skipInactive = args.SkipInactive;
+            IsRecursive = args.IsRecursive;
+            Parent = args.Parent;
+            SkipInactive = args.SkipInactive;
             TraversalAlgorithm = args.TraversalAlgorithm;
         }
 
@@ -76,8 +91,9 @@ namespace MarkLight
 
         #region Methods
 
-        public ViewSearchArgs MakeReadonly() {
-            _isReadonly = true;
+        public ViewSearchArgs MakeReadonly()
+        {
+            _flags |= ReadonlyFlag;
             return this;
         }
 
@@ -85,21 +101,26 @@ namespace MarkLight
 
         #region Properties
 
+        public bool IsReadonly
+        {
+            get { return (_flags & ReadonlyFlag) == ReadonlyFlag; }
+        }
+
         /// <summary>
         /// Determine if the search is recursive. Default is true.
         /// </summary>
         public bool IsRecursive
         {
-            get { return _isRecursive; }
+            get { return (_flags & IsRecursiveFlag) == IsRecursiveFlag; }
             set
             {
-                if (_isReadonly)
+                if (IsReadonly)
                 {
                     throw new InvalidOperationException(
                         "The ViewSearchArgs cannot be modified because it is readonly.");
                 }
 
-                _isRecursive = value;
+                SetFlag(IsRecursiveFlag, value);
             }
         }
 
@@ -111,7 +132,7 @@ namespace MarkLight
             get { return _parent; }
             set
             {
-                if (_isReadonly)
+                if (IsReadonly)
                 {
                     throw new InvalidOperationException(
                         "The ViewSearchArgs cannot be modified because it is readonly.");
@@ -126,16 +147,16 @@ namespace MarkLight
         /// </summary>
         public bool SkipInactive
         {
-            get { return _skipInactive; }
+            get { return (_flags & SkipInactiveFlag) == SkipInactiveFlag; }
             set
             {
-                if (_isReadonly)
+                if (IsReadonly)
                 {
                     throw new InvalidOperationException(
                         "The ViewSearchArgs cannot be modified because it is readonly.");
                 }
 
-                _skipInactive = value;
+                SetFlag(SkipInactiveFlag, value);
             }
         }
 
@@ -146,16 +167,16 @@ namespace MarkLight
         /// false predicate for non-reversed traversal. Reversed traversal simply ignores predicate result.</d>
         public bool StopOnFalsePredicate
         {
-            get { return _stopOnFalsePredicate; }
+            get { return (_flags & StopOnFalsePredicateFlag) == StopOnFalsePredicateFlag; }
             set
             {
-                if (_isReadonly)
+                if (IsReadonly)
                 {
                     throw new InvalidOperationException(
                         "The ViewSearchArgs cannot be modified because it is readonly.");
                 }
 
-                _stopOnFalsePredicate = value;
+                SetFlag(StopOnFalsePredicateFlag, value);
             }
         }
 
@@ -167,13 +188,25 @@ namespace MarkLight
             get { return _traversalAlgorithm; }
             set
             {
-                if (_isReadonly)
+                if (IsReadonly)
                 {
                     throw new InvalidOperationException(
                         "The ViewSearchArgs cannot be modified because it is readonly.");
                 }
 
                 _traversalAlgorithm = value;
+            }
+        }
+
+        private void SetFlag(byte flag, bool isSet)
+        {
+            if (isSet)
+            {
+                _flags |= flag;
+            }
+            else
+            {
+                _flags = (byte)(_flags & ~flag);
             }
         }
 

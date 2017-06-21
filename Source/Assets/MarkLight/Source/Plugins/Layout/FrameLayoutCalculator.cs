@@ -11,8 +11,6 @@ namespace MarkLight
     {
         #region Fields
 
-        private static readonly ElementMargin EmptyMargin = new ElementMargin();
-
         /// <summary>
         /// Determine if the Width should be affected.
         /// </summary>
@@ -66,7 +64,7 @@ namespace MarkLight
                 maxHeight = Mathf.Max(maxHeight, height);
             }
 
-            var contentMargin = ContentMargin ?? EmptyMargin;
+            var contentMargin = ContentMargin;
 
             // add margins
             maxWidth += contentMargin.Left.Pixels + contentMargin.Right.Pixels;
@@ -75,12 +73,12 @@ namespace MarkLight
             // adjust size to content unless it has been set
             if (AdjustToWidth)
             {
-                view.Layout.Width = new ElementSize(maxWidth);
+                view.Layout.Width = ElementSize.FromPixels(maxWidth);
             }
 
             if (AdjustToHeight)
             {
-                view.Layout.Height = new ElementSize(maxHeight);
+                view.Layout.Height = ElementSize.FromPixels(maxHeight);
             }
 
             return view.Layout.IsDirty;

@@ -16,6 +16,8 @@ namespace MarkLight.ValueConverters
 
         public static Dictionary<string, Color> ColorCodes;
 
+        public static readonly ColorValueConverter Instance = new ColorValueConverter();
+
         #endregion
 
         #region Constructor

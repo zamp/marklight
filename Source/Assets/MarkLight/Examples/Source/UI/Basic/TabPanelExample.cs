@@ -1,13 +1,4 @@
-﻿#region Using Statements
-using MarkLight.Views.UI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
+﻿using MarkLight.Views.UI;
 
 namespace MarkLight.Examples.UI.Basic
 {
@@ -105,7 +96,7 @@ namespace MarkLight.Examples.UI.Basic
                     // disable radio button
                     x.IsDisabled.Value = true;
                     }
-                });
+                }, ViewSearchArgs.Default);
             }
         }
 

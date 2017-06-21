@@ -1,14 +1,4 @@
-﻿#region Using Statements
-using MarkLight.Examples.Data;
-using MarkLight.Views.UI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.EventSystems;
-#endregion
+﻿using MarkLight.Examples.Data;
 
 namespace MarkLight.Examples.UI
 {
@@ -20,7 +10,7 @@ namespace MarkLight.Examples.UI
         #region Fields
 
         public ObservableList<Card> Cards;
-        private System.Random _random = new System.Random();
+        private readonly System.Random _random = new System.Random();
 
         #endregion
 
@@ -36,7 +26,7 @@ namespace MarkLight.Examples.UI
             Cards = new ObservableList<Card>();
 
             // generate random cards            
-            for (int i = 1; i <= 22; ++i)
+            for (var i = 1; i <= 22; ++i)
             {
                 Add();
             }
@@ -46,8 +36,12 @@ namespace MarkLight.Examples.UI
         /// Adds new card to the list.
         /// </summary>
         public void Add()
-        {            
-            var card = new Card { CardRank = _random.Next(11, 15), CardSuit = (CardSuit)_random.Next(1, 4) };
+        {
+            var card = new Card
+            {
+                CardRank = _random.Next(11, 15),
+                CardSuit = (CardSuit) _random.Next(1, 4)
+            };
             Cards.Add(card);
         }
 
@@ -64,7 +58,7 @@ namespace MarkLight.Examples.UI
         /// </summary>
         public void ScrollTo()
         {
-            Cards.ScrollTo(Cards.SelectedItem, ElementAlignment.Center);
+            Cards.ScrollTo(Cards.SelectedItem);
         }
         
         #endregion

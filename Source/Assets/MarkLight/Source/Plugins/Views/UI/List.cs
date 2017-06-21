@@ -774,8 +774,9 @@ namespace MarkLight.Views.UI
                 layoutCalc.ScrollContent = ScrollContent;
             }
 
-            var children = GetContentChildren(ScrollContent ?? Content);
-            LayoutCalculator.CalculateLayoutChanges(this, children, context);
+            GetContentChildren(ScrollContent ?? Content, _childBuffer);
+            LayoutCalculator.CalculateLayoutChanges(this, _childBuffer, context);
+            _childBuffer.Clear();
 
             if (UseVirtualization)
             {
@@ -889,8 +890,9 @@ namespace MarkLight.Views.UI
             }
         }
 
-        protected override List<UIView> GetContentChildren(View content) {
-            return GetContentChildren(content, SortDirection);
+        protected override List<UIView> GetContentChildren(View content, List<UIView> output)
+        {
+            return GetContentChildren(content, SortDirection, output, _sortBuffer);
         }
 
         /// <summary>
@@ -1198,17 +1200,21 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Scroll to an item specified by index position.
         /// </summary>
-        public virtual void ScrollTo(int index,
-                                     ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null)
+        public virtual void ScrollTo(int index)
+        {
+            ScrollTo(index, ElementAlignment.Center, new ElementMargin());
+        }
+
+        /// <summary>
+        /// Scroll to an item specified by index position.
+        /// </summary>
+        public virtual void ScrollTo(int index, ElementAlignment alignment, ElementMargin offset)
         {
             if (ListPanel == null)
                 return;
 
             if (index >= _presentedListItems.Count || index < 0)
                 return;
-
-            if (offset == null)
-                offset = new ElementMargin();
 
             var listItem = _presentedListItems[index];
             var itemLayout = listItem.Layout;
@@ -1534,7 +1540,7 @@ namespace MarkLight.Views.UI
             }
 
             // get method GetTemplateId from list item
-            Type type = itemData.GetType();
+            var type = itemData.GetType();
             var method = type.GetMethod("GetTemplateId",
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
                 BindingFlags.Static);
@@ -1543,7 +1549,7 @@ namespace MarkLight.Views.UI
                 return ListItemTemplates[0];
             }
 
-            string templateId = method.IsStatic
+            var templateId = method.IsStatic
                 ? method.Invoke(null, null) as string
                 : method.Invoke(itemData, null) as string;
 

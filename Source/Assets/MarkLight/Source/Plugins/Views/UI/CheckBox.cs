@@ -239,16 +239,16 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Height.DirectValue = new ElementSize(40);
-            CheckBoxImageView.Width.DirectValue = new ElementSize(40);
-            CheckBoxImageView.Height.DirectValue = new ElementSize(40);
+            Height.DirectValue = ElementSize.FromPixels(40);
+            CheckBoxImageView.Width.DirectValue = ElementSize.FromPixels(40);
+            CheckBoxImageView.Height.DirectValue = ElementSize.FromPixels(40);
             IsInteractable.DirectValue = true;
         }
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
             // adjust width to CheckBoxGroup
-            Layout.Width = new ElementSize(CheckBoxGroup.ActualWidth, ElementSizeUnit.Pixels);
+            Layout.Width = ElementSize.FromPixels(CheckBoxGroup.ActualWidth);
             return base.CalculateLayoutChanges(context);
         }
 
@@ -260,14 +260,7 @@ namespace MarkLight.Views.UI
             if (IsDisabled)
                 return;
 
-            if (IsChecked)
-            {
-                SetState("Checked");
-            }
-            else
-            {
-                SetState(DefaultStateName);
-            }
+            SetState(IsChecked ? "Checked" : DefaultStateName);
         }
 
         /// <summary>

@@ -22,7 +22,7 @@ namespace MarkLight.ValueConverters
         public Color32ValueConverter()
         {
             _type = typeof(Color32);
-            _colorValueConverter = new ColorValueConverter();
+            _colorValueConverter = ColorValueConverter.Instance;
         }
 
         #endregion

@@ -1,9 +1,5 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using UnityEngine;
-#endregion
 
 namespace MarkLight
 {
@@ -11,7 +7,7 @@ namespace MarkLight
     /// Represents left, top, right and bottom margins.
     /// </summary>
     [Serializable]
-    public class ElementMargin
+    public struct ElementMargin
     {
         #region Fields
 
@@ -30,17 +26,6 @@ namespace MarkLight
         #endregion
 
         #region Constructor
-
-        /// <summary>
-        /// Initializes a new instance of the class.
-        /// </summary>
-        public ElementMargin()
-        {
-            _left = new ElementSize();
-            _top = new ElementSize();
-            _right = new ElementSize();
-            _bottom = new ElementSize();
-        }
 
         /// <summary>
         /// Initializes a new instance of the class.
@@ -103,6 +88,38 @@ namespace MarkLight
         #region Methods
 
         /// <summary>
+        /// Create copy with modified left size.
+        /// </summary>
+        public ElementMargin SetLeft(ElementSize left)
+        {
+            return new ElementMargin(left, Top, Right, Bottom);
+        }
+
+        /// <summary>
+        /// Create copy with modified top size.
+        /// </summary>
+        public ElementMargin SetTop(ElementSize top)
+        {
+            return new ElementMargin(Left, top, Right, Bottom);
+        }
+
+        /// <summary>
+        /// Create copy with modified right size.
+        /// </summary>
+        public ElementMargin SetRight(ElementSize right)
+        {
+            return new ElementMargin(Left, Top, right, Bottom);
+        }
+
+        /// <summary>
+        /// Create copy with modified bottom size.
+        /// </summary>
+        public ElementMargin SetBottom(ElementSize bottom)
+        {
+            return new ElementMargin(Left, Top, Right, bottom);
+        }
+
+        /// <summary>
         /// Gets left margin from left size.
         /// </summary>
         public static ElementMargin FromLeft(ElementSize left)
@@ -116,6 +133,14 @@ namespace MarkLight
         public static ElementMargin FromTop(ElementSize top)
         {
             return new ElementMargin(new ElementSize(), top, new ElementSize(), new ElementSize());
+        }
+
+        /// <summary>
+        /// Gets left and top margin from left and top size.
+        /// </summary>
+        public static ElementMargin FromLeftTop(ElementSize left, ElementSize top)
+        {
+            return new ElementMargin(left, top, new ElementSize(), new ElementSize());
         }
 
         /// <summary>
@@ -135,6 +160,14 @@ namespace MarkLight
         }
 
         /// <summary>
+        /// Gets right and bottom margin from right and bottom size.
+        /// </summary>
+        public static ElementMargin FromRightBottom(ElementSize right, ElementSize bottom)
+        {
+            return new ElementMargin(new ElementSize(), new ElementSize(), right, bottom);
+        }
+
+        /// <summary>
         /// Converts margin to string.
         /// </summary>
         /// <returns></returns>
@@ -147,13 +180,30 @@ namespace MarkLight
             return (int)Left.Value ^ (int)Top.Value ^ (int)Right.Value ^ (int)Bottom.Value;
         }
 
-        public override bool Equals(object obj) {
-            var other = obj as ElementMargin;
-            if (other == null)
+        public override bool Equals(object obj)
+        {
+            if (!(obj is ElementMargin))
                 return false;
 
+            var other = (ElementMargin)obj;
             return other._left.Equals(_left) && other._top.Equals(_top)
                    && other._right.Equals(_right) && other._bottom.Equals(_bottom);
+        }
+
+        public static bool operator ==(ElementMargin margin1, ElementMargin margin2)
+        {
+            return margin1._left == margin2._left
+                   && margin1._top == margin2._top
+                   && margin1._right == margin2._right
+                   && margin1._bottom == margin2._bottom;
+        }
+
+        public static bool operator !=(ElementMargin margin1, ElementMargin margin2)
+        {
+            return margin1._left != margin2._left
+                   || margin1._top != margin2._top
+                   || margin1._right != margin2._right
+                   || margin1._bottom != margin2._bottom;
         }
 
         #endregion
@@ -169,10 +219,6 @@ namespace MarkLight
             {
                 return _left;
             }
-            set
-            {
-                _left = value;
-            }
         }
 
         /// <summary>
@@ -183,10 +229,6 @@ namespace MarkLight
             get
             {
                 return _top;
-            }
-            set
-            {
-                _top = value;
             }
         }
 
@@ -199,10 +241,6 @@ namespace MarkLight
             {
                 return _right;
             }
-            set
-            {
-                _right = value;
-            }
         }
 
         /// <summary>
@@ -213,10 +251,6 @@ namespace MarkLight
             get
             {
                 return _bottom;
-            }
-            set
-            {
-                _bottom = value;
             }
         }
 

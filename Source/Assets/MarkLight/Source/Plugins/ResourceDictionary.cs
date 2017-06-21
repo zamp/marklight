@@ -1,13 +1,8 @@
-﻿#region Using Statements
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using UnityEngine;
-#endregion
 
 namespace MarkLight
 {
@@ -28,11 +23,12 @@ namespace MarkLight
 
         [NonSerialized]
         private XElement _xumlElement;
-                
+
+        private static readonly HashSetPool<ViewFieldData> _callStackBuffer;
         private static bool _forceUpdateAllObservers;
         private static Dictionary<string, List<Resource>> _resourceLookupDictionary;
-        private static Dictionary<string, List<WeakReference>> _resourceBindingObservers;
-        private static HashSet<WeakReference> _observersToBeNotified;
+        private static readonly Dictionary<string, List<WeakReference>> _resourceBindingObservers;
+        private static readonly HashSet<WeakReference> _observersToBeNotified;
 
         #endregion
 
@@ -51,6 +47,7 @@ namespace MarkLight
         /// </summary>
         static ResourceDictionary()
         {
+            _callStackBuffer = new HashSetPool<ViewFieldData>();
             _resourceBindingObservers = new Dictionary<string, List<WeakReference>>();
             _observersToBeNotified = new HashSet<WeakReference>();
             _resourceLookupDictionary = new Dictionary<string, List<Resource>>();
@@ -77,7 +74,10 @@ namespace MarkLight
         public static void NotifyObservers(bool forceUpdateAllObservers = false)
         {
             // get all observers or just the ones tagged to be notified depending on forceUpdateAllObservers setting
-            var observerRefs = forceUpdateAllObservers || _forceUpdateAllObservers ? _resourceBindingObservers.Values.SelectMany(x => x) : _observersToBeNotified;
+            var observerRefs = forceUpdateAllObservers || _forceUpdateAllObservers
+                ? _resourceBindingObservers.Values.SelectMany(x => x)
+                : _observersToBeNotified;
+
             _forceUpdateAllObservers = false;
 
             // notify observers
@@ -89,7 +89,9 @@ namespace MarkLight
                 var bindingObserver = observerRef.Target as BindingValueObserver;
 
                 //Debug.Log("Notifying target view field: " + bindingObserver.Target.ViewFieldPath);
-                bindingObserver.Notify(new HashSet<ViewFieldData>());
+                var callstack = _callStackBuffer.Get();
+                bindingObserver.Notify(callstack);
+                _callStackBuffer.Recycle(callstack);
             }
             
             _observersToBeNotified.Clear();
@@ -136,9 +138,12 @@ namespace MarkLight
             int match = 0;
 
             // matches according to the following rules: 
-            // a resource parameter (platform or language) can give half match or full match against the dictionary configuration
-            // an empty value in the resource indicates wildcard which gives half match unless the configuration is also empty which means a full match
-            // if a resource parameter is set and the configuration is the same it's a full match otherwise a mismatch
+            // 1. a resource parameter (platform or language) can give half match or full match against the dictionary
+            //    configuration
+            // 2. an empty value in the resource indicates wildcard which gives half match unless the configuration is
+            //    also empty which means a full match
+            // 3. if a resource parameter is set and the configuration is the same it's a full match otherwise a
+            //    mismatch
 
             // compare language 
             if (String.IsNullOrEmpty(resource.Language))
@@ -190,9 +195,16 @@ namespace MarkLight
         /// <summary>
         /// Sets/adds a resource in the runtime resource dictionary.
         /// </summary>
-        public static void SetResource(string dictionaryName, string resourceKey, string value, string language = null, string platform = null)
+        public static void SetResource(string dictionaryName, string resourceKey, string value,
+                                       string language = null, string platform = null)
         {
-            SetResource(dictionaryName, new Resource { Key = resourceKey, Value = value, Language = language, Platform = platform });
+            SetResource(dictionaryName, new Resource
+            {
+                Key = resourceKey,
+                Value = value,
+                Language = language,
+                Platform = platform
+            });
         }
 
         /// <summary>
@@ -228,7 +240,8 @@ namespace MarkLight
         /// <summary>
         /// Registers a resource binding observer. 
         /// </summary>
-        public static void RegisterResourceBindingObserver(string dictionaryName, string resourceKey, BindingValueObserver bindingValueObserver)
+        public static void RegisterResourceBindingObserver(string dictionaryName, string resourceKey,
+                                                           BindingValueObserver bindingValueObserver)
         {
             var fullResourceKey = GetFullResourceKey(dictionaryName, resourceKey);
             if (!_resourceBindingObservers.ContainsKey(fullResourceKey))
@@ -248,13 +261,13 @@ namespace MarkLight
         {
             Resources.AddRange(resources);
 
-            if (Application.isPlaying)
+            if (!Application.isPlaying)
+                return;
+
+            // if XUML is loaded during run-time we need to update runtime dictionary as well
+            foreach (var resource in resources)
             {
-                // if XUML is loaded during run-time we need to update runtime dictionary as well
-                foreach (var resource in resources)
-                {
-                    SetResource(Name, resource);
-                }
+                SetResource(Name, resource);
             }
         }
 
@@ -278,7 +291,9 @@ namespace MarkLight
         /// </summary>
         public static string GetFullResourceKey(string dictionaryName, string resourceKey)
         {
-            return String.IsNullOrEmpty(dictionaryName) ? resourceKey : String.Format("{0}.{1}", dictionaryName, resourceKey);
+            return String.IsNullOrEmpty(dictionaryName)
+                ? resourceKey
+                : String.Format("{0}.{1}", dictionaryName, resourceKey);
         }
 
         #endregion

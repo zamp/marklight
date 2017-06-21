@@ -4,7 +4,8 @@ namespace MarkLight.Views.UI
     /// <summary>
     /// RadioButton view.
     /// </summary>
-    /// <d>Presents a one-of-many selection option. If multiple radio buttons shares the same parent only one is selected at a time.</d>
+    /// <d>Presents a one-of-many selection option. If multiple radio buttons shares the same parent only one is
+    /// selected at a time.</d>
     [HideInPresenter]
     public class RadioButton : UIView
     {
@@ -20,7 +21,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if the radio button is disabled.
         /// </summary>
-        /// <d>If true the radio button changes state from Default to Disabled and no longer responds to user interaction.</d>
+        /// <d>If true the radio button changes state from Default to Disabled and no longer responds to user
+        /// interaction.</d>
         [ChangeHandler("IsDisabledChanged")]
         public _bool IsDisabled;
 
@@ -95,7 +97,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Image displaying the radio button.
         /// </summary>
-        /// <d>Image view that displays the radio button. Different images are presented when the radio button changes state between Default and Checked.</d>
+        /// <d>Image view that displays the radio button. Different images are presented when the radio button changes
+        /// state between Default and Checked.</d>
         public Image RadioButtonImageView;
 
         #endregion
@@ -161,14 +164,16 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Radio button text alignment.
         /// </summary>
-        /// <d>The alignment of the text inside the radio button label. Can be used with TextMargin and TextOffset to get desired positioning of the text.</d>
+        /// <d>The alignment of the text inside the radio button label. Can be used with TextMargin and TextOffset to
+        /// get desired positioning of the text.</d>
         [MapTo("RadioButtonLabel.TextAlignment")]
         public _ElementAlignment TextAlignment;
 
         /// <summary>
         /// Radio button text offset.
         /// </summary>
-        /// <d>The offset of the radio button label. Can be used with TextMargin and TextAlignment to get desired positioning of the text.</d>
+        /// <d>The offset of the radio button label. Can be used with TextMargin and TextAlignment to get desired
+        /// positioning of the text.</d>
         [MapTo("RadioButtonLabel.Offset")]
         public _ElementMargin TextOffset;
 
@@ -226,14 +231,14 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Height.DirectValue = new ElementSize(40);
-            RadioButtonImageView.Width.DirectValue = new ElementSize(40);
-            RadioButtonImageView.Height.DirectValue = new ElementSize(40);
+            Height.DirectValue = ElementSize.FromPixels(40);
+            RadioButtonImageView.Width.DirectValue = ElementSize.FromPixels(40);
+            RadioButtonImageView.Height.DirectValue = ElementSize.FromPixels(40);
         }
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
-            Layout.Width = new ElementSize(RadioButtonGroup.ActualWidth, ElementSizeUnit.Pixels);
+            Layout.Width = ElementSize.FromPixels(RadioButtonGroup.ActualWidth);
             return base.CalculateLayoutChanges(context);
         }
 

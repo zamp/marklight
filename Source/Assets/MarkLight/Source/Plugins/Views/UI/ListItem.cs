@@ -209,8 +209,8 @@ namespace MarkLight.Views.UI
         public override void SetDefaultValues()
         {
             base.SetDefaultValues();
-            Breadth.DirectValue = new ElementSize(40);
-            Length.DirectValue = new ElementSize(120);
+            Breadth.DirectValue = ElementSize.FromPixels(40);
+            Length.DirectValue = ElementSize.FromPixels(120);
             TextPadding.DirectValue = new ElementMargin();
 
             // list item label
@@ -271,20 +271,37 @@ namespace MarkLight.Views.UI
             // adjust item size to text
             if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.Width)
             {
-                Layout.Width = new ElementSize(ItemLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels
-                    + ItemLabel.Margin.Value.Left.Pixels + ItemLabel.Margin.Value.Right.Pixels);
+                Layout.Width =ElementSize.FromPixels(
+                    ItemLabel.PreferredWidth
+                    + TextPadding.Value.Left.Pixels
+                    + TextPadding.Value.Right.Pixels
+                    + ItemLabel.Margin.Value.Left.Pixels
+                    + ItemLabel.Margin.Value.Right.Pixels);
             }
             else if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.Height)
             {
-                Layout.Height = new ElementSize(ItemLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels
-                    + ItemLabel.Margin.Value.Top.Pixels + ItemLabel.Margin.Value.Bottom.Pixels);
+                Layout.Height = ElementSize.FromPixels(
+                    ItemLabel.PreferredHeight
+                    + TextPadding.Value.Top.Pixels
+                    + TextPadding.Value.Bottom.Pixels
+                    + ItemLabel.Margin.Value.Top.Pixels
+                    + ItemLabel.Margin.Value.Bottom.Pixels);
             }
             else if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Layout.Width = new ElementSize(ItemLabel.PreferredWidth + TextPadding.Value.Left.Pixels + TextPadding.Value.Right.Pixels
-                    + ItemLabel.Margin.Value.Left.Pixels + ItemLabel.Margin.Value.Right.Pixels);
-                Layout.Height = new ElementSize(ItemLabel.PreferredHeight + TextPadding.Value.Top.Pixels + TextPadding.Value.Bottom.Pixels
-                    + ItemLabel.Margin.Value.Top.Pixels + ItemLabel.Margin.Value.Bottom.Pixels);
+                Layout.Width = ElementSize.FromPixels(
+                    ItemLabel.PreferredWidth
+                    + TextPadding.Value.Left.Pixels
+                    + TextPadding.Value.Right.Pixels
+                    + ItemLabel.Margin.Value.Left.Pixels
+                    + ItemLabel.Margin.Value.Right.Pixels);
+
+                Layout.Height = ElementSize.FromPixels(
+                    ItemLabel.PreferredHeight
+                    + TextPadding.Value.Top.Pixels
+                    + TextPadding.Value.Bottom.Pixels
+                    + ItemLabel.Margin.Value.Top.Pixels
+                    + ItemLabel.Margin.Value.Bottom.Pixels);
             }
 
             LayoutChanged();
@@ -311,14 +328,7 @@ namespace MarkLight.Views.UI
             if (IsSelected)
                 return;
 
-            if (IsPressed)
-            {
-                SetState("Pressed");
-            }
-            else
-            {
-                SetState("Highlighted");
-            }
+            SetState(IsPressed ? "Pressed" : "Highlighted");
         }
 
         /// <summary>
@@ -370,14 +380,7 @@ namespace MarkLight.Views.UI
             if (IsSelected)
                 return;
 
-            if (IsMouseOver)
-            {
-                SetState("Highlighted");
-            }
-            else
-            {
-                SetState(DefaultItemStyle);
-            }
+            SetState(IsMouseOver ? "Highlighted" : DefaultItemStyle);
         }
 
         /// <summary>

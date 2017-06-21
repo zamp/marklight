@@ -21,11 +21,11 @@ namespace MarkLight
         private ElementAlignment _alignment;
         private ElementOrientation _orientation;
         private ElementAspectRatio _aspectRatio;
-        private ElementSize _width = new ElementSize();
-        private ElementSize _height = new ElementSize();
-        private ElementMargin _offsetFromParent = new ElementMargin();
-        private ElementMargin _offset = new ElementMargin();
-        private ElementMargin _margin = new ElementMargin();
+        private ElementSize _width;
+        private ElementSize _height;
+        private ElementMargin _offsetFromParent;
+        private ElementMargin _offset;
+        private ElementMargin _margin;
 
         private LayoutRectCalculator _layoutRect = LayoutRectCalculator.Default;
         private Vector2 _anchorMin;
@@ -76,11 +76,9 @@ namespace MarkLight
         /// <param name="containerSize">The size of the element container.</param>
         public float SizeToPixels(ElementSize size, float containerSize)
         {
-            return size != null
-                ? size.Unit == ElementSizeUnit.Percents
+            return size.Unit == ElementSizeUnit.Percents
                     ? containerSize * size.Percent
-                    : size.Pixels
-                : 0f;
+                    : size.Pixels;
         }
 
         /// <summary>
@@ -216,27 +214,6 @@ namespace MarkLight
                                         && OffsetFromParent.Bottom.Unit == ElementSizeUnit.Pixels;
 
             return result;
-        }
-
-        /// <summary>
-        /// Copy values from one ElementSize to another.
-        /// </summary>
-        public static void Copy(ElementSize from, ElementSize to)
-        {
-            to.Unit = from.Unit;
-            to.Fill = from.Fill;
-            to.Value = from.Value;
-        }
-
-        /// <summary>
-        /// Copy values from one ElementMargin to another.
-        /// </summary>
-        public static void Copy(ElementMargin from, ElementMargin to)
-        {
-            Copy(from.Left, to.Left);
-            Copy(from.Top, to.Top);
-            Copy(from.Right, to.Right);
-            Copy(from.Bottom, to.Bottom);
         }
 
         #endregion
@@ -424,7 +401,7 @@ namespace MarkLight
             get
             {
                 var width = AspectWidth;
-                return ReferenceEquals(width, Width)
+                return width == Width
                     ? PixelWidth
                     : width.Pixels;
             }
@@ -447,7 +424,7 @@ namespace MarkLight
 
                 if (Width.Unit == ElementSizeUnit.Pixels)
                 {
-                    return new ElementSize(aspectHeight);
+                    return ElementSize.FromPixels(aspectHeight);
                 }
 
                 var pixelHeight = _verticalSizes.BoxSize;
@@ -455,13 +432,13 @@ namespace MarkLight
                 if (AspectRatio.X >= AspectRatio.Y)
                 {
                     return aspectHeight <= pixelHeight
-                        ? new ElementSize(aspectHeight)
+                        ? ElementSize.FromPixels(aspectHeight)
                         : Height;
                 }
 
                 var aspectWidth = pixelHeight * (AspectRatio.X / AspectRatio.Y);
                 return aspectWidth > pixelWidth
-                    ? new ElementSize(aspectHeight)
+                    ? ElementSize.FromPixels(aspectHeight)
                     : Height;
             }
         }
@@ -473,7 +450,7 @@ namespace MarkLight
         {
             get {
                 var height = AspectHeight;
-                return ReferenceEquals(height, Height)
+                return height == Height
                     ? PixelHeight
                     : height.Pixels;
             }
@@ -535,7 +512,7 @@ namespace MarkLight
             get { return _width; }
             set
             {
-                if (Equals(_width, value))
+                if (_width == value)
                     return;
 
                 _width = value;
@@ -551,7 +528,7 @@ namespace MarkLight
             get { return _height; }
             set
             {
-                if (Equals(_height, value))
+                if (_height == value)
                     return;
 
                 _height = value;
@@ -567,7 +544,7 @@ namespace MarkLight
             get { return _aspectRatio; }
             set
             {
-                if (Equals(_aspectRatio, value))
+                if (_aspectRatio == value)
                     return;
 
                 _aspectRatio = value;
@@ -607,7 +584,7 @@ namespace MarkLight
             get { return _offsetFromParent; }
             set
             {
-                if (Equals(_offsetFromParent, value))
+                if (_offsetFromParent == value)
                     return;
 
                 _offsetFromParent = value;
@@ -768,7 +745,7 @@ namespace MarkLight
             get { return _offset; }
             set
             {
-                if (Equals(_offset, value))
+                if (_offset == value)
                     return;
 
                 _offset = value;
@@ -928,7 +905,7 @@ namespace MarkLight
             get { return _margin; }
             set
             {
-                if (Equals(_margin, value))
+                if (_margin == value)
                     return;
 
                 _margin = value;
@@ -1179,46 +1156,6 @@ namespace MarkLight
 
             public float OffsetFromParentXPixels;
             public float OffsetFromParentYPixels;
-
-            public float DisplacementLeftTop
-            {
-                get
-                {
-                    return TargetSize
-                           + MarginPixels
-                           + OffsetXPixels
-                           + OffsetFromParentPixels
-                           - OffsetYPixels
-                           - OffsetFromParentPixels;
-                }
-            }
-
-            public float DisplacementRightBottom
-            {
-                get
-                {
-                    return Mathf.Max(0f, TargetSize
-                           + MarginPixels
-                           - OffsetXPixels
-                           - OffsetFromParentPixels
-                           + OffsetYPixels
-                           + OffsetFromParentPixels);
-                }
-            }
-
-            public float DisplacementCenter
-            {
-                get
-                {
-                    // centered
-                    return Mathf.Max(0f, TargetSize
-                           + MarginPixels
-                           - OffsetXPixels
-                           - OffsetFromParentPixels
-                           - OffsetYPixels
-                           - OffsetFromParentPixels);
-                }
-            }
 
             public float MarginPixels
             {

@@ -259,6 +259,8 @@ namespace MarkLight.Views.UI
         protected CanvasGroup _canvasGroup;
 
         private LayoutData _layout;
+        protected List<UIView> _sortBuffer;
+        protected List<UIView> _childBuffer;
 
         #endregion
 
@@ -272,8 +274,8 @@ namespace MarkLight.Views.UI
             base.SetDefaultValues();
 
             Alignment.DirectValue = ElementAlignment.Center;
-            Width.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents) { Fill = true };
-            Height.DirectValue = new ElementSize(1.0f, ElementSizeUnit.Percents) { Fill = true };
+            Width.DirectValue = ElementSize.FromPercents(1.0f, true);
+            Height.DirectValue = ElementSize.FromPercents(1.0f, true);
             OverrideWidth.DirectValue = ElementSize.FromPixels(0);
             OverrideHeight.DirectValue = ElementSize.FromPixels(0);
             Margin.DirectValue = new ElementMargin();
@@ -332,8 +334,11 @@ namespace MarkLight.Views.UI
             if (!LayoutCalculator.IsChildLayout)
                 return LayoutCalculator.CalculateLayoutChanges(this, context);
 
-            var children = GetContentChildren(Content ?? this);
-            return LayoutCalculator.CalculateLayoutChanges(this, children, context);
+            var children = GetContentChildren(Content ?? this, _childBuffer);
+            var result = LayoutCalculator.CalculateLayoutChanges(this, children, context);
+            _childBuffer.Clear();
+
+            return result;
         }
 
         /// <summary>
@@ -344,8 +349,7 @@ namespace MarkLight.Views.UI
             if (!UpdateRectTransform)
                 return; // rect transform is updated elsewhere
 
-            LayoutData.Copy(Offset.Value, Layout.Offset);
-            Layout.IsDirty = true;
+            Layout.Offset = Offset.Value;
             RenderLayout();
         }
 
@@ -508,6 +512,9 @@ namespace MarkLight.Views.UI
         {
             base.Initialize();
 
+            _sortBuffer = new List<UIView>();
+            _childBuffer = new List<UIView>();
+
             // get background sprite from global cache
             if (BackgroundImage.IsSet && BackgroundImage.Value != null ||
                 DefaultBackgroundImage.IsSet && DefaultBackgroundImage.Value != null)
@@ -528,44 +535,43 @@ namespace MarkLight.Views.UI
         /// </summary>
         public virtual void RefreshLayoutData()
         {
-            var isDirty = Layout.IsDirty;
             Layout.PositionType = PositionType.Value;
             Layout.Alignment = Alignment.Value;
             Layout.AspectRatio = AspectRatio.Value;
-            LayoutData.Copy(Width.Value, Layout.Width);
-            LayoutData.Copy(Height.Value, Layout.Height);
-            LayoutData.Copy(Offset.Value, Layout.Offset);
-            LayoutData.Copy(Margin.Value, Layout.Margin);
-            Layout.IsDirty = isDirty;
+            Layout.Width = Width.Value;
+            Layout.Height = Height.Value;
+            Layout.Offset = Offset.Value;
+            Layout.Margin = Margin.Value;
         }
 
-        protected virtual List<UIView> GetContentChildren(View content) {
-            return GetContentChildren(content, ElementSortDirection.Ascending);
+        protected virtual List<UIView> GetContentChildren(View content, List<UIView> output) {
+            return GetContentChildren(content, ElementSortDirection.Ascending, output, _sortBuffer);
         }
 
-        protected static List<UIView> GetContentChildren(View content, ElementSortDirection sortDirection)
+        protected static List<UIView> GetContentChildren(View content, ElementSortDirection sortDirection,
+                                                         List<UIView> output, List<UIView> sortBuffer)
         {
-            var children = new List<UIView>();
-            var childrenToBeSorted = new List<UIView>();
-
             content.ForEachChild<UIView>(x =>
             {
                 // should this be sorted?
                 if (x.SortIndex != 0)
                 {
                     // yes.
-                    childrenToBeSorted.Add(x);
+                    sortBuffer.Add(x);
                     return;
                 }
 
-                children.Add(x);
+                output.Add(x);
+
             }, ViewSearchArgs.NonRecursive);
 
-            children.AddRange(sortDirection == ElementSortDirection.Ascending
-                ? childrenToBeSorted.OrderBy(x => x.SortIndex.Value)
-                : childrenToBeSorted.OrderByDescending(x => x.SortIndex.Value));
+            output.AddRange(sortDirection == ElementSortDirection.Ascending
+                ? sortBuffer.OrderBy(x => x.SortIndex.Value)
+                : sortBuffer.OrderByDescending(x => x.SortIndex.Value));
 
-            return children;
+            sortBuffer.Clear();
+
+            return output;
         }
 
         #endregion

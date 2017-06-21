@@ -1,25 +1,32 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-#endregion
+﻿using UnityEngine;
 
 namespace MarkLight
 {
     /// <summary>
     /// Contains information about a formatting token found in text.
     /// </summary>
-    public class TextToken
+    public struct TextToken
     {
         #region Fields
 
-        public TextTokenType TextTokenType;
+        public readonly TextTokenType Type;
+        public readonly bool IsValid;
+
         public View EmbeddedView;
         public int FontSize;
         public Color FontColor;
 
-        #endregion        
+        #endregion
+
+        #region Constructor
+
+        public TextToken(TextTokenType type) : this()
+        {
+            Type = type;
+            IsValid = true;
+        }
+
+        #endregion
     }
 
     /// <summary>

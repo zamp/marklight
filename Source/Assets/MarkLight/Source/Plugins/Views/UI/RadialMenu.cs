@@ -197,7 +197,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void ActivateMenuItem(string id)
         {
-            var view = this.Find<UIView>(id, new ViewSearchArgs { IsRecursive = false});
+            var view = this.Find<UIView>(id, new ViewSearchArgs(true) { IsRecursive = false});
             if (view == null)
             {
                 Debug.LogError(String.Format(
@@ -241,7 +241,7 @@ namespace MarkLight.Views.UI
         /// </summary>
         public void DeactivateMenuItem(string id)
         {
-            var view = this.Find<UIView>(id, new ViewSearchArgs {IsRecursive = false});
+            var view = this.Find<UIView>(id, new ViewSearchArgs(true) {IsRecursive = false});
             if (view == null)
             {
                 Debug.LogError(String.Format(
@@ -339,7 +339,7 @@ namespace MarkLight.Views.UI
             _menuOffset = new Vector2();
             _menuAnimators = new List<ViewFieldAnimator>();            
             _deactivatedMenuItems = new List<UIView>();
-            _menuItems = this.GetChildren<UIView>(new ViewSearchArgs { IsRecursive = false });
+            _menuItems = this.GetChildren<UIView>(new ViewSearchArgs(true) { IsRecursive = false });
 
             UpdateMenu();
             Close(false);

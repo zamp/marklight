@@ -1,7 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace MarkLight.Views.UI
 {
@@ -334,7 +332,7 @@ namespace MarkLight.Views.UI
             this.ForEachChild<View>(x =>
             {
                 UnblockDragEvents(x);
-            });
+            }, ViewSearchArgs.Default);
         }
 
         /// <summary>

@@ -46,6 +46,11 @@ namespace MarkLight
         /// <summary>
         /// Scroll to the item in the view.
         /// </summary>
-        void ScrollTo(ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null);
+        void ScrollTo();
+
+        /// <summary>
+        /// Scroll to the item in the view.
+        /// </summary>
+        void ScrollTo(ElementAlignment alignment, ElementMargin offset);
     }
 }

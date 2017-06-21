@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace MarkLight.Views.UI
 {
     /// <summary>
@@ -38,7 +37,7 @@ namespace MarkLight.Views.UI
             }
 
             var templateTypeName = Template != null ? Template.ViewTypeName : null;
-            var itemsToDestroy = new List<View>();
+            var itemsToDestroy = BufferPools.ViewLists.Get();
 
             // remove any items not of the right type
             foreach (var child in this)
@@ -49,7 +48,9 @@ namespace MarkLight.Views.UI
                 }
             }
 
-            itemsToDestroy.ForEach(x => x.Destroy());            
+            itemsToDestroy.ForEach(x => x.Destroy());
+
+            BufferPools.ViewLists.Recycle(itemsToDestroy);
 
             // fill remaining space of pool with views
             if (Template == null || ChildCount >= PoolSize)
@@ -57,8 +58,8 @@ namespace MarkLight.Views.UI
                 return;
             }
             
-            int addCount = PoolSize - ChildCount;
-            for (int i = 0; i < addCount; ++i)
+            var addCount = PoolSize - ChildCount;
+            for (var i = 0; i < addCount; ++i)
             {
                 var item = CreateView(Template);
                 item.Deactivate();

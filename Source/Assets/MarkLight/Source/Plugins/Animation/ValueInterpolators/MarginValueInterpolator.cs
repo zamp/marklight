@@ -1,13 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-#endregion
-
+﻿
 namespace MarkLight.Animation
 {
     /// <summary>
@@ -17,7 +8,7 @@ namespace MarkLight.Animation
     {
         #region Fields
 
-        private ElementSizeValueInterpolator _elementSizeValueInterpolator;
+        private readonly ElementSizeValueInterpolator _sizeInterpolator;
 
         #endregion
 
@@ -29,7 +20,7 @@ namespace MarkLight.Animation
         public MarginValueInterpolator()
         {
             _type = typeof(ElementMargin);
-            _elementSizeValueInterpolator = new ElementSizeValueInterpolator();
+            _sizeInterpolator = new ElementSizeValueInterpolator();
         }
 
         #endregion
@@ -41,16 +32,14 @@ namespace MarkLight.Animation
         /// </summary>
         public override object Interpolate(object from, object to, float weight)
         {
-            ElementMargin a = from as ElementMargin;
-            ElementMargin b = to as ElementMargin;
-            if (a == null || b == null)
-                return base.Interpolate(from, to, weight);
+            var a = (ElementMargin)from;
+            var b = (ElementMargin)to;
 
             return new ElementMargin(
-                _elementSizeValueInterpolator.Interpolate(a.Left, b.Left, weight) as ElementSize,
-                _elementSizeValueInterpolator.Interpolate(a.Top, b.Top, weight) as ElementSize,
-                _elementSizeValueInterpolator.Interpolate(a.Right, b.Right, weight) as ElementSize,
-                _elementSizeValueInterpolator.Interpolate(a.Bottom, b.Bottom, weight) as ElementSize);
+                (ElementSize)_sizeInterpolator.Interpolate(a.Left, b.Left, weight),
+                (ElementSize)_sizeInterpolator.Interpolate(a.Top, b.Top, weight),
+                (ElementSize)_sizeInterpolator.Interpolate(a.Right, b.Right, weight),
+                (ElementSize)_sizeInterpolator.Interpolate(a.Bottom, b.Bottom, weight));
         }
 
         #endregion

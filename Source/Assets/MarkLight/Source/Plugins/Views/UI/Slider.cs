@@ -160,13 +160,15 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Length of the slider.
         /// </summary>
-        /// <d>Specifies the length of the slider. Corresponds to the width or height depending on the orientation of the slider.</d>
+        /// <d>Specifies the length of the slider. Corresponds to the width or height depending on the orientation
+        /// of the slider.</d>
         public _ElementSize Length;
 
         /// <summary>
         /// Breadth of the slider.
         /// </summary>
-        /// <d>Specifies the breadth of the slider. Corresponds to the height or width depending on the orientation of the slider.</d>
+        /// <d>Specifies the breadth of the slider. Corresponds to the height or width depending on the orientation
+        /// of the slider.</d>
         public _ElementSize Breadth;
 
         /// <summary>
@@ -192,7 +194,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Current value.
         /// </summary>
-        /// <d>Current value of the slider. Calculated from the current handle position and the Min/Max value of the slider.</d>
+        /// <d>Current value of the slider. Calculated from the current handle position and the Min/Max value of the
+        /// slider.</d>
         [ChangeHandler("SliderValueChanged")]
         public _float Value;
 
@@ -205,7 +208,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates if value set when handle is released.
         /// </summary>
-        /// <d>Boolean indicating if the slider value should be set when the user releases the handle instead of continously while dragging.</d>
+        /// <d>Boolean indicating if the slider value should be set when the user releases the handle instead of
+        /// continously while dragging.</d>
         public _bool SetValueOnDragEnded;
 
         /// <summary>
@@ -229,7 +233,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Slider value changed.
         /// </summary>
-        /// <d>Triggered when the slider value changes. Triggered once when handle is released if SetValueOnDragEnded is set.</d>
+        /// <d>Triggered when the slider value changes. Triggered once when handle is released if SetValueOnDragEnded
+        /// is set.</d>
         public ViewAction ValueChanged;
 
         #endregion
@@ -243,8 +248,8 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Length.DirectValue = new ElementSize(160);
-            Breadth.DirectValue = new ElementSize(40);
+            Length.DirectValue = ElementSize.FromPixels(160);
+            Breadth.DirectValue = ElementSize.FromPixels(40);
             Orientation.DirectValue = ElementOrientation.Horizontal;
             Min.DirectValue = 0;
             Max.DirectValue = 100;
@@ -252,8 +257,8 @@ namespace MarkLight.Views.UI
             SetValueOnDragEnded.DirectValue = false;
             SliderFillImageView.Alignment.DirectValue = ElementAlignment.Left;
             SliderHandleImageView.Alignment.DirectValue = ElementAlignment.Left;
-            SliderHandleImageView.Width.DirectValue = new ElementSize(20);
-            SliderHandleImageView.Height.DirectValue = ElementSize.FromPercents(1);
+            SliderHandleImageView.Width.DirectValue = ElementSize.FromPixels(20);
+            SliderHandleImageView.Height.DirectValue = ElementSize.FromPercents(1f);
         }
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
@@ -281,8 +286,8 @@ namespace MarkLight.Views.UI
             // if vertical slider rotate slide region 90 degrees
             if (Orientation == ElementOrientation.Vertical)
             {
-                SliderRegion.Layout.Width = new ElementSize(RectTransform.rect.height, ElementSizeUnit.Pixels);
-                SliderRegion.Layout.Height = new ElementSize(RectTransform.rect.width, ElementSizeUnit.Pixels);
+                SliderRegion.Layout.Width = ElementSize.FromPixels(RectTransform.rect.height);
+                SliderRegion.Layout.Height = ElementSize.FromPixels(RectTransform.rect.width);
                 SliderRegion.Rotation.Value = Quaternion.Euler(new Vector3(0, 0, 90));
                 context.NotifyLayoutUpdated(SliderRegion);
             }
@@ -375,16 +380,11 @@ namespace MarkLight.Views.UI
             var pos = GetLocalPoint(mouseScreenPositionIn);
 
             // calculate slide percentage (transform.position.x/y is center of fill area)
-            float p = 0;
-            float slideAreaLength = fillTransform.rect.width - SliderHandleImageView.Layout.Width.Pixels;
-            if (Orientation == ElementOrientation.Horizontal)
-            {
-                p = ((pos.x - fillTransform.localPosition.x + slideAreaLength / 2f) / slideAreaLength).Clamp(0, 1);
-            }
-            else
-            {
-                p = ((pos.y - fillTransform.localPosition.y + slideAreaLength / 2f) / slideAreaLength).Clamp(0, 1);
-            }
+            float p;
+            var slideAreaLength = fillTransform.rect.width - SliderHandleImageView.Layout.Width.Pixels;
+            p = Orientation == ElementOrientation.Horizontal
+                ? ((pos.x - fillTransform.localPosition.x + slideAreaLength / 2f) / slideAreaLength).Clamp(0, 1)
+                : ((pos.y - fillTransform.localPosition.y + slideAreaLength / 2f) / slideAreaLength).Clamp(0, 1);
 
             if (IsRightToLeft)
             {
@@ -393,7 +393,7 @@ namespace MarkLight.Views.UI
             }
 
             // set value
-            float newValue = (Max - Min) * p + Min;
+            var newValue = (Max - Min) * p + Min;
             newValue = Steps > 0 ? Nearest(newValue, Min, Max, Steps) : newValue;
 
             if (!SetValueOnDragEnded || (SetValueOnDragEnded && isEndDrag))
@@ -433,13 +433,13 @@ namespace MarkLight.Views.UI
             var handleOffset = p * slideAreaWidth + sliderFillMargin;
 
             SliderHandleImageView.Layout.OffsetFromParent = IsRightToLeft
-                ? ElementMargin.FromRight(new ElementSize(handleOffset, ElementSizeUnit.Pixels))
-                : ElementMargin.FromLeft(new ElementSize(handleOffset, ElementSizeUnit.Pixels));
+                ? ElementMargin.FromRight(ElementSize.FromPixels(handleOffset))
+                : ElementMargin.FromLeft(ElementSize.FromPixels(handleOffset));
             SliderHandleImageView.RenderLayout();
 
             // set fill percentage as to match the offset of the handle
             var fillP = (handleOffset + SliderHandleImageView.Layout.Width.Pixels / 2f) / fillWidth;
-            SliderFillImageView.Layout.Width = new ElementSize(fillP, ElementSizeUnit.Percents);
+            SliderFillImageView.Layout.Width = ElementSize.FromPercents(fillP);
             SliderFillImageView.RenderLayout();
         }
 

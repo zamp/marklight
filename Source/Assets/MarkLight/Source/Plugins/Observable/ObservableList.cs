@@ -931,7 +931,15 @@ namespace MarkLight
         /// <summary>
         /// Scrolls to item.
         /// </summary>
-        public void ScrollTo(T item, ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null)
+        public void ScrollTo(T item)
+        {
+            ScrollTo(item, ElementAlignment.Center, new ElementMargin());
+        }
+
+        /// <summary>
+        /// Scrolls to item.
+        /// </summary>
+        public void ScrollTo(T item, ElementAlignment alignment, ElementMargin offset)
         {
             var index = IndexOf(item);
             if (index >= 0)
@@ -943,9 +951,16 @@ namespace MarkLight
         /// <summary>
         /// Scrolls to item.
         /// </summary>
-        public void ScrollTo(int index,
-            ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null) {
+        public void ScrollTo(int index)
+        {
+            ScrollTo(index, ElementAlignment.Center, new ElementMargin());
+        }
 
+        /// <summary>
+        /// Scrolls to item.
+        /// </summary>
+        public void ScrollTo(int index, ElementAlignment alignment, ElementMargin offset)
+        {
             var args = new DataScrollToEventArgs(index, alignment, offset);
             if (ScrolledTo != null)
                 ScrolledTo(this, args);
@@ -953,7 +968,8 @@ namespace MarkLight
             LastScroll = args;
         }
 
-        private void CallSelectChangedEvent(IObservableItem item, DataItemSelectChangedEventArgs args) {
+        private void CallSelectChangedEvent(IObservableItem item, DataItemSelectChangedEventArgs args)
+        {
             if (ItemSelectChanged != null)
                 ItemSelectChanged(item, args);
         }
@@ -1259,7 +1275,12 @@ namespace MarkLight
                 _model.NotifyItemModified(Index);
             }
 
-            public void ScrollTo(ElementAlignment alignment = ElementAlignment.Center, ElementMargin offset = null) {
+            public void ScrollTo()
+            {
+                ScrollTo(ElementAlignment.Center, new ElementMargin());
+            }
+
+            public void ScrollTo(ElementAlignment alignment, ElementMargin offset) {
                 _model.ScrollTo(Index, alignment, offset);
             }
 

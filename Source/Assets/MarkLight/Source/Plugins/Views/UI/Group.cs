@@ -89,8 +89,9 @@ namespace MarkLight.Views.UI
             return base.CalculateLayoutChanges(context);
         }
 
-        protected override List<UIView> GetContentChildren(View content) {
-            return GetContentChildren(content, SortDirection);
+        protected override List<UIView> GetContentChildren(View content, List<UIView> output)
+        {
+            return GetContentChildren(content, SortDirection, output, _sortBuffer);
         }
 
         /// <summary>

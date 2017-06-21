@@ -1,16 +1,4 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-#endregion
+﻿using MarkLight.ValueConverters;
 
 namespace MarkLight.Views.UI
 {
@@ -53,8 +41,8 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Width.DirectValue = new ElementSize(120);
-            Height.DirectValue = new ElementSize(40);
+            Width.DirectValue = ElementSize.FromPixels(120);
+            Height.DirectValue = ElementSize.FromPixels(40);
             FontColor.Value = ColorValueConverter.ColorCodes["lightblue"]; 
         }
 
@@ -96,14 +84,7 @@ namespace MarkLight.Views.UI
                 return;
 
             IsMouseOver = true;
-            if (IsPressed)
-            {
-                SetState("Pressed");
-            }
-            else
-            {
-                SetState("Highlighted");
-            }
+            SetState(IsPressed ? "Pressed" : "Highlighted");
         }
 
         /// <summary>
@@ -139,14 +120,7 @@ namespace MarkLight.Views.UI
                 return;
 
             IsPressed = false;
-            if (IsMouseOver)
-            {
-                SetState("Highlighted");
-            }
-            else
-            {
-                SetState(DefaultStateName);
-            }
+            SetState(IsMouseOver ? "Highlighted" : DefaultStateName);
         }
 
         #endregion

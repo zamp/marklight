@@ -1,16 +1,5 @@
-﻿#region Using Statements
-using MarkLight.ValueConverters;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
+﻿using System;
 using UnityEngine.UI;
-#endregion
 
 namespace MarkLight.Views.UI
 {
@@ -35,7 +24,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Caret blinks per second.
         /// </summary>
-        /// <d>The blinking rate of the input caret, defined as the number of times the blink cycle occurs per second.</d>
+        /// <d>The blinking rate of the input caret, defined as the number of times the blink cycle occurs per
+        /// second.</d>
         [MapTo("InputFieldComponent.caretBlinkRate")]
         public _float CaretBlinkRate;
 
@@ -206,14 +196,16 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Input field text alignment.
         /// </summary>
-        /// <d>The alignment of the text inside the input field label. Can be used with TextMargin and TextOffset to get desired positioning of the text.</d>
+        /// <d>The alignment of the text inside the input field label. Can be used with TextMargin and TextOffset to
+        /// get desired positioning of the text.</d>
         [MapTo("InputText.TextAlignment")]
         public _ElementAlignment TextAlignment;
 
         /// <summary>
         /// Input field text offset.
         /// </summary>
-        /// <d>The offset of the input field label. Can be used with TextMargin and TextAlignment to get desired positioning of the text.</d>
+        /// <d>The offset of the input field label. Can be used with TextMargin and TextAlignment to get desired
+        /// positioning of the text.</d>
         [MapTo("InputText.Offset")]
         public _ElementMargin TextOffset;
 
@@ -263,7 +255,8 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Input field text.
         /// </summary>
-        /// <d>Text displayind in the input field. Set as text is typed or at the end of edit if SetValueOnEndEdit is set.</d>
+        /// <d>Text displayind in the input field. Set as text is typed or at the end of edit if SetValueOnEndEdit is
+        /// set.</d>
         [ChangeHandler("TextChanged")]
         public _string Text;
 
@@ -276,13 +269,15 @@ namespace MarkLight.Views.UI
         /// <summary>
         /// Indicates that the value changed action is only to be triggered from changes made to the text in the UI.
         /// </summary>
-        /// <b>Boolean indicate that the value changed action is only to be triggered from changes made to the text in the UI.</b>
+        /// <b>Boolean indicate that the value changed action is only to be triggered from changes made to the text in
+        /// the UI.</b>
         public _bool OnlyTriggerValueChangedFromUI;
 
         /// <summary>
         /// Region displayed when input field is empty.
         /// </summary>
-        /// <d>Region that is displayed when the input field has no text input. Any child content of the input field is placed inside this region.</d>
+        /// <d>Region that is displayed when the input field has no text input. Any child content of the input field is
+        ///  placed inside this region.</d>
         public Region InputFieldPlaceholder;
 
         /// <summary>
@@ -308,8 +303,8 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Width.DirectValue = new ElementSize(200);
-            Height.DirectValue = new ElementSize(40);
+            Width.DirectValue = ElementSize.FromPixels(200);
+            Height.DirectValue = ElementSize.FromPixels(40);
 
             // input text
             InputText.Margin.DirectValue = new ElementMargin(9);

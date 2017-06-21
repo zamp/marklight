@@ -164,6 +164,9 @@ namespace MarkLight.Views.UI
         public _AdjustToText AdjustToText;
 
         private static readonly Regex _tagRegex = new Regex(@"\[(?<tag>[^\]]+)\]");
+        private static readonly ListPool<TextToken> _tokenBuffers = new ListPool<TextToken>();
+        private static readonly StackPool<int> _fontSizeBuffers = new StackPool<int>();
+        private static readonly string[] _seperatorString = {"&sp;"};
 
         #endregion
 
@@ -176,8 +179,8 @@ namespace MarkLight.Views.UI
         {
             base.SetDefaultValues();
 
-            Width.DirectValue = new ElementSize(120);
-            Height.DirectValue = new ElementSize(40);
+            Width.DirectValue = ElementSize.FromPixels(120);
+            Height.DirectValue = ElementSize.FromPixels(40);
 
             TextAlignment.DirectValue = ElementAlignment.Left;
             if (TextComponent != null)
@@ -271,16 +274,16 @@ namespace MarkLight.Views.UI
         {
             if (AdjustToText == MarkLight.AdjustToText.Width)
             {
-                Layout.Width = new ElementSize(PreferredWidth);
+                Layout.Width = ElementSize.FromPixels(PreferredWidth);
             }
             else if (AdjustToText == MarkLight.AdjustToText.Height)
             {
-                Layout.Height = new ElementSize(PreferredHeight);
+                Layout.Height = ElementSize.FromPixels(PreferredHeight);
             }
             else if (AdjustToText == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Layout.Width = new ElementSize(PreferredWidth);
-                Layout.Height = new ElementSize(PreferredHeight);
+                Layout.Width = ElementSize.FromPixels(PreferredWidth);
+                Layout.Height = ElementSize.FromPixels(PreferredHeight);
             }
         }
 
@@ -295,83 +298,94 @@ namespace MarkLight.Views.UI
             if (TextComponent == null || !TextComponent.supportRichText)
                 return text;
 
-            string formattedText = string.Empty;
-            string separatorString = "&sp;";
-
             // search for tokens and apply formatting and embedded views
-            List<TextToken> tokens = new List<TextToken>();
-            formattedText = _tagRegex.Replace(text, x =>
+            var tokens = _tokenBuffers.Get();
+            var formattedText = _tagRegex.Replace(text, x =>
             {
-                string tag = x.Groups["tag"].Value.Trim();
-                string tagNoWs = tag.RemoveWhitespace();
+                var tag = x.Groups["tag"].Value.Trim();
+                var tagNoWs = tag.RemoveWhitespace();
 
                 // check if tag matches default tokens
                 if (String.Equals("B", tagNoWs, StringComparison.OrdinalIgnoreCase))
                 {
                     // bold
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.BoldStart });
-                    return separatorString;
+                    tokens.Add(new TextToken(TextTokenType.BoldStart));
+                    return _seperatorString[0];
                 }
-                else if (String.Equals("/B", tagNoWs, StringComparison.OrdinalIgnoreCase))
+
+                if (String.Equals("/B", tagNoWs, StringComparison.OrdinalIgnoreCase))
                 {
                     // bold end
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.BoldEnd });
-                    return separatorString;
+                    tokens.Add(new TextToken(TextTokenType.BoldEnd));
+                    return _seperatorString[0];
                 }
-                else if (String.Equals("I", tagNoWs, StringComparison.OrdinalIgnoreCase))
+
+                if (String.Equals("I", tagNoWs, StringComparison.OrdinalIgnoreCase))
                 {
                     // italic
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.ItalicStart });
-                    return separatorString;
+                    tokens.Add(new TextToken(TextTokenType.ItalicStart));
+                    return _seperatorString[0];
                 }
-                else if (String.Equals("/I", tagNoWs, StringComparison.OrdinalIgnoreCase))
+
+                if (String.Equals("/I", tagNoWs, StringComparison.OrdinalIgnoreCase))
                 {
                     // italic end
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.ItalicEnd });
-                    return separatorString;
+                    tokens.Add(new TextToken(TextTokenType.ItalicEnd));
+                    return _seperatorString[0];
                 }
-                else if (tagNoWs.StartsWith("SIZE=", StringComparison.OrdinalIgnoreCase))
+
+                if (tagNoWs.StartsWith("SIZE=", StringComparison.OrdinalIgnoreCase))
                 {
                     // parse size value
-                    var vc = new IntValueConverter();
+                    var vc = IntValueConverter.Instance;
                     var convertResult = vc.Convert(tagNoWs.Substring(5), ValueConverterContext.Default);
                     if (!convertResult.Success)
                     {
                         // unable to parse token
-                        Debug.LogError(String.Format("[MarkLight] {0}: Unable to parse text embedded size tag \"[{1}]\". {2}", GameObjectName, tag, convertResult.ErrorMessage));
+                        Debug.LogError(String.Format(
+                                           "[MarkLight] {0}: Unable to parse text embedded size tag \"[{1}]\". {2}",
+                                           GameObjectName, tag, convertResult.ErrorMessage));
                         return String.Format("[{0}]", tag);
                     }
 
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.SizeStart, FontSize = (int)convertResult.ConvertedValue });
-                    return separatorString;
+                    tokens.Add(new TextToken(TextTokenType.SizeStart)
+                    {
+                        FontSize = (int) convertResult.ConvertedValue
+                    });
+                    return _seperatorString[0];
                 }
-                else if (String.Equals("/SIZE", tagNoWs, StringComparison.OrdinalIgnoreCase))
+
+                if (String.Equals("/SIZE", tagNoWs, StringComparison.OrdinalIgnoreCase))
                 {
                     // size end
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.SizeEnd });
-                    return separatorString;
+                    tokens.Add(new TextToken(TextTokenType.SizeEnd));
+                    return _seperatorString[0];
                 }
-                else if (tagNoWs.StartsWith("COLOR=", StringComparison.OrdinalIgnoreCase))
+
+                if (tagNoWs.StartsWith("COLOR=", StringComparison.OrdinalIgnoreCase))
                 {
                     // parse color value
-                    var vc = new ColorValueConverter();
+                    var vc = ColorValueConverter.Instance;
                     var convertResult = vc.Convert(tagNoWs.Substring(6), ValueConverterContext.Default);
                     if (!convertResult.Success)
                     {
                         // unable to parse token
-                        Debug.LogError(String.Format("[MarkLight] {0}: Unable to parse text embedded color tag \"[{1}]\". {2}", GameObjectName, tag, convertResult.ErrorMessage));
+                        Debug.LogError(String.Format(
+                                           "[MarkLight] {0}: Unable to parse text embedded color tag \"[{1}]\". {2}",
+                                           GameObjectName, tag, convertResult.ErrorMessage));
                         return String.Format("[{0}]", tag);
                     }
 
-                    Color color = (Color)convertResult.ConvertedValue;
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.ColorStart, FontColor = color });
-                    return separatorString;
+                    var color = (Color)convertResult.ConvertedValue;
+                    tokens.Add(new TextToken(TextTokenType.ColorStart) { FontColor = color });
+                    return _seperatorString[0];
                 }
-                else if (String.Equals("/COLOR", tagNoWs, StringComparison.OrdinalIgnoreCase))
+
+                if (String.Equals("/COLOR", tagNoWs, StringComparison.OrdinalIgnoreCase))
                 {
                     // color end
-                    tokens.Add(new TextToken { TextTokenType = TextTokenType.ColorEnd });
-                    return separatorString;
+                    tokens.Add(new TextToken(TextTokenType.ColorEnd));
+                    return _seperatorString[0];
                 }
 
                 return String.Format("[{0}]", tag);
@@ -381,25 +395,28 @@ namespace MarkLight.Views.UI
             formattedText = formattedText.Replace("\\n", Environment.NewLine);
 
             // split the string up on each line
-            StringBuilder result = new StringBuilder();
-            var splitString = formattedText.Split(new string[] { separatorString }, StringSplitOptions.None);
-            int splitIndex = 0;
-            int fontBoldCount = 0;
-            int fontItalicCount = 0;
-            Stack<int> fontSizeStack = new Stack<int>();
+            var result = BufferPools.StringBuilders.Get();
+            var splitString = formattedText.Split(_seperatorString, StringSplitOptions.None);
+            var splitIndex = 0;
+            var fontBoldCount = 0;
+            var fontItalicCount = 0;
+            var fontSizeStack = _fontSizeBuffers.Get();
 
             // loop through each split string and apply tokens (embedded views & font styles)
             foreach (var str in splitString)
             {
-                int tokenIndex = splitIndex - 1;
-                var token = tokenIndex >= 0 && tokenIndex < tokens.Count ? tokens[tokenIndex] : null;
+                var tokenIndex = splitIndex - 1;
+                var token = tokenIndex >= 0 && tokenIndex < tokens.Count
+                    ? tokens[tokenIndex]
+                    : new TextToken();
+
                 ++splitIndex;
 
                 // do we have a token?
-                if (token != null)
+                if (!token.IsValid)
                 {
                     // yes. parse token type
-                    switch (token.TextTokenType)
+                    switch (token.Type)
                     {
                         case TextTokenType.BoldStart:
                             result.Append("<b>");
@@ -422,7 +439,9 @@ namespace MarkLight.Views.UI
                             break;
 
                         case TextTokenType.SizeStart:
-                            result.Append(String.Format("<size={0}>", token.FontSize));
+                            result.Append("<size=");
+                            result.Append(token.FontSize);
+                            result.Append('>');
                             fontSizeStack.Push(token.FontSize);
                             break;
 
@@ -432,27 +451,39 @@ namespace MarkLight.Views.UI
                             break;
 
                         case TextTokenType.ColorStart:
-                            int r = (int)(token.FontColor.r * 255f);
-                            int g = (int)(token.FontColor.g * 255f);
-                            int b = (int)(token.FontColor.b * 255f);
-                            int a = (int)(token.FontColor.a * 255f);
-                            result.Append(String.Format("<color=#{0}{1}{2}{3}>", r.ToString("X2"), g.ToString("X2"), b.ToString("X2"), a.ToString("X2")));
+                            var r = (int) (token.FontColor.r * 255f);
+                            var g = (int) (token.FontColor.g * 255f);
+                            var b = (int) (token.FontColor.b * 255f);
+                            var a = (int) (token.FontColor.a * 255f);
+                            result.Append(String.Format("<color=#{0:X2}{1:X2}{2:X2}{3:X2}>", r, g, b, a));
                             break;
 
                         case TextTokenType.ColorEnd:
                             result.Append("</color>");
                             break;
 
-                        case TextTokenType.Unknown:
-                        default:
+                        case TextTokenType.EmbeddedView:
                             break;
+
+                        case TextTokenType.Unknown:
+                            break;
+
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
                 }
 
                 result.Append(str);
             }
 
-            return result.ToString();
+
+            var resultStr = result.ToString();
+
+            _tokenBuffers.Recycle(tokens);
+            BufferPools.StringBuilders.Recycle(result);
+            _fontSizeBuffers.Recycle(fontSizeStack);
+
+            return resultStr;
         }
 
         #endregion

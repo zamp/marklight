@@ -8,6 +8,12 @@ namespace MarkLight.ValueConverters
     /// </summary>
     public class IntValueConverter : ValueConverter
     {
+        #region Fields
+
+        public static readonly IntValueConverter Instance = new IntValueConverter();
+
+        #endregion
+
         #region Constructor
 
         /// <summary>

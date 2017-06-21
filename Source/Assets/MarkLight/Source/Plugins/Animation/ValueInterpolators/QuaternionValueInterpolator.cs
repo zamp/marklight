@@ -1,12 +1,4 @@
-﻿#region Using Statements
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using UnityEngine;
-#endregion
+﻿using UnityEngine;
 
 namespace MarkLight.Animation
 {
@@ -34,8 +26,8 @@ namespace MarkLight.Animation
         /// </summary>
         public override object Interpolate(object from, object to, float weight)
         {
-            Quaternion q1 = (Quaternion)from;
-            Quaternion q2 = (Quaternion)to;
+            var q1 = (Quaternion)from;
+            var q2 = (Quaternion)to;
                       
             return Quaternion.Lerp(q1, q2, weight);
         }

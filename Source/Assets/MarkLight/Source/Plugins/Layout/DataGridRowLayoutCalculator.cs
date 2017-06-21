@@ -62,7 +62,7 @@ namespace MarkLight
                     if (!column.Margin.IsSet && !IsHeader && columnHeaders != null)
                     {
                         var header = columnHeaders[i];
-                        column.Layout.Margin = new ElementMargin(header.Layout.Margin);
+                        column.Layout.Margin = header.Layout.Margin;
                     }
 
                     // set aside fill width columns
@@ -81,11 +81,11 @@ namespace MarkLight
                 {
                     // copy width of header column
                     var header = columnHeaders[i];
-                    column.Layout.Width = new ElementSize(header.Layout.Width);
+                    column.Layout.Width = header.Layout.Width;
 
                     if (!column.Margin.IsSet)
                     {
-                        column.Layout.Margin = new ElementMargin(header.Layout.Margin);
+                        column.Layout.Margin = header.Layout.Margin;
                     }
                 }
 
@@ -116,7 +116,7 @@ namespace MarkLight
             if (!IsHeader && !view.Width.IsSet && ParentDataGrid.RowHeader != null)
             {
                 var headerLayout = ParentDataGrid.RowHeader.Layout;
-                view.Layout.Width = new ElementSize(headerLayout.Width);
+                view.Layout.Width = headerLayout.Width;
             }
 
             // adjust column offsets and settings

@@ -50,9 +50,10 @@ namespace MarkLight
         {
             foreach (var viewFieldData in OwnerView.Fields.Data.OrderByDescending(x => x.IsPropagatedFirst))
             {
+                var callstack = BufferPools.ViewFieldHashSets.Get();
                 try
                 {
-                    viewFieldData.NotifyBindingValueObservers(new HashSet<ViewFieldData>());
+                    viewFieldData.NotifyBindingValueObservers(callstack);
                 }
                 catch (Exception e)
                 {
@@ -60,6 +61,7 @@ namespace MarkLight
                         "[MarkLight] {0}: Error while notifying binding value observers for field \"{1}\". {2}",
                         OwnerView.GameObjectName, viewFieldData.Path, Utils.GetError(e)));
                 }
+                BufferPools.ViewFieldHashSets.Recycle(callstack);
             }
         }
 
@@ -119,7 +121,7 @@ namespace MarkLight
         private void SetSingleBinding(string targetFieldName, ViewFieldData fieldData, string bindingString)
         {
             // check for bindings in string
-            var matches = new List<Match>();
+            var matches = BufferPools.MatchLists.Get();
             foreach (Match match in ViewFieldBinding.BindingRegex.Matches(bindingString))
             {
                 matches.Add(match);
@@ -132,6 +134,8 @@ namespace MarkLight
                     "[MarkLight] {0}: Unable to assign binding \"{1}\" to view field \"{2}\". "+
                     "String contains no binding.",
                     OwnerView.GameObjectName, bindingString, targetFieldName));
+
+                BufferPools.MatchLists.Recycle(matches);
                 return;
             }
 
@@ -149,6 +153,8 @@ namespace MarkLight
                 {
                     var matchCountString = matchCount.ToString();
                     ++matchCount;
+
+                    BufferPools.MatchLists.Recycle(matches);
                     return String.Format("{{{0}{1}}}", matchCountString, x.Groups["format"]);
                 });
 
@@ -175,8 +181,10 @@ namespace MarkLight
                 }
 
                 if (!bindingSource.SetObserver(valueObserver))
-                    return;
+                    break;
             }
+
+            BufferPools.MatchLists.Recycle(matches);
         }
 
         /// <summary>

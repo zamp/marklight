@@ -62,7 +62,7 @@ namespace MarkLight
 
             return !IsMappedToDescendants
                 ? sourceView
-                : sourceView.Find<View>(x => x.Id == RootFieldName, new ViewSearchArgs
+                : sourceView.Find<View>(x => x.Id == RootFieldName, new ViewSearchArgs(true)
                     {
                         Parent = sourceView
                     });

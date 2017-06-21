@@ -38,7 +38,7 @@ namespace MarkLight
             {
                 isCalculated = CalculateLayout(view, ViewRelation.Required) || isCalculated;
                 return true;
-            }, new ViewSearchArgs
+            }, new ViewSearchArgs(true)
             {
                 TraversalAlgorithm = TraversalAlgorithm.ReverseBreadthFirst,
                 SkipInactive = true
@@ -73,6 +73,14 @@ namespace MarkLight
                 return;
 
             _dirtyViews.Add(view);
+        }
+
+        /// <summary>
+        /// Resets the context so it can be reused.
+        /// </summary>
+        internal void Reset()
+        {
+            _dirtyViews.Clear();
         }
 
         private bool CalculateLayout(View view, ViewRelation relation)

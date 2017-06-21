@@ -453,13 +453,18 @@ namespace MarkLight
         /// </summary>
         public void MoveContent(View newParent)
         {
-            foreach (var child in new List<View>(Content.LayoutChildren))
+            var buffer = BufferPools.ViewLists.Get(Content.LayoutChildren);
+
+            for (var i = 0; i < buffer.Count; i++)
             {
+                var child = buffer[i];
                 if (child == null)
                     continue;
 
                 child.MoveTo(newParent);
             }
+
+            BufferPools.ViewLists.Recycle(buffer);
         }
 
         /// <summary>
@@ -1056,11 +1061,12 @@ namespace MarkLight
             if (_changeHandlers.Count <= 0)
                 return;
 
-            var triggeredChangeHandlers = new List<string>(_changeHandlers);
+            var buffer = BufferPools.StringLists.Get(_changeHandlers);
             _changeHandlers.Clear();
 
-            foreach (var changeHandler in triggeredChangeHandlers)
+            for (var i = 0; i < buffer.Count; i++)
             {
+                var changeHandler = buffer[i];
                 try
                 {
                     _changeHandlerMethods[changeHandler].Invoke(this, null);
@@ -1071,6 +1077,8 @@ namespace MarkLight
                         GameObjectName, changeHandler, Utils.GetError(e)));
                 }
             }
+
+            BufferPools.StringLists.Recycle(buffer);
         }
 
         /// <summary>
@@ -1078,13 +1086,16 @@ namespace MarkLight
         /// </summary>
         public void CalculateAndRenderLayout(LayoutChangeContext context, bool force = false)
         {
-            if (!force && (!_isLayoutChanged || _isLayoutCalculating || !IsActive))
+            if (!force)
             {
                 if (!_isLayoutChanged && !IsActive)
                 {
                     NotifyLayoutChanged();
+                    return;
                 }
-                return;
+
+                if (!_isLayoutChanged || _isLayoutCalculating || !IsActive)
+                    return;
             }
 
             _isLayoutChanged = false;
@@ -1227,10 +1238,13 @@ namespace MarkLight
                 if (_presenter != null)
                     return _presenter;
 
-                if (LayoutParent != null)
-                    return LayoutParent.Presenter;
+                _presenter = this as ViewPresenter;
+                if (_presenter != null)
+                    return _presenter;
 
-                return _presenter ?? (_presenter = this as ViewPresenter) ?? (_presenter = ViewPresenter.Instance);
+                return LayoutParent != null
+                    ? LayoutParent.Presenter
+                    : ViewPresenter.Instance;
             }
         }
 

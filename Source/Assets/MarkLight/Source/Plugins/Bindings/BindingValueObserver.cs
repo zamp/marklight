@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 
 namespace MarkLight
 {
@@ -50,7 +49,7 @@ namespace MarkLight
         /// </summary>
         protected string JoinSources() {
 
-            var sb = new StringBuilder();
+            var sb = BufferPools.StringBuilders.Get();
             foreach (var source in Sources)
             {
                 if (source != Sources[0])
@@ -60,7 +59,11 @@ namespace MarkLight
 
                 sb.AppendFormat(source.BindingSourceString);
             }
-            return sb.ToString();
+
+            var result = sb.ToString();
+            BufferPools.StringBuilders.Recycle(sb);
+
+            return result;
         }
 
         #endregion

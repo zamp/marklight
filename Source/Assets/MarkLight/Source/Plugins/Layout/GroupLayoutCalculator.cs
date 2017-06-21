@@ -9,7 +9,6 @@ namespace MarkLight
     /// </summary>
     public class GroupLayoutCalculator : LayoutCalculator
     {
-
         #region Fields
 
         /// <summary>
@@ -47,6 +46,8 @@ namespace MarkLight
         /// </summary>
         public UIView ScrollContent;
 
+        private static readonly ListPool<Row> _rowBuffers = new ListPool<Row>();
+
         #endregion
 
         #region Methods
@@ -64,25 +65,24 @@ namespace MarkLight
 
             // get size of content and set content offsets and alignment
             var childCount = children.Count;
-            var childIndex = 0;
             var firstItem = true;
             float xOffset = 0;
             float yOffset = 0;
             float maxColumnWidth = 0;
             float maxRowHeight = 0;
 
-            var rows = new List<Row>();
-            var row = new Row();
+            var rows = _rowBuffers.Get();
+            var row = new Row(0);
 
             var isLeftAligned = Alignment.HasFlag(ElementAlignment.Left);
             var isTopAligned = Alignment.HasFlag(ElementAlignment.Top);
             var isRightAligned = Alignment.HasFlag(ElementAlignment.Right);
             var isBottomAligned = Alignment.HasFlag(ElementAlignment.Bottom);
 
-            var padLeft = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Left);
-            var padTop = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Top);
-            var padRight = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Right);
-            var padBottom = Padding == null ? 0f : parentLayout.WidthToPixels(Padding.Bottom);
+            var padLeft = parentLayout.WidthToPixels(Padding.Left);
+            var padTop = parentLayout.WidthToPixels(Padding.Top);
+            var padRight = parentLayout.WidthToPixels(Padding.Right);
+            var padBottom = parentLayout.WidthToPixels(Padding.Bottom);
 
             for (var i = 0; i < childCount; i++)
             {
@@ -103,30 +103,33 @@ namespace MarkLight
                 var displacedHeight = boxHeight + topMargin + bottomMargin;
 
                 // set offsets and alignment
-                var offset = new ElementMargin(
-                    new ElementSize(
-                        (isRightAligned ? -1 : 1) * (isHorizontal ? totalWidth : 0f),
-                        ElementSizeUnit.Pixels),
-                    new ElementSize(!isHorizontal ? totalHeight : 0f,
-                        ElementSizeUnit.Pixels));
-
+                var offsetLeft = (isRightAligned ? -1 : 1) * (isHorizontal ? totalWidth : 0f);
+                var offsetTop = !isHorizontal ? totalHeight : 0f;
+                var offsetRight = 0f;
+                var offsetBottom = 0f;
                 if (isLeftAligned)
                 {
-                    offset.Left.Value += padLeft;
+                    offsetLeft += padLeft;
                 }
                 else if (isRightAligned)
                 {
-                    offset.Right.Value += padRight;
+                    offsetRight += padRight;
                 }
 
                 if (isTopAligned)
                 {
-                    offset.Top.Value += padTop;
+                    offsetTop += padTop;
                 }
                 else if (isBottomAligned)
                 {
-                    offset.Bottom.Value += padBottom;
+                    offsetBottom += padBottom;
                 }
+
+                var offset = new ElementMargin(
+                    ElementSize.FromPixels(offsetLeft),
+                    ElementSize.FromPixels(offsetTop),
+                    ElementSize.FromPixels(offsetRight),
+                    ElementSize.FromPixels(offsetBottom));
 
                 child.Layout.OffsetFromParent = offset;
                 child.Layout.Alignment = Alignment;
@@ -145,7 +148,7 @@ namespace MarkLight
                         if (row.Children.Count > 0)
                             rows.Add(row);
 
-                        row = new Row();
+                        row = new Row(0);
                     }
                 }
                 else
@@ -166,7 +169,7 @@ namespace MarkLight
                             if (row.Children.Count > 0)
                                 rows.Add(row);
 
-                            row = new Row();
+                            row = new Row(0);
 
                             // item overflows to the next row
                             xOffset = 0;
@@ -189,7 +192,7 @@ namespace MarkLight
                         if (row.Children.Count > 0)
                         {
                             rows.Add(row);
-                            row = new Row();
+                            row = new Row(0);
                         }
 
                         if (firstItem)
@@ -221,7 +224,6 @@ namespace MarkLight
 
                 // update child layout
                 context.NotifyLayoutUpdated(child);
-                ++childIndex;
             }
 
             // horizontally centered
@@ -236,7 +238,8 @@ namespace MarkLight
                     var center = r.Width / 2f - r.FirstChildWidth / 2f;
                     foreach (var child in r.Children)
                     {
-                        child.Layout.OffsetFromParent.Left.Value -= center;
+                        var offset = child.Layout.OffsetFromParent;
+                        child.Layout.OffsetFromParent = offset.SetLeft(new ElementSize(offset.Left.Value - center));
                     }
                 }
             }
@@ -254,16 +257,18 @@ namespace MarkLight
                 if (AdjustToWidth)
                 {
                     // adjust width to content
-                    view.Layout.Width = new ElementSize(isHorizontal
-                        ? totalWidth
-                        : maxWidth, ElementSizeUnit.Pixels);
+                    view.Layout.Width = ElementSize.FromPixels(
+                        isHorizontal
+                            ? totalWidth
+                            : maxWidth);
                 }
                 else if (ScrollContent != null)
                 {
                     // adjust width of scrollable area to size
-                    ScrollContent.Layout.Width = new ElementSize(isHorizontal
-                        ? totalWidth
-                        : maxWidth, ElementSizeUnit.Pixels);
+                    ScrollContent.Layout.Width = ElementSize.FromPixels(
+                        isHorizontal
+                            ? totalWidth
+                            : maxWidth);
 
                     updateScrollContent = true;
                 }
@@ -276,16 +281,18 @@ namespace MarkLight
                 if (AdjustToHeight)
                 {
                     // if height is not explicitly set then adjust to content
-                    view.Layout.Height = new ElementSize(isHorizontal
-                        ? maxHeight
-                        : totalHeight, ElementSizeUnit.Pixels);
+                    view.Layout.Height = ElementSize.FromPixels(
+                        isHorizontal
+                            ? maxHeight
+                            : totalHeight);
                 }
                 else if (ScrollContent != null)
                 {
                     // adjust width of scrollable area to size
-                    ScrollContent.Layout.Height = new ElementSize(isHorizontal
-                        ? maxHeight
-                        : totalHeight, ElementSizeUnit.Pixels);
+                    ScrollContent.Layout.Height = ElementSize.FromPixels(
+                        isHorizontal
+                            ? maxHeight
+                            : totalHeight);
 
                     updateScrollContent = true;
                 }
@@ -327,6 +334,12 @@ namespace MarkLight
             {
                 context.NotifyLayoutUpdated(ScrollContent);
             }
+
+            for (var i = 0; i < rows.Count; i++)
+            {
+                rows[i].Recycle();
+            }
+            _rowBuffers.Recycle(rows);
 
             return parentLayout.IsDirty;
         }
@@ -370,19 +383,29 @@ namespace MarkLight
         /// <summary>
         /// Layout row data context.
         /// </summary>
-        private class Row
+        private struct Row
         {
             public float Width;
             public float FirstChildWidth;
-            public readonly List<UIView> Children = new List<UIView>(10);
+            public readonly List<UIView> Children;
 
-            public void AddChild(UIView child, float width) {
+            public Row(int capacity) : this()
+            {
+                Children = BufferPools.UIViewLists.Get();
+            }
 
+            public void AddChild(UIView child, float width)
+            {
                 if (Children.Count == 0)
                     FirstChildWidth = width;
 
                 Children.Add(child);
                 Width += width;
+            }
+
+            public void Recycle()
+            {
+                BufferPools.UIViewLists.Recycle(Children);
             }
         }
 

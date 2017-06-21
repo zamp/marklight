@@ -111,12 +111,12 @@ namespace MarkLight.Views.UI
             
             if (!String.IsNullOrEmpty(TransitionIn))
             {
-                TransitionInAnimation = LayoutRoot.Find<ViewAnimation>(TransitionIn);
+                TransitionInAnimation = LayoutRoot.Find<ViewAnimation>(TransitionIn, ViewSearchArgs.Default);
             }
 
             if (!String.IsNullOrEmpty(TransitionOut))
             {
-                TransitionOutAnimation = LayoutRoot.Find<ViewAnimation>(TransitionOut);
+                TransitionOutAnimation = LayoutRoot.Find<ViewAnimation>(TransitionOut, ViewSearchArgs.Default);
                 if (TransitionOutAnimation != null)
                 {
                     TransitionOutAnimation.AnimationCompleted.AddEntry(new ViewActionEntry
@@ -131,12 +131,15 @@ namespace MarkLight.Views.UI
 
             if (!String.IsNullOrEmpty(TransitionInReverse))
             {
-                TransitionInReverseAnimation = LayoutRoot.Find<ViewAnimation>(TransitionInReverse);
+                TransitionInReverseAnimation =
+                    LayoutRoot.Find<ViewAnimation>(TransitionInReverse, ViewSearchArgs.Default);
             }
 
             if (!String.IsNullOrEmpty(TransitionOutReverse))
             {
-                TransitionOutReverseAnimation = LayoutRoot.Find<ViewAnimation>(TransitionOutReverse);
+                TransitionOutReverseAnimation =
+                    LayoutRoot.Find<ViewAnimation>(TransitionOutReverse, ViewSearchArgs.Default);
+
                 if (TransitionOutReverseAnimation != null)
                 {
                     TransitionOutReverseAnimation.AnimationCompleted.AddEntry(new ViewActionEntry
@@ -337,12 +340,12 @@ namespace MarkLight.Views.UI
         public void Next(bool animate = true, bool cycle = true)
         {
             var views = this.GetChildren<View>(ViewSearchArgs.NonRecursive);
-            int viewCount = views.Count;
+            var viewCount = views.Count;
 
             if (viewCount <= 0)
                 return;
 
-            int index = views.IndexOf(ActiveView);
+            var index = views.IndexOf(ActiveView);
             ++index;
 
             if (index >= viewCount)

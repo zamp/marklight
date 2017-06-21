@@ -357,19 +357,22 @@ namespace MarkLight.Views.UI
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
             // set content margins based on tab list size and its orientation
-            var contentMargin = new ElementMargin();
+            var left = new ElementSize();
+            var top = new ElementSize();
+            var right = new ElementSize();
+            var bottom = new ElementSize();
             ElementAlignment tabAlignment;
 
             if (TabHeaderList.Layout.Orientation == ElementOrientation.Horizontal)
             {
                 if (TabHeaderList.Layout.Alignment.HasFlag(ElementAlignment.Bottom))
                 {
-                    contentMargin.Bottom = ElementSize.FromPixels(TabHeaderList.Layout.Height.Pixels);
+                    bottom = ElementSize.FromPixels(TabHeaderList.Layout.Height.Pixels);
                     tabAlignment = ElementAlignment.Top;
                 }
                 else
                 {
-                    contentMargin.Top = ElementSize.FromPixels(TabHeaderList.Layout.Height.Pixels);
+                    top = ElementSize.FromPixels(TabHeaderList.Layout.Height.Pixels);
                     tabAlignment = ElementAlignment.Bottom;
                 }
             }
@@ -377,19 +380,19 @@ namespace MarkLight.Views.UI
             {
                 if (TabHeaderList.Layout.Alignment.HasFlag(ElementAlignment.Right))
                 {
-                    contentMargin.Right = ElementSize.FromPixels(TabHeaderList.Layout.Width.Pixels);
+                    right = ElementSize.FromPixels(TabHeaderList.Layout.Width.Pixels);
                     tabAlignment = ElementAlignment.Left;
                 }
                 else
                 {
-                    contentMargin.Left = ElementSize.FromPixels(TabHeaderList.Layout.Width.Pixels);
+                    left = ElementSize.FromPixels(TabHeaderList.Layout.Width.Pixels);
                     tabAlignment = ElementAlignment.Right;
                 }
             }
 
             if (AutoAdjustContentMargin)
             {
-                TabContent.Layout.Margin = contentMargin;
+                TabContent.Layout.Margin = new ElementMargin(left, top, right, bottom);
                 context.NotifyLayoutUpdated(TabContent);
             }
 
@@ -832,7 +835,8 @@ namespace MarkLight.Views.UI
         /// </summary>
         private void DestroyTabHeader(Tab presentedItem)
         {
-            var tabHeader = TabHeaderList.Content.Find<TabHeader>(x => x.ParentTab == presentedItem);
+            var tabHeader =
+                TabHeaderList.Content.Find<TabHeader>(x => x.ParentTab == presentedItem, ViewSearchArgs.Default);
             tabHeader.Destroy();
             TabHeaderList.UpdatePresentedListItems();
             TabHeaderList.QueueChangeHandler("LayoutChanged");

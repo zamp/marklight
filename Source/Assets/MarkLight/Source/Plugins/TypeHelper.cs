@@ -185,13 +185,15 @@ namespace MarkLight
         /// </summary>
         public static void PrintDependencyFields()
         {
-            var sb = new StringBuilder();
+            var sb = BufferPools.StringBuilders.Get();
             foreach (var derivedType in FindDerivedTypes(typeof(ViewFieldBase)))
             {
                 sb.AppendLine(String.Format("{{ typeof({0}), () => new {0}() }},", derivedType.Name));
             }
 
             Utils.Log(sb.ToString());
+
+            BufferPools.StringBuilders.Recycle(sb);
         }
         
         /// <summary>
