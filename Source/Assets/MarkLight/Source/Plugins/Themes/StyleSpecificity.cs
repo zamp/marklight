@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MarkLight;
 
 namespace Marklight.Themes
@@ -39,13 +40,22 @@ namespace Marklight.Themes
         /// Constructor.
         /// </summary>
         /// <param name="style">The StyleSelector instance to score for specificity.</param>
-        public StyleSpecificity(StyleSelector style) : this(style.StyleClass)
+        public StyleSpecificity(StyleSelector style) : this(new int[3])
         {
-            if (style.SelectorType.HasFlag(StyleSelectorType.Element))
-                Scores[2]++;
+            var current = style;
+            while (current != null)
+            {
+                if (current.SelectorType.HasFlag(StyleSelectorType.Element))
+                    Scores[2]++;
 
-            if (style.SelectorType.HasFlag(StyleSelectorType.Id))
-                Scores[0]++;
+                if (current.SelectorType.HasFlag(StyleSelectorType.Id))
+                    Scores[0]++;
+            
+                if (current.StyleClass.IsSet)
+                    FillScores(current.StyleClass.ClassNames);
+                
+                current = current.Parent;
+            }
         }
 
         /// <summary>
@@ -55,35 +65,9 @@ namespace Marklight.Themes
         public StyleSpecificity(StyleClass cl)
         {
             Scores = new int[3];
-
+            
             if (cl.IsSet)
-            {
-                foreach (var name in cl.ClassNames)
-                {
-                    for (var i = 0; i < name.Length; i++)
-                    {
-                        var ch = name[i];
-
-                        if (i == 0 && ch != '#' && ch != '.')
-                        {
-                            Scores[2]++;
-                            continue;
-                        }
-
-                        switch (ch)
-                        {
-                            case '#':
-                                Scores[0]++;
-                                break;
-                            case '.':
-                            case '[':
-                            case ':':
-                                Scores[1]++;
-                                break;
-                        }
-                    }
-                }
-            }
+                FillScores(cl.ClassNames);
         }
 
         public int CompareTo(StyleSpecificity other)
@@ -108,6 +92,36 @@ namespace Marklight.Themes
 
             return Scores[index] > other.Scores[index] ? 1 : 0;
         }
+        
+        private void FillScores(IEnumerable<string> classNames)
+        {
+            foreach (var name in classNames)
+            {
+                for (var i = 0; i < name.Length; i++)
+                {
+                    var ch = name[i];
+
+                    if (i == 0 && ch != '#' && ch != '.')
+                    {
+                        Scores[2]++;
+                        continue;
+                    }
+
+                    switch (ch)
+                    {
+                        case '#':
+                            Scores[0]++;
+                            break;
+                        case '.':
+                        case '[':
+                        case ':':
+                            Scores[1]++;
+                            break;
+                    }
+                }
+            }
+        }
+
         
         public static StyleSpecificity operator +(StyleSpecificity spec1, StyleSpecificity spec2)
         {

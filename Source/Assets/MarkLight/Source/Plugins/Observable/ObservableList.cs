@@ -370,6 +370,8 @@ namespace MarkLight
             }
 
             _list.Clear();
+            _selectedItems.Clear();
+            _selectedItem = null;
 
             if (ItemsRemoved != null)
             {

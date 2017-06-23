@@ -127,8 +127,6 @@ namespace MarkLight
                 }, ViewSearchArgs.Default);
             }
 
-            var isRenderRequired = !isResolutionChanged && IsLayoutDirty;
-
             this.ForThisAndEachChild<View>(x =>
             {
                 x.TriggerChangeHandlers();
@@ -140,17 +138,22 @@ namespace MarkLight
                 }
 #endif
 
-                if (isRenderRequired)
+                if (IsLayoutDirty)
                 {
                     x.CalculateAndRenderLayout(_layoutContext);
                 }
 
             }, CalculateAndRenderViewSearchArgs);
 
-            if (isRenderRequired)
+            if (IsLayoutDirty)
+            {
+                IsLayoutDirty = isResolutionChanged;
                 _layoutContext.RenderLayout();
+            }
 
             _layoutContext.Reset();
+
+            
         }
 
         /// <summary>
