@@ -264,12 +264,12 @@ namespace MarkLight.Views.UI
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
             if (!Width.IsSet)
-                Layout.Width = Orientation == ElementOrientation.Horizontal
+                Layout.TargetWidth = Orientation == ElementOrientation.Horizontal
                     ? Length.Value
                     : Breadth.Value;
 
             if (!Height.IsSet)
-                Layout.Height = Orientation == ElementOrientation.Horizontal
+                Layout.TargetHeight = Orientation == ElementOrientation.Horizontal
                     ? Breadth.Value
                     : Length.Value;
 
@@ -286,8 +286,8 @@ namespace MarkLight.Views.UI
             // if vertical slider rotate slide region 90 degrees
             if (Orientation == ElementOrientation.Vertical)
             {
-                SliderRegion.Layout.Width = ElementSize.FromPixels(RectTransform.rect.height);
-                SliderRegion.Layout.Height = ElementSize.FromPixels(RectTransform.rect.width);
+                SliderRegion.Layout.TargetWidth = ElementSize.FromPixels(RectTransform.rect.height);
+                SliderRegion.Layout.TargetHeight = ElementSize.FromPixels(RectTransform.rect.width);
                 SliderRegion.Rotation.Value = Quaternion.Euler(new Vector3(0, 0, 90));
                 context.NotifyLayoutUpdated(SliderRegion);
             }
@@ -439,7 +439,7 @@ namespace MarkLight.Views.UI
 
             // set fill percentage as to match the offset of the handle
             var fillP = (handleOffset + SliderHandleImageView.Layout.Width.Pixels / 2f) / fillWidth;
-            SliderFillImageView.Layout.Width = ElementSize.FromPercents(fillP);
+            SliderFillImageView.Layout.TargetWidth = ElementSize.FromPercents(fillP);
             SliderFillImageView.RenderLayout();
         }
 

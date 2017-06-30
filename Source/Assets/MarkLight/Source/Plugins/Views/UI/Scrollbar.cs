@@ -128,16 +128,16 @@ namespace MarkLight.Views.UI
             // adjust scrollbar to orientation
             if (Orientation == ElementOrientation.Horizontal)
             {
-                Layout.Width = ElementSize.FromPercents(1f);
-                Layout.Height = ElementSize.FromPixels(Breadth.Value.Pixels);
+                Layout.TargetWidth = ElementSize.FromPercents(1f);
+                Layout.TargetHeight = ElementSize.FromPixels(Breadth.Value.Pixels);
                 Layout.Alignment = ElementAlignment.Bottom;
 
                 ScrollbarComponent.direction = UnityEngine.UI.Scrollbar.Direction.LeftToRight;
             }
             else
             {
-                Layout.Width = ElementSize.FromPixels(Breadth.Value.Pixels);
-                Layout.Height = ElementSize.FromPercents(1f);
+                Layout.TargetWidth = ElementSize.FromPixels(Breadth.Value.Pixels);
+                Layout.TargetHeight = ElementSize.FromPercents(1f);
                 Layout.Alignment = ElementAlignment.Right;
 
                 ScrollbarComponent.direction = UnityEngine.UI.Scrollbar.Direction.BottomToTop;

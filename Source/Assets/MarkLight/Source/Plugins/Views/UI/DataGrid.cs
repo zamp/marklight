@@ -568,8 +568,8 @@ namespace MarkLight.Views.UI
 
             if (result)
             {
-                list.Layout.Width = ElementSize.FromPercents(1f, true);
-                list.Layout.Height = ElementSize.FromPercents(1f, true);
+                list.Layout.TargetWidth = ElementSize.FromPercents(1f, true);
+                list.Layout.TargetHeight = ElementSize.FromPercents(1f, true);
                 return true;
             }
             return false;

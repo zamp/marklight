@@ -241,7 +241,7 @@ namespace MarkLight.Views.UI
             if (ParentList == null || ParentList.Layout.Orientation == ElementOrientation.Horizontal) {
 
                 if (!Height.IsSet) {
-                    Layout.Height = Breadth.IsSet
+                    Layout.TargetHeight = Breadth.IsSet
                         ? new ElementSize(Breadth.Value)
                         : ElementSize.FromPercents(1);
                 }
@@ -251,7 +251,7 @@ namespace MarkLight.Views.UI
                 //  if neither width nor length is set, use 100% width
                 if (!Width.IsSet)
                 {
-                    Layout.Width = Length.IsSet
+                    Layout.TargetWidth = Length.IsSet
                         ? new ElementSize(Length.Value)
                         : ElementSize.FromPercents(1);
                 }
@@ -271,7 +271,7 @@ namespace MarkLight.Views.UI
             // adjust item size to text
             if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.Width)
             {
-                Layout.Width =ElementSize.FromPixels(
+                Layout.TargetWidth =ElementSize.FromPixels(
                     ItemLabel.PreferredWidth
                     + TextPadding.Value.Left.Pixels
                     + TextPadding.Value.Right.Pixels
@@ -280,7 +280,7 @@ namespace MarkLight.Views.UI
             }
             else if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.Height)
             {
-                Layout.Height = ElementSize.FromPixels(
+                Layout.TargetHeight = ElementSize.FromPixels(
                     ItemLabel.PreferredHeight
                     + TextPadding.Value.Top.Pixels
                     + TextPadding.Value.Bottom.Pixels
@@ -289,14 +289,14 @@ namespace MarkLight.Views.UI
             }
             else if (ItemLabel.AdjustToText.Value == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Layout.Width = ElementSize.FromPixels(
+                Layout.TargetWidth = ElementSize.FromPixels(
                     ItemLabel.PreferredWidth
                     + TextPadding.Value.Left.Pixels
                     + TextPadding.Value.Right.Pixels
                     + ItemLabel.Margin.Value.Left.Pixels
                     + ItemLabel.Margin.Value.Right.Pixels);
 
-                Layout.Height = ElementSize.FromPixels(
+                Layout.TargetHeight = ElementSize.FromPixels(
                     ItemLabel.PreferredHeight
                     + TextPadding.Value.Top.Pixels
                     + TextPadding.Value.Bottom.Pixels

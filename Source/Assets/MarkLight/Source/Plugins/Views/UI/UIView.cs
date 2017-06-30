@@ -28,6 +28,20 @@ namespace MarkLight.Views.UI
         /// <d>Specifies the width of the view either in pixels or percents.</d>
         [ChangeHandler("LayoutChanged")]
         public _ElementSize Width;
+        
+        /// <summary>
+        /// The minimum width of the view.
+        /// </summary>
+        /// <d>Specifies the minimum width of the view either in pixels or percents.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementSize MinWidth;
+        
+        /// <summary>
+        /// The maximum width of the view.
+        /// </summary>
+        /// <d>Specifies the maximum width of the view either in pixels or percents.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementSize MaxWidth;
 
         /// <summary>
         /// The height of the view.
@@ -35,6 +49,20 @@ namespace MarkLight.Views.UI
         /// <d>Specifies the height of the view either in pixels or percents.</d>
         [ChangeHandler("LayoutChanged")]
         public _ElementSize Height;
+        
+        /// <summary>
+        /// The minimum height of the view.
+        /// </summary>
+        /// <d>Specifies the minimum height of the view either in pixels or percents.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementSize MinHeight;
+        
+        /// <summary>
+        /// The maximum height of the view.
+        /// </summary>
+        /// <d>Specifies the maximum height of the view either in pixels or percents.</d>
+        [ChangeHandler("LayoutChanged")]
+        public _ElementSize MaxHeight;
 
         /// <summary>
         /// Override width.
@@ -538,8 +566,8 @@ namespace MarkLight.Views.UI
             Layout.PositionType = PositionType.Value;
             Layout.Alignment = Alignment.Value;
             Layout.AspectRatio = AspectRatio.Value;
-            Layout.Width = Width.Value;
-            Layout.Height = Height.Value;
+            Layout.TargetWidth = Width.Value;
+            Layout.TargetHeight = Height.Value;
             Layout.Offset = Offset.Value;
             Layout.Margin = Margin.Value;
         }

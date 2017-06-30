@@ -238,7 +238,7 @@ namespace MarkLight.Views.UI
 
         public override bool CalculateLayoutChanges(LayoutChangeContext context)
         {
-            Layout.Width = ElementSize.FromPixels(RadioButtonGroup.ActualWidth);
+            Layout.TargetWidth = ElementSize.FromPixels(RadioButtonGroup.ActualWidth);
             return base.CalculateLayoutChanges(context);
         }
 

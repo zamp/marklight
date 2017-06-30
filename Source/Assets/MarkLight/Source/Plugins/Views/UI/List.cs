@@ -1394,6 +1394,7 @@ namespace MarkLight.Views.UI
             }
 
             _presentedListItems.Clear();
+            
         }
 
         /// <summary>

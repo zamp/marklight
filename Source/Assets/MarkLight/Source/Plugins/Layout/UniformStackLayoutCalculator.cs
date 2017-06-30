@@ -72,11 +72,11 @@ namespace MarkLight
 
                 if (isHorizontal && !child.Height.IsSet)
                 {
-                    child.Layout.Height = new ElementSize(1f, ElementSizeUnit.Percents, true);
+                    child.Layout.TargetHeight = new ElementSize(1f, ElementSizeUnit.Percents, true);
                 }
                 else if (!isHorizontal && !child.Width.IsSet)
                 {
-                    child.Layout.Width = new ElementSize(1f, ElementSizeUnit.Percents, true);
+                    child.Layout.TargetWidth = new ElementSize(1f, ElementSizeUnit.Percents, true);
                 }
 
                 // update child layout
@@ -91,10 +91,10 @@ namespace MarkLight
             }
 
             if (!view.Width.IsSet)
-                view.Layout.Width = ElementSize.FromPercents(1f, true);
+                view.Layout.TargetWidth = ElementSize.FromPercents(1f, true);
 
             if (!view.Height.IsSet)
-                view.Layout.Height = ElementSize.FromPercents(1f, true);
+                view.Layout.TargetHeight = ElementSize.FromPercents(1f, true);
 
             return view.Layout.IsDirty;
         }

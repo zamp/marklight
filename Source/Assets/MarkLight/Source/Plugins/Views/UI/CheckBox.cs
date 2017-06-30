@@ -248,7 +248,7 @@ namespace MarkLight.Views.UI
         public override bool CalculateLayoutChanges(LayoutChangeContext context) {
 
             // adjust width to CheckBoxGroup
-            Layout.Width = ElementSize.FromPixels(CheckBoxGroup.ActualWidth);
+            Layout.TargetWidth = ElementSize.FromPixels(CheckBoxGroup.ActualWidth);
             return base.CalculateLayoutChanges(context);
         }
 

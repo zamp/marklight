@@ -73,7 +73,7 @@ namespace MarkLight
                         continue;
                     }
 
-                    column.Layout.Width = defWidth.Unit == ElementSizeUnit.Percents
+                    column.Layout.TargetWidth = defWidth.Unit == ElementSizeUnit.Percents
                         ? ElementSize.FromPixels(defWidth.Percent * rowWidth - column.Layout.HorizontalMarginPixels)
                         : ElementSize.FromPixels(defWidth.Pixels - column.Layout.HorizontalMarginPixels);
                 }
@@ -81,7 +81,7 @@ namespace MarkLight
                 {
                     // copy width of header column
                     var header = columnHeaders[i];
-                    column.Layout.Width = header.Layout.Width;
+                    column.Layout.TargetWidth = header.Layout.Width;
 
                     if (!column.Margin.IsSet)
                     {
@@ -101,7 +101,7 @@ namespace MarkLight
 
                 foreach (var column in columnsToFill)
                 {
-                    column.Layout.Width = ElementSize.FromPixels(
+                    column.Layout.TargetWidth = ElementSize.FromPixels(
                         columnWidth - column.Layout.HorizontalMarginPixels);
 
                     maxHeight = Mathf.Max(maxHeight, column.Layout.AspectPixelHeight);
@@ -110,13 +110,13 @@ namespace MarkLight
 
             if (!view.Height.IsSet)
             {
-                view.Layout.Height = ElementSize.FromPixels(maxHeight);
+                view.Layout.TargetHeight = ElementSize.FromPixels(maxHeight);
             }
 
             if (!IsHeader && !view.Width.IsSet && ParentDataGrid.RowHeader != null)
             {
                 var headerLayout = ParentDataGrid.RowHeader.Layout;
-                view.Layout.Width = headerLayout.Width;
+                view.Layout.TargetWidth = headerLayout.Width;
             }
 
             // adjust column offsets and settings
@@ -124,7 +124,7 @@ namespace MarkLight
             foreach (var column in columns)
             {
                 column.Layout.IsDirty = true;
-                column.Layout.Height = ElementSize.FromPixels(maxHeight);
+                column.Layout.TargetHeight = ElementSize.FromPixels(maxHeight);
                 column.Layout.OffsetFromParent = new ElementMargin(offset, 0f, 0f, 0f);
 
                 offset += column.Layout.Width.Pixels + column.Layout.HorizontalMarginPixels;

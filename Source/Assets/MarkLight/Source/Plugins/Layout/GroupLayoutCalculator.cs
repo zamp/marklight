@@ -257,7 +257,7 @@ namespace MarkLight
                 if (AdjustToWidth)
                 {
                     // adjust width to content
-                    view.Layout.Width = ElementSize.FromPixels(
+                    view.Layout.TargetWidth = ElementSize.FromPixels(
                         isHorizontal
                             ? totalWidth
                             : maxWidth);
@@ -265,7 +265,7 @@ namespace MarkLight
                 else if (ScrollContent != null)
                 {
                     // adjust width of scrollable area to size
-                    ScrollContent.Layout.Width = ElementSize.FromPixels(
+                    ScrollContent.Layout.TargetWidth = ElementSize.FromPixels(
                         isHorizontal
                             ? totalWidth
                             : maxWidth);
@@ -281,7 +281,7 @@ namespace MarkLight
                 if (AdjustToHeight)
                 {
                     // if height is not explicitly set then adjust to content
-                    view.Layout.Height = ElementSize.FromPixels(
+                    view.Layout.TargetHeight = ElementSize.FromPixels(
                         isHorizontal
                             ? maxHeight
                             : totalHeight);
@@ -289,7 +289,7 @@ namespace MarkLight
                 else if (ScrollContent != null)
                 {
                     // adjust width of scrollable area to size
-                    ScrollContent.Layout.Height = ElementSize.FromPixels(
+                    ScrollContent.Layout.TargetHeight = ElementSize.FromPixels(
                         isHorizontal
                             ? maxHeight
                             : totalHeight);
@@ -306,12 +306,12 @@ namespace MarkLight
 
                     if (ScrollContent != null)
                     {
-                        ScrollContent.Layout.Height = ElementSize.FromPixels(maxHeight);
+                        ScrollContent.Layout.TargetHeight = ElementSize.FromPixels(maxHeight);
                         updateScrollContent = true;
                     }
                     else if (AdjustToHeight)
                     {
-                        parentLayout.Height = ElementSize.FromPixels(maxHeight);
+                        parentLayout.TargetHeight = ElementSize.FromPixels(maxHeight);
                     }
                 }
                 else // Vertical
@@ -320,12 +320,12 @@ namespace MarkLight
 
                     if (ScrollContent != null)
                     {
-                        ScrollContent.Layout.Width = ElementSize.FromPixels(maxWidth);
+                        ScrollContent.Layout.TargetWidth = ElementSize.FromPixels(maxWidth);
                         updateScrollContent = true;
                     }
                     else if (AdjustToWidth)
                     {
-                        parentLayout.Width = ElementSize.FromPixels(maxWidth);
+                        parentLayout.TargetWidth = ElementSize.FromPixels(maxWidth);
                     }
                 }
             }

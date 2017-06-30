@@ -274,16 +274,16 @@ namespace MarkLight.Views.UI
         {
             if (AdjustToText == MarkLight.AdjustToText.Width)
             {
-                Layout.Width = ElementSize.FromPixels(PreferredWidth);
+                Layout.TargetWidth = ElementSize.FromPixels(PreferredWidth);
             }
             else if (AdjustToText == MarkLight.AdjustToText.Height)
             {
-                Layout.Height = ElementSize.FromPixels(PreferredHeight);
+                Layout.TargetHeight = ElementSize.FromPixels(PreferredHeight);
             }
             else if (AdjustToText == MarkLight.AdjustToText.WidthAndHeight)
             {
-                Layout.Width = ElementSize.FromPixels(PreferredWidth);
-                Layout.Height = ElementSize.FromPixels(PreferredHeight);
+                Layout.TargetWidth = ElementSize.FromPixels(PreferredWidth);
+                Layout.TargetHeight = ElementSize.FromPixels(PreferredHeight);
             }
         }
 

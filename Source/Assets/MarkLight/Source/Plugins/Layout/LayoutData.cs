@@ -125,11 +125,11 @@ namespace MarkLight
 
             var width = View.OverrideWidth.IsSet
                 ? View.OverrideWidth.Value
-                : Width;
+                : _width;
 
             var height = View.OverrideHeight.IsSet
                 ? View.OverrideHeight.Value
-                : Height;
+                : _height;
 
             _horizontalSizes = GetHorizontalSizes(width);
             _verticalSizes = GetVerticalSizes(height);
@@ -157,9 +157,39 @@ namespace MarkLight
             {
                 result.TargetSize = result.ContainerSize * width.Percent;
             }
+            
+            // MinWidth
+            if (View.MinWidth.IsSet)
+            {
+                if (View.MinWidth.Value.Unit == ElementSizeUnit.Pixels)
+                {
+                    result.MinSize = View.MinWidth.Value.Pixels;
+                }
+                else
+                {
+                    result.MinSize = result.ContainerSize * View.MinWidth.Value.Percent;
+                }
+            }
 
-            result.MarginXPixels = SizeToPixels(Margin.Left, result.TargetSize);
-            result.MarginYPixels = SizeToPixels(Margin.Right, result.TargetSize);
+            // MaxWidth
+            if (View.MaxWidth.IsSet)
+            {
+                if (View.MaxWidth.Value.Unit == ElementSizeUnit.Pixels)
+                {
+                    result.MaxSize = View.MaxWidth.Value.Pixels;
+                }
+                else
+                {
+                    result.MaxSize = result.ContainerSize * View.MaxWidth.Value.Percent;
+                }
+            }
+            else
+            {
+                result.MaxSize = result.TargetSize;
+            }
+            
+            result.MarginXPixels = SizeToPixels(Margin.Left, result.LimitedTargetSize);
+            result.MarginYPixels = SizeToPixels(Margin.Right, result.LimitedTargetSize);
 
             result.OffsetXPixels = SizeToPixels(Offset.Left, containerWidth);
             result.OffsetYPixels = SizeToPixels(Offset.Right, containerWidth);
@@ -196,9 +226,39 @@ namespace MarkLight
             {
                 result.TargetSize = result.ContainerSize * height.Percent;
             }
+            
+            // MinHeight
+            if (View.MinHeight.IsSet)
+            {
+                if (View.MinHeight.Value.Unit == ElementSizeUnit.Pixels)
+                {
+                    result.MinSize = View.MinHeight.Value.Pixels;
+                }
+                else
+                {
+                    result.MinSize = result.ContainerSize * View.MinHeight.Value.Percent;
+                }
+            }
 
-            result.MarginXPixels = SizeToPixels(Margin.Top, result.TargetSize);
-            result.MarginYPixels = SizeToPixels(Margin.Bottom, result.TargetSize);
+            // MaxHeight
+            if (View.MaxHeight.IsSet)
+            {
+                if (View.MaxHeight.Value.Unit == ElementSizeUnit.Pixels)
+                {
+                    result.MaxSize = View.MaxHeight.Value.Pixels;
+                }
+                else
+                {
+                    result.MaxSize = result.ContainerSize * View.MaxHeight.Value.Percent;
+                }
+            }
+            else
+            {
+                result.MaxSize = result.TargetSize;
+            }
+
+            result.MarginXPixels = SizeToPixels(Margin.Top, result.LimitedTargetSize);
+            result.MarginYPixels = SizeToPixels(Margin.Bottom, result.LimitedTargetSize);
 
             result.OffsetXPixels = SizeToPixels(Offset.Top, containerHeight);
             result.OffsetYPixels = SizeToPixels(Offset.Bottom, containerHeight);
@@ -505,9 +565,26 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Get or set the layout width. Setting value causes IsDirty field to be true.
+        /// Get the width adjusted for min and max size.
         /// </summary>
         public ElementSize Width
+        {
+            get
+            {
+                if (_horizontalSizes.UnlimitedBoxSize > _horizontalSizes.MaxSize)
+                    return View.MaxWidth.Value;
+                
+                if (_horizontalSizes.UnlimitedBoxSize < _horizontalSizes.MinSize)
+                    return View.MinWidth.Value;
+                
+                return _width;
+            }
+        }
+        
+        /// <summary>
+        /// Get or set the target layout width. Setting value causes IsDirty field to be true.
+        /// </summary>
+        public ElementSize TargetWidth
         {
             get { return _width; }
             set
@@ -521,9 +598,26 @@ namespace MarkLight
         }
 
         /// <summary>
-        /// Get or set the layout height. Setting value causes IsDirty field to be true.
+        /// Get or the height, adjusted for min and max size.
         /// </summary>
         public ElementSize Height
+        {
+            get
+            {
+                if (_verticalSizes.UnlimitedBoxSize > _verticalSizes.MaxSize)
+                    return View.MaxHeight.Value;
+                
+                if (_verticalSizes.UnlimitedBoxSize < _verticalSizes.MinSize)
+                    return View.MinHeight.Value;
+                
+                return _height;
+            }
+        }
+        
+        /// <summary>
+        /// Get or set the target layout height. Setting value causes IsDirty field to be true.
+        /// </summary>
+        public ElementSize TargetHeight
         {
             get { return _height; }
             set
@@ -1145,6 +1239,8 @@ namespace MarkLight
             public bool IsPositionExplicit;
 
             public float TargetSize;
+            public float MinSize;
+            public float MaxSize;
 
             public float ContainerSize;
 
@@ -1169,12 +1265,12 @@ namespace MarkLight
 
             public float MarginXPercent
             {
-                get { return MarginXPixels / TargetSize; }
+                get { return MarginXPixels / LimitedTargetSize; }
             }
 
             public float MarginYPercent
             {
-                get { return MarginYPixels / TargetSize; }
+                get { return MarginYPixels / LimitedTargetSize; }
             }
 
             public float OffsetPixels
@@ -1221,11 +1317,34 @@ namespace MarkLight
             {
                 get
                 {
+                    var size = UnlimitedBoxSize;
+                    if (size > MaxSize)
+                        return MaxSize;
+                    
+                    return size < MinSize ? MinSize : size;
+                }
+            }
+
+            public float LimitedTargetSize
+            {
+                get
+                {
+                    if (TargetSize > MaxSize)
+                        return MaxSize;
+                    
+                    return TargetSize < MinSize ? MinSize : TargetSize;
+                }
+            }
+
+            public float UnlimitedBoxSize
+            {
+                get
+                {
                     if (IsExplicit)
                         return TargetSize;
 
                     return Mathf.Min(TargetSize,
-                        ContainerSize - MarginPixels);
+                                     ContainerSize - MarginPixels);
                 }
             }
         }

@@ -114,17 +114,14 @@ namespace MarkLight
                         width = width,
                         height = height
                     };
+                    
+                    this.ForThisAndEachChild<UIView>(x =>
+                    {
+                        x.Layout.IsDirty = true;
+                        x.NotifyLayoutChanged();
+                        x.ResolutionChanged();
+                    }, ViewSearchArgs.Default);
                 }
-            }
-
-            if (isResolutionChanged)
-            {
-                this.ForThisAndEachChild<UIView>(x =>
-                {
-                    x.Layout.IsDirty = true;
-                    x.NotifyLayoutChanged();
-                    x.ResolutionChanged();
-                }, ViewSearchArgs.Default);
             }
 
             this.ForThisAndEachChild<View>(x =>

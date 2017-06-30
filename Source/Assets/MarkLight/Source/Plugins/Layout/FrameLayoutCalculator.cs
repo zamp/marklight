@@ -49,10 +49,12 @@ namespace MarkLight
                 // get size of content
 
                 var width = child.Layout.AspectPixelWidth
-                            + child.Layout.HorizontalOffsetPixels;
+                            + child.Layout.HorizontalOffsetPixels
+                            + child.Layout.HorizontalMarginPixels;
 
                 var height = child.Layout.AspectPixelHeight
-                            + child.Layout.VerticalOffsetPixels;
+                            + child.Layout.VerticalOffsetPixels
+                            + child.Layout.VerticalMarginPixels;
 
                 if (child.Layout.PositionType != ElementPositionType.Absolute)
                 {
@@ -73,12 +75,12 @@ namespace MarkLight
             // adjust size to content unless it has been set
             if (AdjustToWidth)
             {
-                view.Layout.Width = ElementSize.FromPixels(maxWidth);
+                view.Layout.TargetWidth = ElementSize.FromPixels(maxWidth);
             }
 
             if (AdjustToHeight)
             {
-                view.Layout.Height = ElementSize.FromPixels(maxHeight);
+                view.Layout.TargetHeight = ElementSize.FromPixels(maxHeight);
             }
 
             return view.Layout.IsDirty;
