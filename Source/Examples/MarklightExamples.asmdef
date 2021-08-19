@@ -1,0 +1,16 @@
+{
+    "name": "MarklightExamples",
+    "rootNamespace": "",
+    "references": [
+        "GUID:6995f2dece45a4740af011c487864c4c"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
